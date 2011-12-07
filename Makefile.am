@@ -25,6 +25,9 @@ install-exec-hook:
 	chmod ug+s $(DESTDIR)$(bindir)/jfbterm
 
 install-data-local:
+	mkdir -p $(DESTDIR)$(sysconfdir)
 	$(INSTALL_DATA) $(srcdir)/$(JFBTERM_CONFIG_FILE) $(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_FILE)
+
+	mkdir -p $(DESTDIR)$(datadir)/fonts/jfbterm
 	$(INSTALL_DATA) $(srcdir)/fonts/*.pcf.gz $(DESTDIR)$(datadir)/fonts/jfbterm
 
