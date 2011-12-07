@@ -2,12 +2,9 @@ jfbterm is autoconfisicated since version 0.2.0.
 
 To install jfbterm, run
 
-	./configure
+	./autogen.sh
 	make
-	su
-	make install
-	exit
-
+	sudo make install
 
 You need to create /usr/local/etc/jfbterm.conf from jfbterm.conf.sample.
 Also you need font files that you configured in jfbterm.conf

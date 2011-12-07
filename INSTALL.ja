@@ -1,18 +1,16 @@
 
-jfbterm �ϡ�Version 0.2.0 �ʹߤ��� autoconf/automake ������Ƥ��ޤ���
+jfbterm は、Version 0.2.0 以降から autoconf/automake 化されています。
 
-���󥹥ȡ���ϡ�
+インストールは、
 
-	./configure
+	./autogen.sh
 	make
-	su
-	make install
-	exit
+	sudo make install
 
-�Ǥ����ʤ��ޤ���
+でおこなえます。
 
-������������ե����� /etc/jfbterm.conf �������Ѱդ���ɬ�פ�����ޤ���
-Ʊ���� jfbterm.conf.sample �򻲹ͤ˺������Ƥ���������
+ただし、設定ファイル /etc/jfbterm.conf は別途用意する必要があります。
+同梱の jfbterm.conf.sample を参考に作成してください。
 
-�ޤ����ե���ȥե�����������Ѱդ��Ƥ���������
+また、フォントファイルも別途用意してください。
 
