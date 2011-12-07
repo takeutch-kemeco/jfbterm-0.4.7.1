@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <math.h>
 #include <signal.h>
+#include <sys/user.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -46,7 +47,6 @@
 #endif
 #include <linux/vt.h>
 #include <linux/fb.h>
-#include <asm/page.h>
 
 #include "mytypes.h"
 #include "fbcommon.h"
