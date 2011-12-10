@@ -17,11 +17,10 @@ jfbterm_SOURCES = 				\
 
 jfbterm_LDADD = -lutil
 
-JFBTERM_CONFIG_SAMPLE_FILE = 			\
-	jfbterm.conf.sample 			\
-	jfbterm.conf.sample.ja			\
-	jfbterm.conf.sample.mplus_j12r		\
-	jfbterm.conf.sample.unifont
+JFBTERM_CONFIG_SAMPLE            = jfbterm.conf.sample
+JFBTERM_CONFIG_SAMPLE_JA         = $(JFBTERM_CONFIG_SAMPLE).ja
+JFBTERM_CONFIG_SAMPLE_MPLUS_J12R = $(JFBTERM_CONFIG_SAMPLE).mplus_j12r
+JFBTERM_CONFIG_SAMPLE_UNIFONT    = $(JFBTERM_CONFIG_SAMPLE).unifont
 
 JFBTERM_CONFIG_FILE = jfbterm.conf
 
@@ -31,12 +30,26 @@ install-exec-hook:
 
 install-data-local:
 	mkdir -p $(DESTDIR)$(sysconfdir)
-	$(INSTALL_DATA) -C $(JFBTERM_CONFIG_FILE) $(DESTDIR)$(sysconfdir)/
-	$(INSTALL_DATA) $(JFBTERM_CONFIG_SAMPLE_FILE) $(DESTDIR)$(sysconfdir)/
+
+	$(INSTALL_DATA) --compare 				\
+		$(JFBTERM_CONFIG_FILE)				\
+		$(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_FILE)
+
+	$(INSTALL_DATA) 				\
+		$(JFBTERM_CONFIG_SAMPLE) 		\
+		$(JFBTERM_CONFIG_SAMPLE_JA)		\
+		$(JFBTERM_CONFIG_SAMPLE_MPLUS_J12R)	\
+		$(JFBTERM_CONFIG_SAMPLE_UNIFONT)	\
+		$(DESTDIR)$(sysconfdir)/
 
 uninstall:
 	$(RM) $(DESTDIR)$(bindir)/jfbterm
-	cd $(DESTDIR)$(sysconfdir)
-	$(RM) $(JFBTERM_CONFIG_SAMPLE_FILE)
-	$(RM) $(JFBTERM_CONFIG_FILE)
+
+#	$(RM) $(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_FILE)
+
+	$(RM)								\
+	$(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_SAMPLE)		\
+	$(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_SAMPLE_JA)		\
+	$(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_SAMPLE_MPLUS_J12R)	\
+	$(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_SAMPLE_UNIFONT)
 
