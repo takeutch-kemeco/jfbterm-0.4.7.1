@@ -1,0 +1,7 @@
+term: jfbterm
+
+fontset: iso10646.1,pcf,L,/usr/share/fonts/misc/unifont.pcf.gz
+
+encoding: UTF-8
+encoding.UTF-8: UTF-8,iso10646.1
+
