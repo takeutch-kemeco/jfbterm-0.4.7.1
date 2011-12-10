@@ -1,6 +1,7 @@
-term: jfbterm
+term: jfbtermi
 
-fontset: iso10646.1,pcf,L,/usr/share/fonts/misc/unifont.pcf.gz
+fontset:  iso646-1973irv,pcf,L,/usr/share/fonts/misc/8x16.pcf.gz
++fontset: iso10646.1,pcf,L,/usr/share/fonts/misc/unifont.pcf.gz
 
 encoding: UTF-8
 encoding.UTF-8: UTF-8,iso10646.1
