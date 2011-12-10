@@ -56,14 +56,12 @@
 #include "config.h"
 
 int gChildProcessId = 0;
+static int gExitFlag = 0;
 
 TTerm gTerm;
 
 void tterm_wakeup_shell(TTerm* p, const char* tn);
 void tterm_final(TTerm* p);
-
-static const char *tterm_getptyline(const char *ptyname);
-static const char *tterm_getptyid(const char *ptyline);
 
 static void tterm_set_utmp(TTerm* p);
 static void tterm_reset_utmp(TTerm* p);
@@ -76,7 +74,11 @@ void send_hangup(
 	}
 }
 
-void sigchld(sig) int sig; {
+void sigchld(int sig)
+{
+	gExitFlag = 1;
+	return;
+	
 	int st;
 	int ret;
 	ret = wait(&st);
@@ -183,7 +185,7 @@ void tterm_start(TTerm* p, const char* tn, const char* en)
 	 * VtInit();
 	 * VtStart();
 	 */
-	for (;;) {
+	while (gExitFlag == 0) {
 		fd_set fds;
 		int max = 0;
 		tv.tv_sec = 0;
@@ -245,38 +247,27 @@ void tterm_wakeup_shell(TTerm* p, const char* tn)
 	exit(1);
 }
 
-const char *tterm_getptyline(const char *ptyname)
-{
-	if (strncmp(ptyname, "/dev/", 5) == 0) ptyname += 5;
-
-	return ptyname;
-}
-
-const char *tterm_getptyid(const char *ptyline)
-{
-	size_t len;
-
-	len = strlen(ptyline);
-	if (len > 4) ptyline += (len - 4);
-
-	return ptyline;
-}
 
 void	tterm_set_utmp(TTerm* p)
 {
 	struct utmp	utmp;
 	struct passwd	*pw;
+	char	*tn;
 
+	pw = getpwuid(util_getuid());
+	tn = rindex(p->name, '/') + 1;
 	memset((char *)&utmp, 0, sizeof(utmp));
+	strncpy(utmp.ut_id, tn + 3, sizeof(utmp.ut_id));
+	utmp.ut_type = DEAD_PROCESS;
+	setutent();
+	getutid(&utmp);
 	utmp.ut_type = USER_PROCESS;
 	utmp.ut_pid = getpid();
-	strncpy(utmp.ut_line, tterm_getptyline(p->name), sizeof(utmp.ut_line) - 1);
-	strncpy(utmp.ut_id, tterm_getptyid(utmp.ut_line), 4);
-	pw = getpwuid(util_getuid());
-	if (pw) strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user) - 1);
+	if (strncmp("/dev/", p->name, 5) == 0)
+	    tn = p->name + 5;
+	strncpy(utmp.ut_line, tn, sizeof(utmp.ut_line));
+	strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user));
 	time(&(utmp.ut_time));
-
-	setutent();
 	pututline(&utmp);
 	endutent();
 }
@@ -284,18 +275,19 @@ void	tterm_set_utmp(TTerm* p)
 void	tterm_reset_utmp(TTerm* p)
 {
 	struct utmp	utmp, *utp;
+	char	*tn;
 
+	tn = rindex(p->name, '/') + 4;
 	memset((char *)&utmp, 0, sizeof(utmp));
+	strncpy(utmp.ut_id, tn, sizeof(utmp.ut_id));
 	utmp.ut_type = USER_PROCESS;
-	strncpy(utmp.ut_id, tterm_getptyid(tterm_getptyline(p->name)), 4);
-
 	setutent();
 	utp = getutid(&utmp);
-	if (utp) {
-		utp->ut_type = DEAD_PROCESS;
-		memset(utp->ut_user, 0, sizeof(utp->ut_user));
-		time(&(utp->ut_time));
-		pututline(utp);}
+	utp->ut_type = DEAD_PROCESS;
+	memset(utp->ut_user, 0, sizeof(utmp.ut_user));
+	utp->ut_type = DEAD_PROCESS;
+	time(&(utp->ut_time));
+	pututline(utp);
 	endutent();
 }
 
