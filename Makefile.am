@@ -31,8 +31,8 @@ install-exec-hook:
 install-data-local:
 	mkdir -p $(DESTDIR)$(sysconfdir)
 
-	$(INSTALL_DATA) --compare 				\
-		$(JFBTERM_CONFIG_FILE)				\
+	cp -n 							\
+		$(JFBTERM_CONFIG_FILE)		 		\
 		$(DESTDIR)$(sysconfdir)/$(JFBTERM_CONFIG_FILE)
 
 	$(INSTALL_DATA) 				\
