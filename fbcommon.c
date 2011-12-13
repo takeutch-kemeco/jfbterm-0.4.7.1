@@ -201,15 +201,14 @@ static TBool modified_var_screen_info = FALSE;
 static u_int trueColor32Table[16];
 static u_short trueColor16Table[16];
 
-static u_short red16[16] = {
-	0x0000,0x0000,0x0000,0x0000,0xaaaa,0xaaaa,0xaaaa,0xaaaa,
-	0x5555,0x5555,0x5555,0x5555,0xffff,0xffff,0xffff,0xffff, };
-static u_short green16[16] = {
-	0x0000,0x0000,0xaaaa,0xaaaa,0x0000,0x0000,0xaaaa,0xaaaa,
-	0x5555,0x5555,0xffff,0xffff,0x5555,0x5555,0xffff,0xffff, };
-static u_short	blue16[16] = {
-	0x0000,0xaaaa,0x0000,0xaaaa,0x0000,0xaaaa,0x0000,0xaaaa,
-	0x5555,0xffff,0x5555,0xffff,0x5555,0xffff,0x5555,0xffff, };
+#define COL_0 0xBBBB
+#define COL_5 0xFFFF
+#define COL_A 0xFFFF
+#define COL_F 0xBBBB
+ 
+static u_short red16[16]   = {0x1111, COL_0, COL_0, COL_0,   COL_5, COL_5, COL_5, COL_5,   COL_A, COL_A, COL_A, COL_A,   COL_F, COL_F, COL_F, COL_F, };
+static u_short green16[16] = {0x2222, COL_0, COL_5, COL_5,   COL_0, COL_0, COL_5, COL_5,   COL_A, COL_A, COL_F, COL_F,   COL_A, COL_A, COL_F, COL_F, };
+static u_short blue16[16]  = {0x3333, COL_5, COL_0, COL_5,   COL_0, COL_5, COL_0, COL_5,   COL_A, COL_F, COL_A, COL_F,   COL_A, COL_F, COL_A, COL_F, };
 
 static void tfbm_setup_color_table(struct fb_var_screeninfo *var)
 {
