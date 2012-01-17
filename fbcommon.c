@@ -201,14 +201,14 @@ static TBool modified_var_screen_info = FALSE;
 static u_int trueColor32Table[16];
 static u_short trueColor16Table[16];
 
-#define COL_0 0xBBBB
-#define COL_5 0xFFFF
-#define COL_A 0xFFFF
-#define COL_F 0xBBBB
+#define CL_B0 0xBBBB
+#define CL_B1 0xFFFF
+#define CL_F0 0x8888
+#define CL_F1 0xCCCC
  
-static u_short red16[16]   = {0x1111, COL_0, COL_0, COL_0,   COL_5, COL_5, COL_5, COL_5,   COL_A, COL_A, COL_A, COL_A,   COL_F, COL_F, COL_F, COL_F, };
-static u_short green16[16] = {0x2222, COL_0, COL_5, COL_5,   COL_0, COL_0, COL_5, COL_5,   COL_A, COL_A, COL_F, COL_F,   COL_A, COL_A, COL_F, COL_F, };
-static u_short blue16[16]  = {0x3333, COL_5, COL_0, COL_5,   COL_0, COL_5, COL_0, COL_5,   COL_A, COL_F, COL_A, COL_F,   COL_A, COL_F, COL_A, COL_F, };
+static u_short red16[16]   = {0x1111, CL_B0, CL_B0, CL_B0,   CL_B1, CL_B1, CL_B1, CL_B1,   0x5555, CL_F0, CL_F0, CL_F0,   CL_F1, CL_F1, CL_F1, CL_F1, };
+static u_short green16[16] = {0x2222, CL_B0, CL_B1, CL_B1,   CL_B0, CL_B0, CL_B1, CL_B1,   0x6666, CL_F0, CL_F1, CL_F1,   CL_F0, CL_F0, CL_F1, CL_F1, };
+static u_short blue16[16]  = {0x3333, CL_B1, CL_B0, CL_B1,   CL_B0, CL_B1, CL_B0, CL_B1,   0x7777, CL_F1, CL_F0, CL_F1,   CL_F0, CL_F1, CL_F0, CL_F1, };
 
 static void tfbm_setup_color_table(struct fb_var_screeninfo *var)
 {
