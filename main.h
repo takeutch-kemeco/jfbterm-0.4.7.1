@@ -43,6 +43,8 @@ typedef struct Raw_TApplication {
 	char** gExecShellArgv;
     	char* gConfFile;
 	char* gConfEncoding;
+	TBool gOptCCW;
+	TBool gOptCW;
 } TApplication;
 
 extern TApplication gApp;

@@ -1,27 +1,30 @@
 
         JFBTERM      ----- J Framebuffer terminal -----
 
-  JFBTERM �� Linux �� framebuffer ��Ǵ�����ɽ�����뤿��Υץ������Ǥ���
-KON Ʊ�ͤ˵���ü����Ȥäƥ��󥽡�����Ϥ�եå����ޤ�����VGA �ǤϤʤ���
-framebuffer ��Ÿ�����Ƥ��ޤ���
+  JFBTERM は Linux の framebuffer 上で漢字を表示するためのプログラムです。
+KON 同様に疑似端末を使ってコンソール出力をフックしますが、VGA ではなく、
+framebuffer に展開しています。
 
 
-��ħ
-	* �ե���ȥե�����Ȥ��� PCF �����Τ�Τ���Ѥ��ޤ���X �ǻȤ�줤��
-	  Ŭ���ʥե���ȥե�������Ѱդ��Ƥ���������
+特徴
+	* フォントファイルとして PCF 形式のものを使用します。X で使われいる
+	  適当なフォントファイルを用意してください。
 
-	* JIS/EUC/UTF-8�ʤɤ��б����Ƥ��ޤ���iconv(3)��Ĥ��ä�
-          SHIFT_JIS�ˤ��б��Ǥ��ޤ���
+	* JIS/EUC/UTF-8などに対応しています。iconv(3)をつかって
+          SHIFT_JISにも対応できます。
 
-	* pty ��Ȥäƽ��Ϥ�եå�����framebuffer �ǥƥ����Ȳ��̤򥨥ߥ�
-	  �졼�Ȥ��Ƥ��ޤ���
+	* pty を使って出力をフックし、framebuffer でテキスト画面をエミュ
+	  レートしています。
 
-�ץ������ˤĤ���
+	* jfbterm --cw  として起動すると、画面表示を時計方向に回転します。
+	  jfbterm --ccw として機動すると、画面表示を反時計方向に回転します。
 
-  JFBTERM ��Ȥäƥϡ��ɥ�������¾�Υ��եȥ����������꤬ȯ�����Ƥ⡢��Ԥ�
-��Ǥ��Ȥ뤳�ȤϤǤ��ޤ���
+プログラムについて
 
-  �Х���ո��ʤɤ�����ޤ����鲼���ޤǤ�Ϣ������������
+  JFBTERM を使ってハードウェアや他のソフトウェアに問題が発生しても、作者は
+責任をとることはできません。
+
+  バグや意見などがありましたら下記までご連絡ください。
 
 		http://sourceforge.jp/projects/jfbterm
 		E-Mail: jfbterm-dev@linux.or.jp

@@ -81,6 +81,12 @@ typedef struct Raw_TFrameBufferMemory {
 #endif
 } TFrameBufferMemory;
 
+enum TFBM_SCR_ROT_FLAG {
+	TFBM_SCR_ROT_FLAG_NORMAL = 0x01,
+	TFBM_SCR_ROT_FLAG_CW     = 0x02,
+	TFBM_SCR_ROT_FLAG_CCW    = 0x04,
+};
+
 extern TFrameBufferMemory gFramebuffer;
 
 void tfbm_init(TFrameBufferMemory* p);
@@ -91,6 +97,8 @@ u_int tfbm_select_32_color(u_int);
 u_short tfbm_select_16_color(u_int);
 
 extern float fbgamma;
+
+extern enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
 
 #endif /* INCLUDE_FBCOMMON_H */
 

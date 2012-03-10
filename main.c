@@ -79,6 +79,8 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 		{"reset",	2, NULL, 'r'},
 		{"quite",	0, NULL, 'q'},
 		{"help",	0, NULL, 'h'},
+		{"cw",		0, NULL, 'R'},
+		{"ccw",		0, NULL, 'L'},
 		{NULL,		0, NULL, 0},
 	};
 	int c;
@@ -86,7 +88,7 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 	int i;
 	
 	while (1) {
-		c = getopt_long(argc, argv, "c:f:e:hqr::", optList, &ix);
+		c = getopt_long(argc, argv, "c:f:e:hqr::RL", optList, &ix);
 		if (c == EOF) {
 			break;
 		}
@@ -111,6 +113,12 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 			break;
 		case 'h':
 			p->gOptShowHelpQ = TRUE;
+			break;
+		case 'R':
+			p->gOptCW = TRUE;
+			break;
+		case 'L':
+			p->gOptCCW = TRUE;
 			break;
 		default:
 			break;
@@ -400,6 +408,14 @@ int main(int argc, char *argv[])
 		fclose(tf);
 		printf("ENCODING: %s\n", en);
 		exit(0);
+	}
+
+	if(gApp.gOptCW == TRUE) {
+		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CW;
+	} else if (gApp.gOptCCW == TRUE) {
+		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CCW;
+	} else {
+		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
 	}
 
 	en = tcaps_find_first(&(gApp.gCaps), "encoding");

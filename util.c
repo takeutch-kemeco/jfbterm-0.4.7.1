@@ -141,3 +141,9 @@ int util_search_string(const char* s, const char** array)
 	return -1;	
 }
 
+void util_swap(u_int* a, u_int* b)
+{
+	u_int tmp = *a;
+	*a = *b;
+	*b = tmp;
+}

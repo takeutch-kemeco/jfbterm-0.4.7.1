@@ -618,14 +618,14 @@ void tfbm_fill_rect_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-
+return;
 	for (y = sy ; y < sy+ly ; y++) {
 		d=p->smem + y * p->bytePerLine + sx * 3;
 		for(x=0;x<lx;x++){
 			d[0] = t;
 			d[1] = m;
 			d[2] = b;
-			d+=3;
+			d+=(p->bytePerLine + sx * 3);
 		}
 	}
 }
@@ -645,7 +645,7 @@ void tfbm_clear_all_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-
+return;
 	for(lp=0;lp<((p->slen)-2);lp+=3){
 		p->smem[lp]   = t;
 		p->smem[lp+1] = m;
@@ -672,7 +672,7 @@ void tfbm_overlay_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-
+return;
 	for (y = yd ; y < yd+ly ; y++) {
 		tps = ps;
 		wp = p->smem + y * p->bytePerLine + xd * 3;
@@ -720,7 +720,7 @@ void tfbm_reverse_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-
+return;
 	for (y = sy ; y < sy+ly ; y++) {
 		for (x = 0 ; x < (lx*3) ; x+=3) {
 			p->smem[y * p->bytePerLine + sx * 3 + x] ^= t;
@@ -733,93 +733,149 @@ void tfbm_reverse_24bpp_packed(
 
 #ifdef JFB_32BPP
 /* 32 bpp */
-void tfbm_fill_rect_32bpp_packed(
-	TFrameBufferMemory* p,
-	u_int sx, u_int sy, u_int lx, u_int ly, u_int color)
+
+/* xとyをスクリーンの回転設定に合わせて、右か左に回転移動。
+ * CW（クロックワイズ）が、首を時計回りに傾けて見るのに適した状態。
+ * CCW（カウンターCW）が、首を反時計回りに傾けて見るのに適した状態。
+ */
+static void tfbm_rot_xy_32bpp_packed(u_int* real_x, u_int* real_y,
+				     const u_int x, const u_int y,
+			             const u_int w, const u_int h)
 {
+	switch(tfbm_scr_rot_flag) {
+	case TFBM_SCR_ROT_FLAG_CCW:
+		*real_x = y;
+		*real_y = (w - 1) - x;
+		break;
+
+	case TFBM_SCR_ROT_FLAG_CW:
+		*real_x = (h - 1) - y;
+		*real_y = x;
+		break;
+
+	default:
+		*real_x = x;
+		*real_y = y;
+	}
+}
+
+static u_int* tfbm_seek_pix_adrs_32bpp_packed(TFrameBufferMemory* p,
+					      const u_int x, const u_int y)
+{
+	u_int real_x;
+	u_int real_y;
+	tfbm_rot_xy_32bpp_packed(&real_x, &real_y,
+				 x, y, p->width, p->height);
+
+	return (u_int*)(p->smem + (real_y * p->bytePerLine) + (real_x * 4));
+}
+
+static void tfbm_set_pixel_32bpp_packed(TFrameBufferMemory* p,
+                                        const u_int x, const u_int y,
+					const u_int icol)
+{
+	u_int* d = tfbm_seek_pix_adrs_32bpp_packed(p, x, y);
+	*d = icol;
+}
+
+static void tfbm_xor_pixel_32bpp_packed(TFrameBufferMemory* p,
+					const u_int x, const u_int y,
+					const u_int icol)
+{
+	u_int* d = tfbm_seek_pix_adrs_32bpp_packed(p, x, y);
+	*d ^= icol;
+}
+
+void tfbm_fill_rect_32bpp_packed(TFrameBufferMemory* p,
+				 u_int sx, u_int sy,
+				 u_int lx, u_int ly,
+				 u_int color)
+{
+	const u_int icol = tfbm_select_32_color(color);
+
 	u_int x,y;
-	u_int icol;
-	u_int *d;
-
-	icol = tfbm_select_32_color(color);
-	for (y = sy ; y < sy+ly ; y++) {
-		d=(u_int*)(p->smem + y * p->bytePerLine + sx * 4);
-		for(x = 0 ; x < lx ; x++){
-			*d++ = icol;
+	for (y = sy; y < sy + ly; y++) {
+		for(x = sx; x < sx + lx; x++){
+			tfbm_set_pixel_32bpp_packed(p, x, y, icol);
 		}
 	}
 }
 
-void tfbm_clear_all_32bpp_packed(
-	TFrameBufferMemory* p, u_int color)
+void tfbm_clear_all_32bpp_packed(TFrameBufferMemory* p,
+				 const u_int color)
 {
-	u_int lp;
-	u_int	*d=(u_int*)(p->smem);
-	u_int icol;
+	tfbm_fill_rect_32bpp_packed(p, 0, 0, p->width, p->height, color);
+}
 
-	icol = tfbm_select_32_color(color);
-	for(lp = 0 ; lp < ((p->slen)/2) ; lp++) {
-		d[lp]=icol;
+static void tfbm_byte_to_8pix_32bpp_packed(TFrameBufferMemory* p,
+					   const u_int x, const u_int y,
+					   const u_int sb, const u_int icol)
+{
+	if(sb & 0x80) tfbm_set_pixel_32bpp_packed(p, x + 0, y, icol);
+	if(sb & 0x40) tfbm_set_pixel_32bpp_packed(p, x + 1, y, icol);
+	if(sb & 0x20) tfbm_set_pixel_32bpp_packed(p, x + 2, y, icol);
+	if(sb & 0x10) tfbm_set_pixel_32bpp_packed(p, x + 3, y, icol);
+	if(sb & 0x08) tfbm_set_pixel_32bpp_packed(p, x + 4, y, icol);
+	if(sb & 0x04) tfbm_set_pixel_32bpp_packed(p, x + 5, y, icol);
+	if(sb & 0x02) tfbm_set_pixel_32bpp_packed(p, x + 6, y, icol);
+	if(sb & 0x01) tfbm_set_pixel_32bpp_packed(p, x + 7, y, icol);
+}
+
+static void tfbm_byte_to_xpix_32bpp_packed(TFrameBufferMemory* p,
+					   const u_int x, const u_int y,
+					   const u_int sb, const u_int icol,
+					   const u_int index)
+{
+	switch(index) {
+	case 7:	if(sb & 0x02) tfbm_set_pixel_32bpp_packed(p, x + 7, y, icol);
+	case 6:	if(sb & 0x04) tfbm_set_pixel_32bpp_packed(p, x + 6, y, icol);
+	case 5:	if(sb & 0x08) tfbm_set_pixel_32bpp_packed(p, x + 5, y, icol);
+	case 4:	if(sb & 0x10) tfbm_set_pixel_32bpp_packed(p, x + 4, y, icol);
+	case 3:	if(sb & 0x20) tfbm_set_pixel_32bpp_packed(p, x + 3, y, icol);
+	case 2:	if(sb & 0x40) tfbm_set_pixel_32bpp_packed(p, x + 2, y, icol);
+	case 1:	if(sb & 0x80) tfbm_set_pixel_32bpp_packed(p, x + 1, y, icol);
 	}
 }
 
-void tfbm_overlay_32bpp_packed(
-	TFrameBufferMemory* p,
-	u_int xd, u_int yd,
-	const u_char* ps, u_int lx, u_int ly, u_int gap, u_int color)
+void tfbm_overlay_32bpp_packed(TFrameBufferMemory* p,
+			       u_int xd, u_int yd,
+			       const u_char* ps,
+			       u_int lx, u_int ly,
+			       u_int gap, u_int color)
 {
+	const u_int icol = tfbm_select_32_color(color);
+
+	u_int x;
 	u_int y;
-	u_int* wp;
-	const u_char* tps;
 	u_int i;
-	u_int sb;
-	u_int icol;
+	for (y = yd; y < yd + ly; y++) {
+		const u_char* tps = ps;
+		x = xd;
+		for (i = lx; i >= 8; i -= 8) {
+			tfbm_byte_to_8pix_32bpp_packed(p, x, y, *tps, icol);
 
-	icol = tfbm_select_32_color(color);
-	for (y = yd ; y < yd+ly ; y++) {
-		tps = ps;
-		wp = (u_int*)(p->smem + y * p->bytePerLine + xd * 4);
-		for (i = lx ; i >= 8 ; i -= 8) {
-			sb = *tps++;
-			if (sb & 0x80) wp[0] = icol;
-			if (sb & 0x40) wp[1] = icol;
-			if (sb & 0x20) wp[2] = icol;
-			if (sb & 0x10) wp[3] = icol;
-			if (sb & 0x08) wp[4] = icol;
-			if (sb & 0x04) wp[5] = icol;
-			if (sb & 0x02) wp[6] = icol;
-			if (sb & 0x01) wp[7] = icol;
-			wp += 8;
+			tps++;
+			x += 8;
 		}
-		if (i) {
-			sb = *tps++;
-			switch (i) {
-			case 7:	if (sb & 0x02) wp[6] = icol;
-			case 6:	if (sb & 0x04) wp[5] = icol;
-			case 5:	if (sb & 0x08) wp[4] = icol;
-			case 4:	if (sb & 0x10) wp[3] = icol;
-			case 3:	if (sb & 0x20) wp[2] = icol;
-			case 2:	if (sb & 0x40) wp[1] = icol;
-			case 1:	if (sb & 0x80) wp[0] = icol;
-			}
+		
+		if(i) {
+			tfbm_byte_to_xpix_32bpp_packed(p, x, y, *tps, icol, i);
 		}
 		ps += gap;
 	}
 }
 
-void tfbm_reverse_32bpp_packed(
-	TFrameBufferMemory* p,
-	u_int sx, u_int sy, u_int lx, u_int ly, u_int color)
+void tfbm_reverse_32bpp_packed(TFrameBufferMemory* p,
+			       u_int sx, u_int sy,
+			       u_int lx, u_int ly,
+			       u_int color)
 {
-	u_int x,y;
-	u_int *d;
-	u_int icol;
+	const u_int icol = tfbm_select_32_color(color);
 
-	icol = tfbm_select_32_color(color);
-	for (y = sy ; y < sy+ly ; y++) {
-		d = (u_int*)(p->smem + y * p->bytePerLine + sx * 4);
-		for (x = 0 ; x < lx ; x++) {
-			d[x] ^= icol;
+	u_int x,y;
+	for (y = sy; y < sy + ly; y++) {
+		for (x = sx; x < sx + lx ;x++) {
+			tfbm_xor_pixel_32bpp_packed(p, x, y, icol);
 		}
 	}
 }

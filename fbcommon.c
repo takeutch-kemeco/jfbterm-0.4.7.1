@@ -55,6 +55,8 @@
 
 #include "fbdpsp.h"
 
+enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
+
 static int tfbm_select_visual(  TFrameBufferMemory* p,
 				struct fb_var_screeninfo* fbvs,
 				struct fb_fix_screeninfo* fbfs);
@@ -514,6 +516,17 @@ void tfbm_open(TFrameBufferMemory* p)
 		cmapSaved = TRUE;
 	}
 
+	switch(tfbm_scr_rot_flag) {
+	case TFBM_SCR_ROT_FLAG_CW:
+	case TFBM_SCR_ROT_FLAG_CCW:
+		util_swap(&fb_var.xres,         &fb_var.yres);
+		util_swap(&fb_var.xres_virtual, &fb_var.yres_virtual);		
+		util_swap(&fb_var.xoffset,      &fb_var.yoffset);
+		util_swap(&fb_var.height,       &fb_var.width);		
+		util_swap(&fb_var.left_margin,  &fb_var.lower_margin);
+		util_swap(&fb_var.right_margin, &fb_var.upper_margin);
+	}
+
 #ifdef FORCE_8BIT
 	if(fb_fix.visual == FB_VISUAL_DIRECTCOLOR) {
 		if (modified_var_screen_info == FALSE) {
@@ -548,7 +561,7 @@ void tfbm_open(TFrameBufferMemory* p)
 	tfbm_initcolors(p, &fb_var, &fb_fix);
 
 	/* fix: scanline length is not necessarily the same as display width */
-	p->width = fb_var.xres;
+	p->width  = fb_var.xres;
 	p->height = fb_var.yres;
 	p->bytePerLine = fb_fix.line_length;
 

@@ -49,4 +49,6 @@ void util_sjis_to_jis(u_char* ch, u_char* cl);
 
 int util_search_string(const char* s, const char** array);
 
+void util_swap(u_int* a, u_int* b);
+
 #endif /* INCLUDE_UTIL_H */
