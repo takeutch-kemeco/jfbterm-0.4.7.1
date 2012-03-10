@@ -618,14 +618,14 @@ void tfbm_fill_rect_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-return;
+
 	for (y = sy ; y < sy+ly ; y++) {
 		d=p->smem + y * p->bytePerLine + sx * 3;
 		for(x=0;x<lx;x++){
 			d[0] = t;
 			d[1] = m;
 			d[2] = b;
-			d+=(p->bytePerLine + sx * 3);
+			d+=3;
 		}
 	}
 }
@@ -645,7 +645,7 @@ void tfbm_clear_all_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-return;
+
 	for(lp=0;lp<((p->slen)-2);lp+=3){
 		p->smem[lp]   = t;
 		p->smem[lp+1] = m;
@@ -672,7 +672,7 @@ void tfbm_overlay_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-return;
+
 	for (y = yd ; y < yd+ly ; y++) {
 		tps = ps;
 		wp = p->smem + y * p->bytePerLine + xd * 3;
@@ -720,7 +720,7 @@ void tfbm_reverse_24bpp_packed(
 #else
 #	error FIXME : No endianness ?
 #endif 
-return;
+
 	for (y = sy ; y < sy+ly ; y++) {
 		for (x = 0 ; x < (lx*3) ; x+=3) {
 			p->smem[y * p->bytePerLine + sx * 3 + x] ^= t;
