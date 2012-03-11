@@ -522,9 +522,36 @@ void tfbm_open(TFrameBufferMemory* p)
 		util_swap(&fb_var.xres,         &fb_var.yres);
 		util_swap(&fb_var.xres_virtual, &fb_var.yres_virtual);		
 		util_swap(&fb_var.xoffset,      &fb_var.yoffset);
-		util_swap(&fb_var.height,       &fb_var.width);		
-		util_swap(&fb_var.left_margin,  &fb_var.lower_margin);
-		util_swap(&fb_var.right_margin, &fb_var.upper_margin);
+		util_swap(&fb_var.height,       &fb_var.width);	
+		break;
+
+	default:
+		break;
+	}
+
+	switch(tfbm_scr_rot_flag) {
+	case TFBM_SCR_ROT_FLAG_CW:
+		{
+			u_int tmp = fb_var.left_margin;
+			fb_var.left_margin  = fb_var.lower_margin;
+			fb_var.lower_margin = fb_var.right_margin;
+			fb_var.right_margin = fb_var.upper_margin;
+			fb_var.upper_margin = tmp;
+		}
+		break;
+
+	case TFBM_SCR_ROT_FLAG_CCW:
+		{
+			u_int tmp = fb_var.left_margin;
+			fb_var.left_margin  = fb_var.upper_margin;
+			fb_var.upper_margin = fb_var.right_margin;
+			fb_var.right_margin = fb_var.lower_margin;
+			fb_var.lower_margin = tmp;
+		}
+		break;
+
+	default:
+		break;
 	}
 
 #ifdef FORCE_8BIT
