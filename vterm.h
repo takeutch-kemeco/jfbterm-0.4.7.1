@@ -47,10 +47,10 @@
 
 
 typedef struct Raw_TFontSpec {
-	u_int invokedGn;	/* ¸Æ¤Ó½Ğ¤µ¤µ¤ì¤Æ¤¤¤ë Gn : n = 0..3 */
-	u_int idx;		/* Ê¸»ú½¸¹ç¤ÎgFont[]¤Ç¤Î°ÌÃÖ */
-	u_int type; 		/* Ê¸»ú½¸¹ç¤Î¶èÊ¬ */
-	FONTSET_HALF half;	/* Ê¸»ú½¸¹ç¤ÎG0,G1 ¤Î¤É¤Á¤é¤ò»È¤Ã¤Æ¤¤¤ë¤« */
+	u_int invokedGn;	/* å‘¼ã³å‡ºã•ã•ã‚Œã¦ã„ã‚‹ Gn : n = 0..3 */
+	u_int idx;		/* æ–‡å­—é›†åˆã®gFont[]ã§ã®ä½ç½® */
+	u_int type; 		/* æ–‡å­—é›†åˆã®åŒºåˆ† */
+	FONTSET_HALF half;	/* æ–‡å­—é›†åˆã®G0,G1 ã®ã©ã¡ã‚‰ã‚’ä½¿ã£ã¦ã„ã‚‹ã‹ */
 } TFontSpec;
 
 #ifdef JFB_OTHER_CODING_SYSTEM
@@ -90,28 +90,28 @@ typedef struct Raw_TVterm {
 	int xmax;
 	int ymax;
 	int ymin;
-	int xcap;			/* ¥Ï¡¼¥ÉÅª¤Ê1¹Ô¤¢¤¿¤êÊ¸»ú¿ô */
-	int ycap;			/* ¥Ï¡¼¥ÉÅª¤Ê¹Ô¿ô */
-	u_int tab;			/* TAB ¥µ¥¤¥º */
+	int xcap;			/* ãƒãƒ¼ãƒ‰çš„ãª1è¡Œã‚ãŸã‚Šæ–‡å­—æ•° */
+	int ycap;			/* ãƒãƒ¼ãƒ‰çš„ãªè¡Œæ•° */
+	u_int tab;			/* TAB ã‚µã‚¤ã‚º */
 	
-	TPen pen;
-	TPen* savedPen;
-	TPen* savedPenSL;		/* ¥¹¥Æ¡¼¥¿¥¹¥é¥¤¥óÍÑ */
-	int scroll;			/* ¥¹¥¯¥í¡¼¥ë¹Ô¿ô */
+	struct TPen  pen;
+	struct TPen* savedPen;
+	struct TPen* savedPenSL;	/* ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒ©ã‚¤ãƒ³ç”¨ */
+	int scroll;			/* ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«è¡Œæ•° */
 	/* -- */
 
 	u_char knj1;			/* first byte of 2 byte code */
 	FONTSET_HALF knj1h;
 	u_int knj1idx;
 
-	/* ISO-2022 ÂĞ±ş */
+	/* ISO-2022 å¯¾å¿œ */
 	u_int escSignature;
 	u_int escGn;
-	TFontSpec tgl;	/* ¼¡¤ÎÊ¸»ú¤¬GL¤Î¤È¤­¤Ë»È¤¦Ê¸»ú½¸¹ç */
-	TFontSpec tgr;	/* ¼¡¤ÎÊ¸»ú¤¬GR¤Î¤È¤­¤Ë»È¤¦Ê¸»ú½¸¹ç */
-	TFontSpec gl;	/* GL ¤Ë¸Æ¤Ó½Ğ¤µ¤ì¤Æ¤¤¤ëÊ¸»ú½¸¹ç */
-	TFontSpec gr;	/* GR ¤Ë¸Æ¤Ó½Ğ¤µ¤ì¤Æ¤¤¤ëÊ¸»ú½¸¹ç */
-	u_int gIdx[4];	/* Gn ¤Ë»Ø¼¨¤µ¤ì¤Æ¤¤¤ëÊ¸»ú½¸¹ç¤ÎgFont[]¤Ç¤Î°ÌÃÖ */
+	TFontSpec tgl;	/* æ¬¡ã®æ–‡å­—ãŒGLã®ã¨ãã«ä½¿ã†æ–‡å­—é›†åˆ */
+	TFontSpec tgr;	/* æ¬¡ã®æ–‡å­—ãŒGRã®ã¨ãã«ä½¿ã†æ–‡å­—é›†åˆ */
+	TFontSpec gl;	/* GL ã«å‘¼ã³å‡ºã•ã‚Œã¦ã„ã‚‹æ–‡å­—é›†åˆ */
+	TFontSpec gr;	/* GR ã«å‘¼ã³å‡ºã•ã‚Œã¦ã„ã‚‹æ–‡å­—é›†åˆ */
+	u_int gIdx[4];	/* Gn ã«æŒ‡ç¤ºã•ã‚Œã¦ã„ã‚‹æ–‡å­—é›†åˆã®gFont[]ã§ã®ä½ç½® */
 	/* --- */
 	u_int gDefaultL;
 	u_int gDefaultR;
@@ -136,14 +136,14 @@ typedef struct Raw_TVterm {
 
 	TBool soft;
 	TBool wrap;
-	TBool ins;			/* ÁŞÆş¥â¡¼¥É */
-	TBool active;			/* ¤³¤Î¥¿¡¼¥ß¥Ê¥ë¤¬¥¢¥¯¥Æ¥£¥Ö */
-	TBool busy;			/* ¥Ó¥¸¡¼¾õÂÖ */
+	TBool ins;			/* æŒ¿å…¥ãƒ¢ãƒ¼ãƒ‰ */
+	TBool active;			/* ã“ã®ã‚¿ãƒ¼ãƒŸãƒŠãƒ«ãŒã‚¢ã‚¯ãƒ†ã‚£ãƒ– */
+	TBool busy;			/* ãƒ“ã‚¸ãƒ¼çŠ¶æ…‹ */
 	TBool sw;
 	TBool release;
 	TBool textClear;
 	void (*esc)(struct Raw_TVterm* p, u_char ch);
-	/* ¥«¡¼¥½¥ë */
+	/* ã‚«ãƒ¼ã‚½ãƒ« */
 	TCursor cursor;
 
         /*  */
@@ -152,10 +152,10 @@ typedef struct Raw_TVterm {
 	char report[LEN_REPORT];
 	/* low level half */
 	u_int textHead;
-	u_int xcap4; /* 4 bytes ¶­³¦¤ËÀ°¹ç¤·¤¿·å¿ô(xcap + 0 ... 3) */
+	u_int xcap4; /* 4 bytes å¢ƒç•Œã«æ•´åˆã—ãŸæ¡æ•°(xcap + 0 ... 3) */
 	u_int tsize; /* == xcap4 * ycap */
 	/* */
-	u_int* text; /* 1 Ê¸»úÅö¤¿¤ê 4 bytes */
+	u_int* text; /* 1 æ–‡å­—å½“ãŸã‚Š 4 bytes */
 	u_char* attr;
 	u_char* flag;
 } TVterm;

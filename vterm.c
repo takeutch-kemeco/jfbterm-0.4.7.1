@@ -506,10 +506,10 @@ void tvterm_final(TVterm* p)
 
 void tvterm_push_current_pen(TVterm* p, TBool b)
 {
-	TPen* t;
-	TPen** base;
+	struct TPen* t;
+	struct TPen** base;
 	base = b ? &(p->savedPen) : &(p->savedPenSL);
-	t = (TPen*)malloc(sizeof(TPen));
+	t = (struct TPen*)malloc(sizeof(*t));
 
 	if (!t) {
 		return;
@@ -522,8 +522,8 @@ void tvterm_push_current_pen(TVterm* p, TBool b)
 
 void tvterm_pop_pen_and_set_currnt_pen(TVterm* p, TBool b)
 {
-	TPen* t;
-	TPen** base;
+	struct TPen* t;
+	struct TPen** base;
 	base = b ? &(p->savedPen) : &(p->savedPenSL);
 	t = *base;
 
