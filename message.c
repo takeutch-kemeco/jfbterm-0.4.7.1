@@ -38,7 +38,7 @@
 #include	"main.h"
 #include	"message.h"
 
-void die(const char *format, ...)
+void die(const char* format, ...)
 {
 	va_list args;
 
@@ -53,7 +53,7 @@ void die_file_eof(FILE* fp)
 	die("Unexpectied EOF\n");
 }
 
-void print_warn(const char *format, ...)
+void print_warn(const char* format, ...)
 {
 	va_list args;
 
@@ -62,7 +62,7 @@ void print_warn(const char *format, ...)
 	va_end(args);
 }
 
-void print_error(const char *format, ...)
+void print_error(const char* format, ...)
 {
 	va_list args;
 
@@ -71,23 +71,24 @@ void print_error(const char *format, ...)
 	va_end(args);
 }
 
-void print_message(const char *format, ...)
+void print_message(const char* format, ...)
 {
 	va_list args;
 
-	if (gApp.gOptQuiet)
+	if(gApp.gOptQuiet) {
 	    return;
+	}
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
 }
 
-void print_strerror(const char *msg)
+void print_strerror(const char* msg)
 {
 	print_message("system error - %s: %s\r\n", msg, strerror(errno));
 }
 
-void print_strerror_and_exit(const char *message)
+void print_strerror_and_exit(const char* message)
 {
 	fprintf(stderr, "%s: %s\r\n", message, strerror(errno));
 	exit(EXIT_FAILURE);

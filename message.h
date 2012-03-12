@@ -28,12 +28,12 @@
 #ifndef INCLUDE_MESSAGE_H
 #define INCLUDE_MESSAGE_H
 
-void die(const char *format, ...);
+void die(const char* format, ...);
 void die_file_eof(FILE* fp);
-void print_warn(const char *format, ...);
-void print_error(const char *format, ...);
-void print_message(const char *format, ...);
-void print_strerror(const char *msg);
-void print_strerror_and_exit(const char *message);
+void print_warn(const char* format, ...);
+void print_error(const char* format, ...);
+void print_message(const char* format, ...);
+void print_strerror(const char* msg);
+void print_strerror_and_exit(const char* message);
 
 #endif /* INCLUDE_MESSAGE_H */
