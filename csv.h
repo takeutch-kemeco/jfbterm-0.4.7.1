@@ -28,15 +28,15 @@
 #ifndef INCLUDE_CSV_H
 #define INCLUDE_CSV_H
 
-typedef struct Raw_TCsv {
+struct TCsv {
 	char* buffer;
-	int count;
+	int   count;
 	char* pnt;
-	char cap;
-} TCsv;
+	char  cap;
+};
 
-void tcsv_init(TCsv* p, const char* s);
-void tcsv_final(TCsv* p);
-const char* tcsv_get_token(TCsv* p);
+void tcsv_init(struct TCsv* p, const char* s);
+void tcsv_final(struct TCsv* p);
+const char* tcsv_get_token(struct TCsv* p);
 
 #endif /* INCLUDE_CSV_H */

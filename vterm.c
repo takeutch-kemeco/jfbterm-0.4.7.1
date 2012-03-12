@@ -121,7 +121,7 @@ int
 tvterm_parse_encoding(const char *en, int idx[6])
 {
 	static const char* table[] = {"G0", "G1", "G2", "G3", NULL}; 
-	TCsv farg;
+	struct TCsv farg;
 	const char *g;
 	int i;
 	int ig;
@@ -182,7 +182,7 @@ static int
 tvterm_UTF8index(const char *en)
 {
 	int i;
-	TCsv farg;
+	struct TCsv farg;
 	const char *g;
 	int id = 0;
 	
@@ -238,7 +238,7 @@ tvterm_is_UTF8(TVterm *p)
 int
 tvterm_parse_otherCS(const char *en, TCodingSystem* otherCS)
 {
-	TCsv farg;
+	struct TCsv farg;
 	const char *g;
 
 	memset(otherCS, 0, sizeof(*otherCS));
@@ -377,7 +377,7 @@ void tvterm_set_default_encoding(TVterm* p, const char* en)
 	const char *g;
 	int i;
 	int idx[6];
-	TCsv farg;
+	struct TCsv farg;
 	int ncap;
 
 	tcsv_init(&farg, en);
@@ -1469,7 +1469,7 @@ void tvterm_show_sequence(FILE *tf, TCaps *cap, const char *en)
 	static const char *invokeR[] = {"", "\033~", "\033}", "\033|"};
 	static const char csr4[] = {ISO_GZD4, ISO_G1D4, ISO_G2D4, ISO_G3D4};
 	static const char csr6[] = {MULE__GZD6, ISO_G1D6, ISO_G2D6, ISO_G3D6};
-	TCsv farg;
+	struct TCsv farg;
 	int i;
 	const char *g;
 	int idx[6];

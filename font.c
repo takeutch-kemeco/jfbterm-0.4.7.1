@@ -534,7 +534,7 @@ void tfont_setup_fontlist(TCapValue* vp)
 	TFont* dst;
 	TFont* src;
 
-	TCsv farg;
+	struct TCsv farg;
 	
 	for (; vp ; vp = vp->next) {
 		tcsv_init(&farg, vp->value);

@@ -29,54 +29,67 @@
 #include "csv.h"
 #include "util.h"
 
-void tcsv_init(TCsv* p, const char* s)
+/* TCsv の初期設定
+ * 文字列のセミコロンを \0 で置き換え、文字列が何個あるかを cap に書き出す。
+ * つまりトークンに切り分ける。
+ *
+ * 例えば文字列が "aa,bb,cc" なら、"aa" \0 "bb" \0 "cc"となり、
+ * 文字列の個数 3 が cap にセットされる。
+ */
+void tcsv_init(struct TCsv* p, const char* s)
 {
-	char* cp;
-	char* cq;
-
 	p->buffer = strdup(s);
 	p->pnt = p->buffer;
 	p->cap = 0;
 	p->count = 0;
 
-	if (!(p->buffer)) {
+	if (p->buffer == NULL) {
 		return;
 	}
 
 	p->cap = 1;
-	for (cp = p->buffer , cq = p->buffer ; *cp ; cp++) {
-		switch (*cp) {
-		case ',':
-			*cq++ = '\0';
+	char* cp = p->buffer;
+	char* cq = p->buffer;
+	while(*cp != '\0') {
+		if(*cp == ',') {
+			*cq = '\0';
 			p->cap++;
-			break;
-		default:
-			*cq++ = *cp;
-			break;
+		} else {
+			*cq = *cp;
 		}
+
+		cp++;
+		cq++;
 	}
 	*cq = '\0';
-	
-	return;
 }
 
-void tcsv_final(TCsv* p)
+/* TCsv のメモリー解放 */
+void tcsv_final(struct TCsv* p)
 {
 	util_free(p->buffer);
 }
 
-const char* tcsv_get_token(TCsv* p)
+/* TCsv からトークンを１個取り出す
+ *
+ * トークンを１個取り出すと、カレントシーク位置を次のトークンへと進める。
+ * この関数を連続して呼び出すことで、トークンを先頭から順番に読み出せる。
+ *
+ * それ以上読み出すトークンが無い場合は NULL を返す
+ */
+const char* tcsv_get_token(struct TCsv* p)
 {
-	char* r;
-
 	if (p->count >= p->cap) {
 		return NULL;
 	}
 
-	for (r = p->pnt ; *(p->pnt) ; p->pnt++) {
-		/* no body */
+	char* ret = p->pnt;
+	
+	while(*(p->pnt) != '\0') {
+		p->pnt++;
 	}
 	p->pnt++;
 	p->count++;
-	return r;
+
+	return ret;
 }
