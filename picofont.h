@@ -35,6 +35,4 @@
 
 extern u_char gPicoFontLeft[];
 
-
 #endif /* INCLUDE_PICOFONT_H */
-

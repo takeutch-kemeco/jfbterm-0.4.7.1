@@ -77,6 +77,3 @@ u_char gPicoFontLeft[] = {
 	0x3e,		/* ..OOOOO. */
 	0x0a,		/* ....O.O. */
 };
-
-
-
