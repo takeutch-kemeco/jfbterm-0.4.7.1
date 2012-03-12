@@ -375,7 +375,7 @@ tapp_setup_encoding(char *en)
 
 int main(int argc, char *argv[])
 {
-	TCapability* fcap;
+	struct TCapability* fcap;
 	char* cp;
 	const char* tn;
 	char* en;

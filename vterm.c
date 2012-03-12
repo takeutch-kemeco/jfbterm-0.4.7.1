@@ -79,7 +79,8 @@ static int tvterm_is_otherCS(TVterm *p);
 
 #endif
 
-void tvterm_init(TVterm* p, TTerm* pt, u_int hw, u_int hh, TCaps *caps, const char* en)
+void tvterm_init(TVterm* p, TTerm* pt, u_int hw, u_int hh,
+                 struct TCaps *caps, const char* en)
 {
 	p->term = pt;
 	p->xcap = hw;
@@ -1463,7 +1464,7 @@ static void tvterm_esc_traditional_multibyte_fix(TVterm* p, u_char ch)
 }
 
 
-void tvterm_show_sequence(FILE *tf, TCaps *cap, const char *en)
+void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 {
 	static const char *invokeL[] = {"\017", "\016", "\033n", "\033o"};
 	static const char *invokeR[] = {"", "\033~", "\033}", "\033|"};

@@ -36,7 +36,7 @@
 typedef struct Raw_TApplication {
 	int    gOrigVirtualConsole;
 	bool   gCapsQ;
-	TCaps  gCaps;
+	struct TCaps gCaps;
 	bool   gOptShowHelpQ;
 	bool   gOptQuiet;
 	char*  gOptReset;

@@ -81,7 +81,7 @@ void tfont_final(TFont* p);
 void tfont_ary_final(void);
 void tfont_init(TFont* p);
 
-void tfont_setup_fontlist(TCapValue* values);
+void tfont_setup_fontlist(struct TCapValue* values);
 int tfont_is_valid(TFont* p);
 int tfont_is_loaded(TFont *p);
 

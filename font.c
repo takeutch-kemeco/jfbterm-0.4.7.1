@@ -518,7 +518,7 @@ int tfont_is_loaded(TFont *p)
 	return (p->conv != tfont_default_glyph);
 }
 
-void tfont_setup_fontlist(TCapValue* vp)
+void tfont_setup_fontlist(struct TCapValue* vp)
 {
 	static const char* types[] = {"pcf", "alias", NULL}; 
 	static const char* sides[] = {"L", "R", "U", NULL}; 

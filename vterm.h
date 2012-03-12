@@ -132,7 +132,7 @@ typedef struct Raw_TVterm {
 	TCodingSystem *otherCS;
 #endif
 	bool altCs;
-	TCaps *caps;
+	struct TCaps* caps;
 
 	bool soft;
 	bool wrap;
@@ -179,14 +179,15 @@ void tvterm_text_clear_all(TVterm* p);
 void tvterm_emulate(TVterm* p, const char *buff, int nchars);
 void tvterm_refresh(TVterm* p);
 
-void tvterm_init(TVterm* p, struct Raw_TTerm* tp, u_int hx, u_int hy, TCaps *caps, const char* en);
+void tvterm_init(TVterm* p, struct Raw_TTerm* tp, u_int hx, u_int hy,
+                 struct TCaps *caps, const char* en);
 void tvterm_start(TVterm* p);
 void tvterm_final(TVterm* p);
 
 void tvterm_unregister_signal(void);
 void tvterm_register_signal(TVterm* p);
 
-void tvterm_show_sequence(FILE *fp, TCaps *cap, const char *en);
+void tvterm_show_sequence(FILE *fp, struct TCaps *cap, const char *en);
 
 
 /*

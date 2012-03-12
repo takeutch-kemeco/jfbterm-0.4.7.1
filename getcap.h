@@ -34,30 +34,35 @@
 #ifndef INCLUDE_GETCAP_H
 #define INCLUDE_GETCAP_H
 
-typedef struct Raw_TCapValue {
-	struct Raw_TCapValue* next;
+/* cap の終端要素 */
+struct TCapValue {
+	struct TCapValue* next;
 	char *value;			 /* Value for this capability. */
-} TCapValue;
+};
 
-typedef struct Raw_TCapability {
-	struct Raw_TCapability* next;
+/* cap の非終端要素 */
+struct TCapability {
+	struct TCapability* next;
 	char *name;			 /* Name of capability label */
-	TCapValue *values;		 /* Value for this capability. */
+	struct TCapValue *values;	 /* Value for this capability. */
 } TCapability;
 
-typedef struct Raw_TCaps {
-	struct Raw_TCapability* next;
-} TCaps;
+/* cap の開始要素 */
+struct TCaps {
+	struct TCapability* head;
+};
 
-void tcapability_init(TCapability* p);
-void tcapability_final(TCapability* p);
-void tcapability_set(TCapability* p, const char* name, const char* vale);
-void tcaps_init(TCaps* p);
-void tcaps_final(TCaps* p);
-TCapability* tcaps_find(TCaps* p, const char* name);
-char* tcaps_find_first(TCaps* p, const char* name);
-char *tcaps_find_entry(TCaps* p, const char* prefix, const char *name);
-void tcaps_read(TCaps* p, const char *filename);
-void tcaps_read_args(TCaps* p, int argc, char *argv[]);
+void tcapability_init(struct TCapability* p);
+void tcapability_final(struct TCapability* p);
+void tcapability_set(struct TCapability* p,
+                     const char* name, const char* vale);
+void tcaps_init(struct TCaps* p);
+void tcaps_final(struct TCaps* p);
+struct TCapability* tcaps_find(struct TCaps* p, const char* name);
+char* tcaps_find_first(struct TCaps* p, const char* name);
+char *tcaps_find_entry(struct TCaps* p,
+		       const char* prefix, const char* name);
+void tcaps_read(struct TCaps* p, const char* filename);
+void tcaps_read_args(struct TCaps* p, int argc, char** argv);
 
 #endif /* INCLUDE_GETCAP_H */
