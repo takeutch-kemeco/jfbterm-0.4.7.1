@@ -25,15 +25,13 @@
  *
  */
 
+#include <termios.h>
+#include "vterm.h"
+
 #ifndef INCLUDE_TERM_H
 #define INCLUDE_TERM_H
 
-#include <termios.h>
-
-#include "vterm.h"
-#include "mytypes.h"
-
-#define SUCCESS       (0)
+#define SUCCESS (0)
 
 typedef struct Raw_TTerm {
 	int ptyfd;

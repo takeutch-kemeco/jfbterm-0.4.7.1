@@ -31,23 +31,24 @@
  */
 
 #define __USE_STRING_INLINES
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<unistd.h>
-#include	<sys/vt.h>
-#include	<fcntl.h>
-#include	<signal.h>
-#include	<termios.h>
-#include	<sys/ioctl.h>
-#include	<sys/kd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/vt.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <sys/kd.h>
 
-#include	"util.h"
-#include	"vterm.h"
-#include	"term.h"
-#include	"font.h"
-#include	"fbcommon.h"
-#include	"config.h"
+#include "util.h"
+#include "vterm.h"
+#include "term.h"
+#include "font.h"
+#include "fbcommon.h"
+#include "config.h"
 
 
 #if 0
@@ -204,12 +205,12 @@ static void tvterm_scroll_down_n_lines(TVterm* p, int n)
 }
 #endif
 
-void tvterm_set_cursor_wide(TVterm* p, TBool b)
+void tvterm_set_cursor_wide(TVterm* p, bool b)
 {
 	p->cursor.wide = b;
 }
 
-void tvterm_show_cursor(TVterm* p, TBool b)
+void tvterm_show_cursor(TVterm* p, bool b)
 {
 	if (!p->cursor.on) {
 		return;
@@ -251,28 +252,28 @@ void tvterm_show_cursor(TVterm* p, TBool b)
 /*---------------------------------------------------------------------------*/
 void tvterm_refresh(TVterm* p)
 {
-	u_int	i;
-	u_int	x, y;
+	u_int i;
+	u_int x, y;
 	u_int lang;
-	u_char	ch, ch2;
-	u_int	chlw;
-	u_char	fc, bc, fg;
+	u_char ch, ch2;
+	u_int chlw;
+	u_char fc, bc, fg;
 	TFont* pf;
 	const u_char* glyph;
-	u_int  w, gw;
+	u_int w, gw;
 
-	p->busy = TRUE;
+	p->busy = true;
 	if (!p->active) {
-		p->busy = FALSE;
+		p->busy = false;
 		return;
 	}
 	
-	tvterm_show_cursor(p, FALSE);
+	tvterm_show_cursor(p, false);
 
 	if (p->textClear) {
 		gFramebuffer.cap.fill(&gFramebuffer, 0, 0,
 				gFramebuffer.width, gFramebuffer.height, 0);
-		p->textClear = FALSE;
+		p->textClear = false;
 	}
 
 	for (y = 0; y < p->ycap; y ++) {
@@ -327,10 +328,10 @@ void tvterm_refresh(TVterm* p)
 	    tvterm_set_cursor_wide(p, IsKanji(p,p->pen.x,p->pen.y));
 	    p->cursor.x = p->pen.x;
 	    p->cursor.y = p->pen.y;
-	    tvterm_show_cursor(p, TRUE);
+	    tvterm_show_cursor(p, true);
 	}
 
-	p->busy = FALSE;
+	p->busy = false;
 	if (p->release) {
                 sig_leave_virtual_console(SIGUSR1);
 	}
@@ -374,7 +375,7 @@ void tvterm_register_signal(TVterm* p)
         ioctl(sig_obj->term->ttyfd, TIOCCONS, NULL);
 
         llatch(p->flag, p->tsize);
-        p->textClear = TRUE;
+        p->textClear = true;
         tvterm_refresh(p);
 }
 
@@ -384,11 +385,11 @@ static void     sig_leave_virtual_console(int signum)
 
         signal(SIGUSR1, sig_leave_virtual_console);
         if (sig_obj->busy) {
-                sig_obj->release = TRUE;
+                sig_obj->release = true;
                 return;
         } else {
-                sig_obj->release = FALSE;
-                sig_obj->active = FALSE;
+                sig_obj->release = false;
+                sig_obj->active = false;
                 /*
                  * SetTextMode();
                  */
@@ -400,7 +401,7 @@ static void     sig_enter_virtual_console(int signum)
 {
         signal(SIGUSR2, sig_enter_virtual_console);
         if (!sig_obj->active) {
-                sig_obj->active = TRUE;
+                sig_obj->active = true;
                 tvterm_register_signal(sig_obj);
                 signal(SIGUSR2, sig_enter_virtual_console);
         }
@@ -460,7 +461,7 @@ void tvterm_text_clear_all(TVterm* p)
 		a = tvterm_coord_to_index(p, 0, y);
 		tvterm_clear(p, a, p->xcap4); /* lclear */
 	}
-	p->textClear = TRUE;
+	p->textClear = true;
 }
 
 /**
@@ -668,16 +669,16 @@ void	PollCursor(bool wakeup)
 	if (!con.active)
 	return;
 	if (wakeup) {
-	SaveScreen(FALSE);
-	ShowCursor(&cInfo, TRUE);
+	SaveScreen(false);
+	ShowCursor(&cInfo, true);
 	return;
 	}
 	/* Idle. */
 	if (saved)
 	return;
 	if ((saveTime > 0) && (++saverCount == saveTime)) {
-	ShowCursor(&cInfo, FALSE);
-	SaveScreen(TRUE);
+	ShowCursor(&cInfo, false);
+	SaveScreen(true);
 	return;
 	}
 	if ((cInfo.interval > 0) && (++cInfo.count == cInfo.interval)) {
@@ -698,7 +699,7 @@ static int	ConfigBeep(const char *confstr)
 {
 	beepCount = atoi(confstr) * 10000;
 	if (beepCount > 0)
-	ioperm(COUNTER_ADDR, 1, TRUE);
+	ioperm(COUNTER_ADDR, 1, true);
 	return SUCCESS;
 }
 

@@ -31,19 +31,19 @@
  * Copyright (C) 1992-1996 Takashi MANABE (manabe@papilio.tutics.tut.ac.jp)
  */
 
-#include	<stdio.h>
-#include	<string.h>
-#include	<unistd.h>
-#include	<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
-#include	"getcap.h"
+#include "getcap.h"
 
-#include	"util.h"
-#include	"mytypes.h"
-#include	"message.h"
+#include "util.h"
+#include "message.h"
 
-#define BUF_SIZE	1024
-#define MAX_COLS	256
+#define BUF_SIZE 1024
+#define MAX_COLS 256
 
 /*--------------------------------------------------------------------------*/
 void tcapValue_init(TCapValue* p)
@@ -234,7 +234,7 @@ char* trim_left_right(char* cp)
 	return cp;
 }
 
-TBool tcaps_register(TCaps* p, const char *cp)
+bool tcaps_register(TCaps* p, const char *cp)
 {
 	char line[MAX_COLS];
 	char* n;
@@ -243,14 +243,14 @@ TBool tcaps_register(TCaps* p, const char *cp)
 
 	strcpy(line, cp);
 	if ((q = strchr(line, ':')) == NULL) {
-		return FALSE;
+		return false;
 	}
 	*q = '\0';
 	n = trim_left_right(line);
 	v = trim_left_right(q+1);
 
 	if (*n == '\0') {
-		return FALSE;
+		return false;
 	}
 	
 	if (*n == '+') {
@@ -259,7 +259,7 @@ TBool tcaps_register(TCaps* p, const char *cp)
 		tcaps_register_nv(p, n, v, '=');
 	}
 
-	return TRUE;
+	return true;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -268,7 +268,6 @@ void tcaps_read(TCaps* p, const char *filename)
 	FILE* fp;
 	char* q;
 	char line[MAX_COLS];
-	TBool b;
 	int nl = 0;
 	int len;
 
@@ -280,23 +279,27 @@ void tcaps_read(TCaps* p, const char *filename)
 
 	while(fgets(line, MAX_COLS, fp) != NULL) {
 		nl++;
+
 		len = strlen(line);
 		if (len > 0) {
 			line[len-1] = '\0';
 		}
+
 		if ((q = strchr(line, '#')) != NULL) {
 			*q = '\0';
 		}
+
 		q = trim_left(line);
 		if (*q == '\0') {
 			continue;
 		}
+
 		if (strchr(line, ':') == NULL) {
 			print_message("(--) : line %d, `%s'\n", nl, line);
 			continue;
 		}
-		b = tcaps_register(p, line);
-		if (!b) {
+
+		if (tcaps_register(p, line) == false) {
 			print_message("(--) : line %d, `%s'\n", nl, line);
 		} else {
 			print_message("(**) : line %d, `%s'\n", nl, line);
@@ -309,7 +312,7 @@ void tcaps_read(TCaps* p, const char *filename)
 
 void tcaps_read_args(TCaps* p, int argc, char *argv[])
 {
-	TBool b;
+	bool b;
 	int nl = 0;
 	char* q;
 
@@ -320,20 +323,21 @@ void tcaps_read_args(TCaps* p, int argc, char *argv[])
 		if (*q == '\0') {
 			continue;
 		}
+
 		if (strlen(argv[nl]) >= MAX_COLS) {
 			print_warn("(--) : arg %d, `%s'\n", nl, argv[nl]);
 			continue;
 		}
+
 		if (strchr(argv[nl], ':') == NULL) {
 			print_warn("(--) : arg %d, `%s'\n", nl, argv[nl]);
 			continue;
 		}
-		b = tcaps_register(p, argv[nl]);
-		if (!b) {
+
+		if (tcaps_register(p, argv[nl]) == false) {
 			print_warn("(--) : arg %d, `%s'\n", nl, argv[nl]);
 		}
 	}
+
 	print_warn("(**) : total %d args read.\n", nl);
-
 }
-

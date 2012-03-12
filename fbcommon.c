@@ -26,7 +26,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#	include "config.h"
+#include "config.h"
 #endif
 
 #include <stdio.h>
@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <math.h>
@@ -48,7 +49,6 @@
 #include <linux/vt.h>
 #include <linux/fb.h>
 
-#include "mytypes.h"
 #include "fbcommon.h"
 #include "message.h"
 #include "util.h"
@@ -180,24 +180,24 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 };
 
 #ifndef major	/* defined in sys/sysmacros.h - ukai 1999/10/27 */
-#define major(dev)	(((dev) >> 8) & 0xff)
+#define major(dev) (((dev) >> 8) & 0xff)
 #endif
 
-static char*		fbdn = NULL;
+static char* fbdn = NULL;
 
-static unsigned short	red[256], green[256], blue[256];
-static struct fb_cmap	ncmap = { 0, 256, red, green, blue, NULL};
+static unsigned short red[256], green[256], blue[256];
+static struct fb_cmap ncmap = { 0, 256, red, green, blue, NULL};
 
-static TBool cmapSaved = FALSE;
-static unsigned short	ored[256], ogreen[256], oblue[256], otrans[256];
-static struct fb_cmap	ocmap = { 0, 256, ored, ogreen, oblue, otrans};
+static bool cmapSaved = false;
+static unsigned short ored[256], ogreen[256], oblue[256], otrans[256];
+static struct fb_cmap ocmap = { 0, 256, ored, ogreen, oblue, otrans};
 
 static int tvisual = 0;
 
 float fbgamma = 1.7;
 
 static struct fb_var_screeninfo ovar;
-static TBool modified_var_screen_info = FALSE;
+static bool modified_var_screen_info = false;
 
 /*---------------------------------------------------------------------------*/
 static u_int trueColor32Table[16];
@@ -505,7 +505,7 @@ void tfbm_open(TFrameBufferMemory* p)
 		fb_var.yres_virtual = fb_var.yres;
 		fb_var.yoffset = 0;
 		fb_var.activate = FB_ACTIVATE_NOW;
-		modified_var_screen_info = TRUE;
+		modified_var_screen_info = true;
 		tfbm_set_var_screen_info(p->fh, &fb_var);
 	}
 	tfbm_get_fix_screen_info(p->fh, &fb_fix);
@@ -513,7 +513,7 @@ void tfbm_open(TFrameBufferMemory* p)
 	if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR ||
 	    fb_fix.visual == FB_VISUAL_PSEUDOCOLOR) {
 		tfbm_get_cmap(p->fh, &ocmap);
-		cmapSaved = TRUE;
+		cmapSaved = true;
 	}
 
 	switch(tfbm_scr_rot_flag) {
@@ -556,9 +556,9 @@ void tfbm_open(TFrameBufferMemory* p)
 
 #ifdef FORCE_8BIT
 	if(fb_fix.visual == FB_VISUAL_DIRECTCOLOR) {
-		if (modified_var_screen_info == FALSE) {
+		if (modified_var_screen_info == false) {
 			memcpy((void*)&ovar,(void*)&fb_var,sizeof(ovar));
-			modified_var_screen_info = TRUE;
+			modified_var_screen_info = true;
 		}
 		fb_var.bits_per_pixel = 8;
 		fb_var.vmode |= FB_VMODE_CONUPDATE;
@@ -652,14 +652,14 @@ void tfbm_close(TFrameBufferMemory* p)
 	if ((long)p->mmio != -1) {
 		munmap((caddr_t)((u_long)p->mmio & PAGE_MASK), p->mlen);
 	}
-	if (cmapSaved == TRUE) {
+	if (cmapSaved == true) {
 		tfbm_put_cmap(p->fh, &ocmap);
-		cmapSaved = FALSE;
+		cmapSaved = false;
 	}
-	if (modified_var_screen_info == TRUE) {
+	if (modified_var_screen_info == true) {
 		ovar.activate = FB_ACTIVATE_NOW;
 		tfbm_set_var_screen_info(p->fh, &ovar);
-		modified_var_screen_info = FALSE;
+		modified_var_screen_info = false;
 	}
 	close(p->fh);
 }

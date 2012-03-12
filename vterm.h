@@ -32,12 +32,12 @@
 #ifndef INCLUDE_VTERM_H
 #define INCLUDE_VTERM_H
 
-#include	<sys/types.h>
+#include <sys/types.h>
+#include <stdbool.h>
 
-#include	"config.h"
-#include	"mytypes.h"
-#include	"pen.h"
-#include	"font.h"
+#include "config.h"
+#include "pen.h"
+#include "font.h"
 
 #ifdef JFB_OTHER_CODING_SYSTEM
 #include <iconv.h>
@@ -77,9 +77,9 @@ typedef struct Raw_TCodingSystem {
 typedef struct Raw_TCursor {
 	u_int x;
 	u_int y;
-	TBool on;
-	TBool shown;
-	TBool wide;
+	bool  on;
+	bool  shown;
+	bool  wide;
 	u_int width;
 	u_int height;
 
@@ -131,17 +131,17 @@ typedef struct Raw_TVterm {
 #ifdef JFB_OTHER_CODING_SYSTEM
 	TCodingSystem *otherCS;
 #endif
-	TBool altCs;
+	bool altCs;
 	TCaps *caps;
 
-	TBool soft;
-	TBool wrap;
-	TBool ins;			/* 挿入モード */
-	TBool active;			/* このターミナルがアクティブ */
-	TBool busy;			/* ビジー状態 */
-	TBool sw;
-	TBool release;
-	TBool textClear;
+	bool soft;
+	bool wrap;
+	bool ins;			/* 挿入モード */
+	bool active;			/* このターミナルがアクティブ */
+	bool busy;			/* ビジー状態 */
+	bool sw;
+	bool release;
+	bool textClear;
 	void (*esc)(struct Raw_TVterm* p, u_char ch);
 	/* カーソル */
 	TCursor cursor;

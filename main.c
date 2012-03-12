@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/vt.h>
@@ -54,7 +55,6 @@
 #include "term.h"
 #include "vterm.h"
 #include "message.h"
-#include "mytypes.h"
 #include "getcap.h"
 #include "util.h"
 #include "csv.h"
@@ -103,22 +103,22 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 			p->gConfEncoding = optarg;
 			break;
 		case 'r':
-			p->gOptQuiet = TRUE;
+			p->gOptQuiet = true;
 			p->gOptReset = optarg;
 			if (p->gOptReset == NULL)
 				p->gOptReset = "locale";
 			break;
 		case 'q':
-			p->gOptQuiet = TRUE;
+			p->gOptQuiet = true;
 			break;
 		case 'h':
-			p->gOptShowHelpQ = TRUE;
+			p->gOptShowHelpQ = true;
 			break;
 		case 'R':
-			p->gOptCW = TRUE;
+			p->gOptCW = true;
 			break;
 		case 'L':
-			p->gOptCCW = TRUE;
+			p->gOptCCW = true;
 			break;
 		default:
 			break;
@@ -179,8 +179,8 @@ void tapp_init(TApplication* p)
 	
 	p->gOrigVirtualConsole	= -1;
 	tcaps_init(&(p->gCaps));
-	p->gCapsQ	= TRUE;
-	p->gOptShowHelpQ = FALSE;
+	p->gCapsQ = true;
+	p->gOptShowHelpQ = false;
 	if (getenv("SHELL")) {
 		/* This cause a buffer overflow. */
 		memset (shell, '\0', sizeof shell);
@@ -410,9 +410,9 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	if(gApp.gOptCW == TRUE) {
+	if(gApp.gOptCW == true) {
 		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CW;
-	} else if (gApp.gOptCCW == TRUE) {
+	} else if (gApp.gOptCCW == true) {
 		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CCW;
 	} else {
 		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;

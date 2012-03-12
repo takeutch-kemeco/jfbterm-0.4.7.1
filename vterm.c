@@ -29,25 +29,26 @@
  * 
  */
 
-#include	<stdio.h>
-#include	<unistd.h>
-#include	<string.h>
-#include	<termios.h>
-#include	<malloc.h>
-#include	<sys/types.h>
-#include	<sys/ioctl.h>
-#include	<sys/kd.h>
-#include	<errno.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdbool.h>
+#include <termios.h>
+#include <malloc.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/kd.h>
+#include <errno.h>
 
-#include	"config.h"
-#include	"util.h"
-#include	"term.h"
-#include	"vterm.h"
-#include	"font.h"
-#include	"csv.h"
+#include "config.h"
+#include "util.h"
+#include "term.h"
+#include "vterm.h"
+#include "font.h"
+#include "csv.h"
 
-#include	"sequence.h"
-#include	"message.h"
+#include "sequence.h"
+#include "message.h"
 
 #define	LEN_REPORT	9
 
@@ -89,8 +90,8 @@ void tvterm_init(TVterm* p, TTerm* pt, u_int hw, u_int hh, TCaps *caps, const ch
 	p->savedPen = NULL;
 	p->savedPenSL = NULL;
 	p->scroll = 0;
-	p->soft = FALSE;
-	p->wrap = FALSE;
+	p->soft = false;
+	p->wrap = false;
 	p->esc = NULL;
 
 	p->textHead = 0;
@@ -112,7 +113,7 @@ void tvterm_init(TVterm* p, TTerm* pt, u_int hw, u_int hh, TCaps *caps, const ch
 	p->otherCS = NULL;
 #endif
 	p->caps = caps;
-	p->altCs = FALSE;
+	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
 }
 
@@ -433,7 +434,7 @@ void tvterm_set_default_invoke_and_designate(TVterm* p)
 	p->utf8remain = 0;
 	p->ucs2ch = 0;
 #endif
-	p->altCs = FALSE;
+	p->altCs = false;
 }
 
 void tvterm_start(TVterm* p)
@@ -447,11 +448,11 @@ void tvterm_start(TVterm* p)
 	p->pen.bcol = 0;
 	p->pen.attr = 0;
 	p->esc = NULL;
-	p->soft = FALSE;
-	p->ins = FALSE;
-	p->wrap = FALSE;
-	p->active = TRUE;
-	p->altCs = FALSE;
+	p->soft = false;
+	p->ins = false;
+	p->wrap = false;
+	p->active = true;
+	p->altCs = false;
 
 	/* ISO-2022 */
 	p->escSignature = 0;
@@ -460,9 +461,9 @@ void tvterm_start(TVterm* p)
 
 	p->cursor.x = 0;
 	p->cursor.y = 0;
-	p->cursor.on = TRUE;
-	p->cursor.shown = FALSE;
-	p->cursor.wide = FALSE;
+	p->cursor.on = true;
+	p->cursor.shown = false;
+	p->cursor.wide = false;
 	p->cursor.width = gFontsWidth;
 	p->cursor.height = gFontsHeight;
 
@@ -504,7 +505,7 @@ void tvterm_final(TVterm* p)
 	util_free(p->flag);
 }
 
-void tvterm_push_current_pen(TVterm* p, TBool b)
+void tvterm_push_current_pen(TVterm* p, bool b)
 {
 	struct TPen* t;
 	struct TPen** base;
@@ -520,7 +521,7 @@ void tvterm_push_current_pen(TVterm* p, TBool b)
 	*base = t;
 }
 
-void tvterm_pop_pen_and_set_currnt_pen(TVterm* p, TBool b)
+void tvterm_pop_pen_and_set_currnt_pen(TVterm* p, bool b)
 {
 	struct TPen* t;
 	struct TPen** base;
@@ -562,7 +563,7 @@ static inline void INSERT_N_CHARS_IF_NEEDED(TVterm* p, int n)
 static inline void SET_WARP_FLAG_IF_NEEDED(TVterm* p)
 {
 	if (p->pen.x == p->xmax-1) {
-		p->wrap = TRUE;
+		p->wrap = true;
 	}
 }
 
@@ -570,7 +571,7 @@ static inline void SET_WARP_FLAG_IF_NEEDED(TVterm* p)
 static int tvterm_put_normal_char(TVterm* p, u_char ch)
 {
 	if (p->pen.x == p->xmax) {
-		p->wrap = TRUE;
+		p->wrap = true;
 		p->pen.x --;
 	}
 	if (p->wrap) {
@@ -580,7 +581,7 @@ static int tvterm_put_normal_char(TVterm* p, u_char ch)
 		} else {
 			p->pen.y ++;
 		}
-		p->wrap = FALSE;
+		p->wrap = false;
 		return -1;
 	}
 	if (p->knj1) { /* 漢字 第 2 バイト */
@@ -632,7 +633,7 @@ static int tvterm_put_uchar(TVterm* p, u_int ch)
 	TFont *pf = &gFont[p->utf8Idx];
 	u_int w;
 	if (p->pen.x == p->xmax) {
-		p->wrap = TRUE;
+		p->wrap = true;
 		p->pen.x --;
 	}
 	if (p->wrap) {
@@ -642,7 +643,7 @@ static int tvterm_put_uchar(TVterm* p, u_int ch)
 		} else {
 			p->pen.y ++;
 		}
-		p->wrap = FALSE;
+		p->wrap = false;
 		return -1;
 	}
 	pf->conv(pf, ch, &w);
@@ -668,11 +669,11 @@ int tvterm_iso_C0_set(TVterm* p, u_char ch)
 		if (p->pen.x) {
 			p->pen.x --;
 		}
-		p->wrap = FALSE;
+		p->wrap = false;
 		break;
 	case ISO_HT:
 		p->pen.x += p->tab - (p->pen.x % p->tab);
-		p->wrap = FALSE;
+		p->wrap = false;
 		if (p->pen.x < p->xmax) {
 			break;
 		}
@@ -686,7 +687,7 @@ int tvterm_iso_C0_set(TVterm* p, u_char ch)
 			tvterm_set_default_invoke_and_designate(p);
 		/* fail into next case */
 	case ISO_LF:
-		p->wrap = FALSE;
+		p->wrap = false;
 		if (p->pen.y == p->ymax -1) {
 			p->scroll ++;
 		} else  {
@@ -695,7 +696,7 @@ int tvterm_iso_C0_set(TVterm* p, u_char ch)
 		break;
 	case ISO_CR:
 		p->pen.x = 0;
-		p->wrap = FALSE;
+		p->wrap = false;
 		break;
 	case UNIVERSAL_ESC:
 		p->esc = tvterm_esc_start;
@@ -830,7 +831,7 @@ tvterm_put_otherCS_char(TVterm *p, u_char ch)
 	/* output bytes */
 	s = sizeof(p->otherCS->outbuf) - outbuflen;
 
-	if (strcmp(p->otherCS->tocode, "UTF-8") == 0 && p->altCs == FALSE) {
+	if (strcmp(p->otherCS->tocode, "UTF-8") == 0 && p->altCs == false) {
 		p->ucs2ch = 0;
 		for (i = 0; i < s; i++) {
 			p->ucs2ch <<= 8;
@@ -974,7 +975,7 @@ static void tvterm_esc_start(TVterm* p, u_char ch)
 		break;
 	case Fe(ISO_NEL):	/* 4/5 E */
 		p->pen.x = 0;
-		p->wrap = FALSE;
+		p->wrap = false;
 	case Fe(TERM_IND): 	/* 4/4 D */
 		if (p->pen.y == p->ymax -1) {
 			p->scroll ++;
@@ -1000,21 +1001,21 @@ static void tvterm_esc_start(TVterm* p, u_char ch)
 		p->pen.fcol = 7;
 		p->pen.bcol = 0;
 		p->pen.attr = 0;
-		p->wrap = FALSE;
+		p->wrap = false;
 		tvterm_set_default_invoke_and_designate(p);
 		/* fail into next case */
 		/* TERM_CAH: - conflicts with ISO_G2D4, no terminfo */
 		p->pen.x = 0;
 		p->pen.y = 0;
-		p->wrap = FALSE;
+		p->wrap = false;
 		tvterm_text_clear_all(p);
 		break;
 	case DEC_SC:		/* 3/7 7 */
-		tvterm_push_current_pen(p, TRUE);
+		tvterm_push_current_pen(p, true);
 		break;
 	case DEC_RC:		/* 3/8 8 */
-		tvterm_pop_pen_and_set_currnt_pen(p, TRUE);
-		p->wrap = FALSE;
+		tvterm_pop_pen_and_set_currnt_pen(p, true);
+		p->wrap = false;
 		break;
 	case ISO_LS2:		/* 6/14 n */
 		if (!tvterm_is_ISO2022(p))
@@ -1074,7 +1075,7 @@ void tvterm_esc_set_attr(TVterm* p, int col)
 		tvterm_re_invoke_gx(p, &(p->gl));
 		tvterm_re_invoke_gx(p, &(p->gr));
 		p->tgl = p->gl; p->tgr = p->gr;
-		p->altCs = FALSE;
+		p->altCs = false;
 		break;
 	case 11:	/* smacs, smpch */
 		if (acsIdx == 0) {
@@ -1085,7 +1086,7 @@ void tvterm_esc_set_attr(TVterm* p, int col)
 			tvterm_re_invoke_gx(p, &(p->gl));
 			tvterm_re_invoke_gx(p, &(p->gr));
 			p->tgl = p->gl; p->tgr = p->gr;
-			p->altCs = TRUE;
+			p->altCs = true;
 		}
 		break;
 	default: tpen_set_color(&(p->pen), col);
@@ -1093,7 +1094,7 @@ void tvterm_esc_set_attr(TVterm* p, int col)
 	}
 }
 
-static void tvterm_set_mode(TVterm* p, u_char mode, TBool sw)
+static void tvterm_set_mode(TVterm* p, u_char mode, bool sw)
 {
 	switch(mode) {
 	case 4:
@@ -1140,11 +1141,11 @@ static void tvterm_set_region(TVterm* p,int ymin, int ymax)
 	p->ymax = ymax;
 	p->pen.x = 0;
 	if (p->pen.y < p->ymin || p->pen.y > p->ymax-1) p->pen.y = p->ymin-1;
-	p->wrap = FALSE;
+	p->wrap = false;
 	if (p->ymin || p->ymax != p->ycap) {
-		p->soft = TRUE;
+		p->soft = true;
 	} else {
-		p->soft = FALSE;
+		p->soft = false;
 	}
 }
 
@@ -1166,7 +1167,7 @@ static void tvterm_esc_status_line(TVterm* p, u_char mode)
 	case 'T':	/* To */
 		if (p->sl == SL_ENTER) break;
 		if (!p->savedPenSL) {
-			tvterm_push_current_pen(p, FALSE);
+			tvterm_push_current_pen(p, false);
 		}
 	case 'S':	/* Show */
 		if (p->sl == SL_NONE) {
@@ -1183,7 +1184,7 @@ static void tvterm_esc_status_line(TVterm* p, u_char mode)
 			p->sl = SL_LEAVE;
 			tvterm_set_region(p, 0, p->ycap -1);
 			if (p->savedPenSL) {
-				tvterm_pop_pen_and_set_currnt_pen(p, FALSE);
+				tvterm_pop_pen_and_set_currnt_pen(p, false);
 			}
 			p->savedPenSL = NULL;
 		}
@@ -1202,7 +1203,7 @@ static void tvterm_esc_status_line(TVterm* p, u_char mode)
 		tvterm_esc_bracket(p, mode);
 		return;
 	}
-	p->wrap = FALSE;
+	p->wrap = false;
 	p->esc = NULL;
 }
 
@@ -1248,15 +1249,15 @@ static void tvterm_esc_bracket(TVterm* p, u_char ch)
 			break;
 		case ISO_CS_NO_CUF:
 			p->pen.x += varg[0] ? varg[0]: 1;
-			p->wrap = FALSE;
+			p->wrap = false;
 			break;
 		case ISO_CS_NO_CUB:
 			p->pen.x -= varg[0] ? varg[0]: 1;
-			p->wrap = FALSE;
+			p->wrap = false;
 			break;
 		case 'G':
 			p->pen.x = varg[0] ? varg[0] - 1: 0;
-			p->wrap = FALSE;
+			p->wrap = false;
 			break;
 		case 'P':
 			tvterm_delete_n_chars(p, varg[0] ? varg[0]: 1);
@@ -1279,7 +1280,7 @@ static void tvterm_esc_bracket(TVterm* p, u_char ch)
 			} else {
 				p->pen.x = 0;
 			}
-			p->wrap = FALSE;
+			p->wrap = false;
 		case 'd':
 			p->pen.y = varg[0] ? varg[0] - 1: 0;
 			/* XXX: resize(1) specify large x,y */
@@ -1302,30 +1303,30 @@ static void tvterm_esc_bracket(TVterm* p, u_char ch)
 			break;
 		case 'l':
 			for (n = 0; n <= narg; n ++) {
-				tvterm_set_mode(p, varg[n], FALSE);
+				tvterm_set_mode(p, varg[n], false);
 			}
 			break;
 		case 'h':
 			for (n = 0; n <= narg; n ++) {
-				tvterm_set_mode(p, varg[n], TRUE);
+				tvterm_set_mode(p, varg[n], true);
 			}
 			break;
 		case '?':
 			p->esc = tvterm_esc_status_line;
 	#if 0
-			question = TRUE;
+			question = true;
 			p->esc = tvterm_esc_bracket;
 	#endif
 			break;
 		case 's':
-			tvterm_push_current_pen(p, TRUE);
+			tvterm_push_current_pen(p, true);
 			break;
 		case 'u':
-			tvterm_pop_pen_and_set_currnt_pen(p, TRUE);
+			tvterm_pop_pen_and_set_currnt_pen(p, true);
 			break;
 		case 'n':
 		case 'c':
-			if (question != TRUE) {
+			if (question != true) {
 				tvterm_esc_report(p, ch, varg[0]);
 			}
 			break;

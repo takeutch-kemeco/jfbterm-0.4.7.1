@@ -26,28 +26,28 @@
  *
  */
 
+#include <stdbool.h>
+
+#include "getcap.h"
+
 #ifndef INCLUDE_MAIN_H
 #define INCLUDE_MAIN_H
 
-#include "mytypes.h"
-#include "getcap.h"
-
 typedef struct Raw_TApplication {
-	int gOrigVirtualConsole;
-	TBool gCapsQ;
-	TCaps gCaps;
-	TBool gOptShowHelpQ;
-	TBool gOptQuiet;
-	char* gOptReset;
-	char* gExecShell;
+	int    gOrigVirtualConsole;
+	bool   gCapsQ;
+	TCaps  gCaps;
+	bool   gOptShowHelpQ;
+	bool   gOptQuiet;
+	char*  gOptReset;
+	char*  gExecShell;
 	char** gExecShellArgv;
-    	char* gConfFile;
-	char* gConfEncoding;
-	TBool gOptCCW;
-	TBool gOptCW;
+    	char*  gConfFile;
+	char*  gConfEncoding;
+	bool   gOptCCW;
+	bool   gOptCW;
 } TApplication;
 
 extern TApplication gApp;
-
 
 #endif /* INCLUDE_MAIN_H */
