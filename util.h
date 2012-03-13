@@ -26,29 +26,22 @@
  *
  */
 
-#ifndef INCLUDE_UTIL_H
-#define INCLUDE_UTIL_H
-
 #include <sys/types.h>
 #include <stdlib.h>
 
-void util_privilege_init();
-void util_privilege_on();
-void util_privilege_off();
+#ifndef INCLUDE_UTIL_H
+#define INCLUDE_UTIL_H
+
+void util_privilege_init(void);
+void util_privilege_on(void);
+void util_privilege_off(void);
 int util_privilege_open(char *pathname, int flags);
-#ifdef HAVE_IOPERM
-int util_privilege_ioperm(unsigned long from, unsigned int num, int turn_on);
-#endif
+int util_privilege_ioperm(u_long from, u_int num, int turn_on);
 uid_t util_getuid();
 void util_privilege_drop();
+int util_search_string(const char* s, const char** array);
+void util_swap(u_int* a, u_int* b);
 
 #define util_free(p) {free(p); (p) = NULL;}
-
-void util_euc_to_sjis(u_char* ch, u_char* cl);
-void util_sjis_to_jis(u_char* ch, u_char* cl);
-
-int util_search_string(const char* s, const char** array);
-
-void util_swap(u_int* a, u_int* b);
 
 #endif /* INCLUDE_UTIL_H */
