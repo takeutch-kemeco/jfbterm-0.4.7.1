@@ -165,7 +165,7 @@ void tvterm_insert_n_chars(TVterm* p, int n)
 	tvterm_clear(p, addr, n);
 }
 
-#if 0 /* ¥Ï¡¼¥É¥¦¥¨¥¢¥¹¥¯¥í¡¼¥ë¤¹¤ëºİ¤Ë»È¤¦¡£(¸½ºßÌ¤»ÈÍÑ) */
+#if 0 /* ãƒãƒ¼ãƒ‰ã‚¦ã‚¨ã‚¢ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ã™ã‚‹éš›ã«ä½¿ã†ã€‚(ç¾åœ¨æœªä½¿ç”¨) */
 static void tvterm_scroll_up_n_lines(TVterm* p, int n)
 {
 	int	h;
@@ -450,7 +450,7 @@ void tvterm_uput2(TVterm* p, u_int idx, u_int ch)
 #endif
 
 /**
-	¹Ô¶è´Ö [0, TVterm::ymax) ¤ò¥¯¥ê¥¢¤¹¤ë¡£
+	è¡ŒåŒºé–“ [0, TVterm::ymax) ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 **/
 void tvterm_text_clear_all(TVterm* p)
 {
@@ -465,11 +465,11 @@ void tvterm_text_clear_all(TVterm* p)
 }
 
 /**
-	¹ÔÆâ¤Î»ØÄêÉôÊ¬¤ò¥¯¥ê¥¢¤¹¤ë¡£
+	è¡Œå†…ã®æŒ‡å®šéƒ¨åˆ†ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 mode
-1	¹Ô TVterm::y ¥«¥é¥à[0, TVterm::x) ¤ò¥¯¥ê¥¢¤¹¤ë¡£
-2	¹Ô TVterm::y ¤ò¥¯¥ê¥¢¤¹¤ë¡£
-ow	¹Ô TVterm::y ¥«¥é¥à[TVterm::x, TVterm::xcap) ¤ò¥¯¥ê¥¢¤¹¤ë¡£
+1	è¡Œ TVterm::y ã‚«ãƒ©ãƒ [0, TVterm::x) ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
+2	è¡Œ TVterm::y ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
+ow	è¡Œ TVterm::y ã‚«ãƒ©ãƒ [TVterm::x, TVterm::xcap) ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 **/
 void tvterm_text_clear_eol(TVterm* p, u_char mode)
 {
@@ -494,13 +494,13 @@ void tvterm_text_clear_eol(TVterm* p, u_char mode)
 }
 
 /**
-	¥¹¥¯¥ê¡¼¥óÆâ¤Î»ØÄêÉôÊ¬¤ò¥¯¥ê¥¢¤¹¤ë¡£
+	ã‚¹ã‚¯ãƒªãƒ¼ãƒ³å†…ã®æŒ‡å®šéƒ¨åˆ†ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 mode
-1	¹Ô [0, TVterm::y) ¤ò¥¯¥ê¥¢¤·¡¢¤µ¤é¤Ë
-	¹Ô TVterm::y ¥«¥é¥à[0, TVterm::x) ¤ò¥¯¥ê¥¢¤¹¤ë¡£
-2	¥¹¥¯¥ê¡¼¥óÁ´ÂÎ¤ò¥¯¥ê¥¢¤¹¤ë¡£
-ow	¹Ô [TVterm::y+1, TVterm::ycap) ¤ò¥¯¥ê¥¢¤·¡¢¤µ¤é¤Ë
-	¹Ô TVterm::y ¥«¥é¥à[TVterm::x, TVterm::xcap) ¤ò¥¯¥ê¥¢¤¹¤ë¡£
+1	è¡Œ [0, TVterm::y) ã‚’ã‚¯ãƒªã‚¢ã—ã€ã•ã‚‰ã«
+	è¡Œ TVterm::y ã‚«ãƒ©ãƒ [0, TVterm::x) ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
+2	ã‚¹ã‚¯ãƒªãƒ¼ãƒ³å…¨ä½“ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
+ow	è¡Œ [TVterm::y+1, TVterm::ycap) ã‚’ã‚¯ãƒªã‚¢ã—ã€ã•ã‚‰ã«
+	è¡Œ TVterm::y ã‚«ãƒ©ãƒ [TVterm::x, TVterm::xcap) ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 **/
 void tvterm_text_clear_eos(TVterm* p, u_char mode)
 {
@@ -526,7 +526,7 @@ void tvterm_text_clear_eos(TVterm* p, u_char mode)
 }
 
 /**
-	¹Ô¶è´Ö [top, btm) ¤ò¥¯¥ê¥¢¤¹¤ë¡£
+	è¡ŒåŒºé–“ [top, btm) ã‚’ã‚¯ãƒªã‚¢ã™ã‚‹ã€‚
 **/
 static void tvterm_text_clean_band(TVterm* p, u_int top, u_int btm)
 {
