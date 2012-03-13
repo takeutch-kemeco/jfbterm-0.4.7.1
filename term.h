@@ -36,13 +36,11 @@
 typedef struct Raw_TTerm {
 	int ptyfd;
 	int ttyfd;
-	char name[64];
+	char name[0x1000];
 	struct termios ttysave;
 	TVterm vterm;
 } TTerm;
 
-void tterm_start(TTerm* p, const char* tn, const char* en);
-
-extern TTerm gTerm;
+void tterm_start(const char* tn, const char* en);
 
 #endif /* INCLUDE_TERM_H */

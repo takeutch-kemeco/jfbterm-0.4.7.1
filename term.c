@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <ctype.h>
 #include <errno.h>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -55,61 +56,62 @@
 
 #include "config.h"
 
-int gChildProcessId = 0;
+static int gChildProcessId = 0;
 static int gExitFlag = 0;
 
-TTerm gTerm;
+static TTerm gTerm;
 
-void tterm_wakeup_shell(TTerm* p, const char* tn);
-void tterm_final(TTerm* p);
-
+static void tterm_wakeup_shell(TTerm* p, const char* tn);
+static void tterm_final(TTerm* p);
 static void tterm_set_utmp(TTerm* p);
 static void tterm_reset_utmp(TTerm* p);
 
-void send_hangup(
-	int closure)
+static void sigchld(int sig)
 {
-	if (gChildProcessId) {
-		kill(gChildProcessId, SIGHUP);
-	}
-}
-
-void sigchld(int sig)
-{
-	gExitFlag = 1;
-	return;
-	
 	int st;
-	int ret;
-	ret = wait(&st);
-	if (ret == gChildProcessId || ret == ECHILD) {
+	int ret = wait(&st);
+	if(ret == gChildProcessId || ret == ECHILD) {
+#ifdef DEBUG_TERM
+	print_message_f("sigchld(): ret[%d], gChildProcessId[%d], ECHILD[%d]\n",
+			ret, gChildProcessId, ECHILD);
+#endif
 		tvterm_unregister_signal();
 		tterm_final(&gTerm);
+
 		exit(EXIT_SUCCESS);
 	}
+	
 	signal(SIGCHLD, sigchld);
+	gExitFlag = 1;
 }
 
-
-void tterm_init(TTerm* p, const char* en)
+/* term に初期状態をセットする
+ * 同時に term 内部の vterm へ初期設定をセットする関数を呼び出す
+ *
+ * pty, ttf ともに -1
+ * name は'\0'（空）で初期設定される
+ */
+static void tterm_init(TTerm* p, const char* en)
 {
 	p->ptyfd = -1;
 	p->ttyfd = -1;
 	p->name[0] = '\0';
 	tcgetattr(0, &(p->ttysave));
 	tvterm_init(&(p->vterm), p,
-		    gFramebuffer.width/gFontsWidth,
-		    gFramebuffer.height/gFontsHeight, 
+		    gFramebuffer.width / gFontsWidth,
+		    gFramebuffer.height / gFontsHeight, 
 		    &(gApp.gCaps), en);
 }
 
-void tterm_final(TTerm* p)
+/* 
+ */
+static void tterm_final(TTerm* p)
 {
 	tterm_reset_utmp(p);
 	tvterm_final(&(p->vterm));
 }
 
-void application_final(void)
+static void application_final(void)
 {
 	TTerm* p = &gTerm;
 /*
@@ -121,20 +123,34 @@ void application_final(void)
 	tfbm_close(&gFramebuffer);
 	tfont_ary_final();
 }
-	
 
-int tterm_get_ptytty(TTerm* p)
+/* 使用可能な擬似端末を見つけて端末をオープンし、値をtermにセットする
+ *
+ * ptyfd はマスターのファイルディスクリプタ、
+ * ttyfd はスレーブのファイルディスクリプタとなる
+ *
+ * name にはスレーブの端末名がセットされる
+ *
+ * スレーブの端末パラメーター、及び、ウインドウサイズは、デフォルト設定がセットされる
+ */
+static int tterm_open(TTerm* p)
 {
-	if (openpty(&p->ptyfd, &p->ttyfd, p->name, NULL, NULL) < 0) {
-	    print_strerror("openpty");
-	    return 0;
+	if(openpty(&p->ptyfd, &p->ttyfd, p->name, NULL, NULL) < 0) {
+		print_strerror("error: openpty()");
+		return 0;
 	}
+#ifdef DEBUG_TERM
+	print_message_f("ptyfd[%d], ttyfd[%d], name[%s]\n",
+			p->ptyfd, p->ttyfd, p->name);
+#endif
 	return 1;
 }
 
 #define BUF_SIZE 1024
-void tterm_start(TTerm* p, const char* tn, const char* en)
+void tterm_start(const char* tn, const char* en)
 {
+	TTerm* p = &gTerm;
+
 	struct termios ntio;
 
 	int ret;
@@ -148,7 +164,7 @@ void tterm_start(TTerm* p, const char* tn, const char* en)
 #endif
 
 	tterm_init(p, en);
-	if (!tterm_get_ptytty(p)) {
+	if (!tterm_open(p)) {
 		die("Cannot get free pty-tty.\n");
 	}
 
@@ -234,7 +250,7 @@ void tterm_start(TTerm* p, const char* tn, const char* en)
 	}
 }
 
-void tterm_wakeup_shell(TTerm* p, const char* tn)
+static void tterm_wakeup_shell(TTerm* p, const char* tn)
 {
 	setenv("TERM", tn, 1);
 	close(p->ptyfd);
@@ -247,48 +263,138 @@ void tterm_wakeup_shell(TTerm* p, const char* tn)
 	exit(1);
 }
 
-
-void	tterm_set_utmp(TTerm* p)
+/* 文字列中の、先頭からの "?/dev/" を読み飛ばしたアドレスを返す
+ * 該当しない場合は、元の文字列の先頭アドレスをそのまま返す
+ *
+ * 例：
+ * "/dev/tty123"  => "tty123"
+ * "/dev/pty/123" => "pty/123"
+ *
+ * "/aaa/dev/bbb" => "bbb"
+ * "/aaa/bbb/ccc" => "/aaa/bbb/ccc"
+ *
+ * "/devian"      => "/devian"
+ */
+static char* skip_dev(char* s)
 {
-	struct utmp	utmp;
-	struct passwd	*pw;
-	char	*tn;
+	char dev_str[] = "/dev/";
+	char* p = s;
 
-	pw = getpwuid(util_getuid());
-	tn = rindex(p->name, '/') + 1;
-	memset((char *)&utmp, 0, sizeof(utmp));
-	strncpy(utmp.ut_id, tn + 3, sizeof(utmp.ut_id));
+	while(*p != '\0') {
+		p = strchr(p, dev_str[0]);
+		if(p == NULL) {
+			break;
+		} else {
+			if(strcmp(p, dev_str) == 0) {
+				s = p + strlen(dev_str);
+				break;
+			}
+		}
+
+		p++;
+	}
+	
+	return s;
+}
+
+/* 文字列の右側から [0-9]数字のみが連続する文字列を抜き出した、文字列の先頭アドレスを返す
+ * 
+ * ただし、最大で４文字まで。それ以上の長さの数字が連続した場合は、以降は切り捨てる
+ *
+ * 該当する数字が存在しない場合はNULLを返す
+ *
+ * 例：
+ * "/dev/tty123"    => "123"
+ * "/dev/pty/123"   => "123"
+ *
+ * "/dev/tty12345"  => "2345"
+ * "/dev/pty/12345" => "2345"
+ */
+static char* suffix_num4(char* s)
+{
+	char* ret = NULL;
+
+	int count = 0;
+	int len = strlen(s);
+	while(len-->0) {
+		if(isdigit(s[len])) {
+			ret = &s[len];
+			count++;
+		} else {
+			break;
+		}
+
+		if(count >= 4) {
+			break;
+		}
+	}
+
+	return ret;
+}
+
+static void tterm_set_utmp(TTerm* p)
+{
+#ifdef DEBUG_TERM
+	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
+			skip_dev(p->name), suffix_num4(p->name));
+#endif
+	struct utmp utmp;
+	memset((char*)&utmp, 0, sizeof(utmp));
+
+	char* tnum = suffix_num4(p->name);
+	strncpy(utmp.ut_id, tnum, sizeof(utmp.ut_id));
+
 	utmp.ut_type = DEAD_PROCESS;
+
 	setutent();
+
+
 	getutid(&utmp);
+
 	utmp.ut_type = USER_PROCESS;
+
 	utmp.ut_pid = getpid();
-	if (strncmp("/dev/", p->name, 5) == 0)
-	    tn = p->name + 5;
-	strncpy(utmp.ut_line, tn, sizeof(utmp.ut_line));
+
+	char* tname = skip_dev(p->name);
+	strncpy(utmp.ut_line, tname, sizeof(utmp.ut_line));
+
+	struct passwd* pw = getpwuid(util_getuid());
 	strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user));
+
 	time(&(utmp.ut_time));
+
 	pututline(&utmp);
+
 	endutent();
 }
 
-void	tterm_reset_utmp(TTerm* p)
+static void tterm_reset_utmp(TTerm* p)
 {
-	struct utmp	utmp, *utp;
-	char	*tn;
+#ifdef DEBUG_TERM
+	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",
+			skip_dev(p->name), suffix_num4(p->name));
+#endif
+	struct utmp utmp;
+	memset((char*)&utmp, 0, sizeof(utmp));
 
-	tn = rindex(p->name, '/') + 4;
-	memset((char *)&utmp, 0, sizeof(utmp));
-	strncpy(utmp.ut_id, tn, sizeof(utmp.ut_id));
+	char* tnum = suffix_num4(p->name);
+	strncpy(utmp.ut_id, tnum, sizeof(utmp.ut_id));
+
 	utmp.ut_type = USER_PROCESS;
+
 	setutent();
-	utp = getutid(&utmp);
+
+
+	struct utmp* utp = getutid(&utmp);
+
 	utp->ut_type = DEAD_PROCESS;
+
 	memset(utp->ut_user, 0, sizeof(utmp.ut_user));
 	utp->ut_type = DEAD_PROCESS;
+
 	time(&(utp->ut_time));
+
 	pututline(utp);
+
 	endutent();
 }
-
-

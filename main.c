@@ -451,7 +451,7 @@ int main(int argc, char *argv[])
 	if (!tn) {
 		tn = "jfbterm";
 	}
-	tterm_start(&gTerm, tn, en);
+	tterm_start(tn, en);
 
 	tfbm_close(&gFramebuffer);
 	tfont_ary_final();

@@ -35,5 +35,6 @@ void print_error(const char* format, ...);
 void print_message(const char* format, ...);
 void print_strerror(const char* msg);
 void print_strerror_and_exit(const char* message);
+void print_message_f(const char* format, ...);
 
 #endif /* INCLUDE_MESSAGE_H */

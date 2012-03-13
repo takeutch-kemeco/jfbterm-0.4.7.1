@@ -93,3 +93,21 @@ void print_strerror_and_exit(const char* message)
 	fprintf(stderr, "%s: %s\r\n", message, strerror(errno));
 	exit(EXIT_FAILURE);
 }
+
+/* デバッグ用に情報表示する。
+ * 出力は画面ではなく、実行時カレントディレクトリーへ
+ * ファイル "jfbterm.debug.log" として行う
+ */
+void print_message_f(const char* format, ...)
+{
+	const char* fn = "jfbterm.debug.log";
+	FILE* fp = fopen(fn, "at");
+	
+	va_list args;
+
+	va_start(args, format);
+	vfprintf(fp, format, args);
+	va_end(args);
+
+	fclose(fp);
+}
