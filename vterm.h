@@ -86,7 +86,7 @@ typedef struct Raw_TCursor {
 } TCursor;
 
 typedef struct Raw_TVterm {
-	struct Raw_TTerm* term;
+	struct TTerm* term;
 	int xmax;
 	int ymax;
 	int ymin;
@@ -179,7 +179,7 @@ void tvterm_text_clear_all(TVterm* p);
 void tvterm_emulate(TVterm* p, const char *buff, int nchars);
 void tvterm_refresh(TVterm* p);
 
-void tvterm_init(TVterm* p, struct Raw_TTerm* tp, u_int hx, u_int hy,
+void tvterm_init(TVterm* p, struct TTerm* tp, u_int hx, u_int hy,
                  struct TCaps *caps, const char* en);
 void tvterm_start(TVterm* p);
 void tvterm_final(TVterm* p);

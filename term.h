@@ -33,13 +33,13 @@
 
 #define SUCCESS (0)
 
-typedef struct Raw_TTerm {
+struct TTerm {
 	int ptyfd;
 	int ttyfd;
 	char name[0x1000];
 	struct termios ttysave;
 	TVterm vterm;
-} TTerm;
+};
 
 void tterm_start(const char* tn, const char* en);
 

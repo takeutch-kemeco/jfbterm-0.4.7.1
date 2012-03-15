@@ -42,6 +42,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <sys/kd.h>
+#include <time.h>
 
 #include "util.h"
 #include "vterm.h"
@@ -49,7 +50,7 @@
 #include "font.h"
 #include "fbcommon.h"
 #include "config.h"
-
+#include "skipagent.h"
 
 #if 0
 
@@ -58,16 +59,16 @@ static bool	saved;
 static volatile bool	busy;		 /* TRUE iff updating screen */
 static volatile bool	release;	 /* delayed VC switch flag */
 
-static void	ShowCursor(struct cursorInfo *, bool);
+static void ShowCursor(struct cursorInfo *, bool);
 
 #endif
 
-static void     sig_leave_virtual_console(int signum);
-static void     sig_enter_virtual_console(int signum);
+static void sig_leave_virtual_console(int signum);
+static void sig_enter_virtual_console(int signum);
 
 static void tvterm_text_clean_band(TVterm* p, u_int top, u_int btm);
 
-/*---------------------------------------------------------------------------*/
+/* おそらくx,y座標からテキストバッファーのインデックスへの変換 */
 static inline u_int tvterm_coord_to_index(TVterm* p, u_int x, u_int y)
 {
 	return (p->textHead + x + y * p->xcap4) % p->tsize;
@@ -83,37 +84,53 @@ static inline int IsKanji2(TVterm* p, u_int x, u_int y)
 	return p->flag[tvterm_coord_to_index(p, x, y)] & CODEIS_2;
 }
 
-static inline void	KanjiAdjust(TVterm* p, u_int *x, u_int *y)
+static inline void KanjiAdjust(TVterm* p, u_int *x, u_int *y)
 {
 	if (IsKanji2(p, *x, *y)) {
 		--*x;
 	}
 }
 
-/*---------------------------------------------------------------------------*/
-static inline void brmove(void *dst, void *src, int n)
+/* サイズをマイナス方向へ数える memmove()
+ * サイズはbyte単位で指定する。
+ *
+ * 先頭アドレスを、コピーバイト分だけマイナスして渡すのと同様のことをしてる。
+ * 例：
+ * memmove(a - 10, b - 10, 10);
+ * と同じこと
+ */
+static inline void brmove(void* dst, void* src, int n)
 {
 	memmove((void*)((char*)dst-n),(void*)((char*)src-n),n);
 }
 
-static inline void blatch(void *head, int n)
+/* 配列の各byte単位で、8bit目を 0 にする*/
+static inline void blatch(void* head, int n)
 {
- 	unsigned char *c = (unsigned char*)head;
-	unsigned char *e = (unsigned char*)head + n;
-	for(; c < e ; c++) {
-		*c &= 0x7f;
+ 	u_char* c = (u_char*)head;
+	u_char* e = (u_char*)head + n;
+	while(c < e) {
+		*c++ &= 0x7f;
 	}
 }
 
+/* blatch() と同様だが 4byte 単位で処理するので高速に見える
+ * 
+ * （ただし、バイト境界のアラインがどう影響するかがよくわからないので、速いとも限らない）
+ */
 static inline void llatch(void *head, int n)
 {
-	unsigned int *l = (unsigned int*)head;
-	unsigned int *e = (unsigned int*)head + (n>>2);
-	for(; l < e ; l++) {
-		*l &= 0x7f7f7f7f;
+	u_long* a = (u_long*)head;
+	u_long* e = (u_long*)head + (n>>2);
+	while(a < e) {
+		*a++ &= 0x7f7f7f7f;
 	}
 }
 
+/* tvterm 内のバッファー text, attr, flag において、データ範囲を移動する。
+ *
+ * 実質上はコピーする。ただし、範囲が重複していても正しくコピーされる。
+ */
 static inline void tvterm_move(TVterm* p, int dst, int src, int n)
 {
 	memmove(p->text+dst, p->text+src, n*sizeof(u_int));
@@ -121,6 +138,7 @@ static inline void tvterm_move(TVterm* p, int dst, int src, int n)
 	memmove(p->flag+dst, p->flag+src, n);
 }
 
+/* p - index を始点としての tvterm_move() */
 static inline void tvterm_brmove(TVterm* p, int dst, int src, int n)
 {
 	brmove(p->text+dst, p->text+src, n*sizeof(u_int));
@@ -128,6 +146,7 @@ static inline void tvterm_brmove(TVterm* p, int dst, int src, int n)
 	brmove(p->flag+dst, p->flag+src, n);
 }
 
+/* tvterm 内のバッファー text, attr, flag において、指定範囲をクリアーする */
 static inline void tvterm_clear(TVterm* p, int top, int n)
 {
 	bzero(p->text+top, n*sizeof(u_int));
@@ -135,7 +154,13 @@ static inline void tvterm_clear(TVterm* p, int top, int n)
 	memset(p->attr+top, (p->pen.bcol<<4), n);
 }
 
-/*---------------------------------------------------------------------------*/
+/* 現在の pen の位置から n 文字分をカットする（デルではない）。
+ * 処理はその１行のみ。（バッファー全体で処理するわけではない）
+ *
+ * 具体的処理：
+ * 現在の pen の位置へ、”n文字先～行末”までを、まるごとスライドしてくる。
+ * その後、スライドした分だけ空白になるはずの行末領域を、クリアーで埋める。
+ */
 void tvterm_delete_n_chars(TVterm* p, int n)
 {
 	u_int addr;
@@ -151,6 +176,7 @@ void tvterm_delete_n_chars(TVterm* p, int n)
 	tvterm_clear(p, addr, n);
 }
 
+/* 現在の pen の位置の手前に、n 文字分の空白スペースを挿入する。（上書きではなく） */
 void tvterm_insert_n_chars(TVterm* p, int n)
 {
 	u_int addr;
@@ -185,6 +211,11 @@ static void tvterm_scroll_up_n_lines(TVterm* p, int n)
 	tvterm_clear(p, h, n); /* lclear */
 }
 
+/* n 行だけダウンスクロールする。
+ * （ダウンスクロール　＝　↓カーソルを押された時の動き）
+ *
+ * textHead 以下に空きスペースができるはずなので、そこをクリアーする処理がメイン。
+ */
 static void tvterm_scroll_down_n_lines(TVterm* p, int n)
 {
 	int	h;
@@ -249,9 +280,10 @@ void tvterm_show_cursor(TVterm* p, bool b)
 	}
 }
 
-/*---------------------------------------------------------------------------*/
-void tvterm_refresh(TVterm* p)
+static void __tvterm_refresh(void* __p)
 {
+	TVterm* p = __p;
+
 	u_int i;
 	u_int x, y;
 	u_int lang;
@@ -335,6 +367,11 @@ void tvterm_refresh(TVterm* p)
 	if (p->release) {
                 sig_leave_virtual_console(SIGUSR1);
 	}
+}
+
+void tvterm_refresh(TVterm* p)
+{
+	sage_throw(__tvterm_refresh, (void*)p);
 }
 
 /*---------------------------------------------------------------------------*/

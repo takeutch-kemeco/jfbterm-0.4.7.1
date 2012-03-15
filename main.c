@@ -54,6 +54,7 @@
 #include "fbcommon.h"
 #include "term.h"
 #include "vterm.h"
+#include "skipagent.h"
 #include "message.h"
 #include "getcap.h"
 #include "util.h"
@@ -81,6 +82,7 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 		{"help",	0, NULL, 'h'},
 		{"cw",		0, NULL, 'R'},
 		{"ccw",		0, NULL, 'L'},
+		{"legacy",	0, NULL, 'l'},
 		{NULL,		0, NULL, 0},
 	};
 	int c;
@@ -119,6 +121,9 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 			break;
 		case 'L':
 			p->gOptCCW = true;
+			break;
+		case 'l':
+			p->gOptLegacy = true;
 			break;
 		default:
 			break;
@@ -410,12 +415,18 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	if(gApp.gOptCW == true) {
+	if(gApp.gOptCW) {
 		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CW;
-	} else if (gApp.gOptCCW == true) {
+	} else if (gApp.gOptCCW) {
 		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CCW;
 	} else {
 		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
+	}
+
+	if(gApp.gOptLegacy) {
+		sage_use = false;
+	} else {
+		sage_use = true;
 	}
 
 	en = tcaps_find_first(&(gApp.gCaps), "encoding");

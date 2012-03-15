@@ -13,9 +13,10 @@ jfbterm_SOURCES = 				\
 		term.c term.h 			\
 		util.c util.h 			\
 		csv.c csv.h 			\
-		vterm.c vtermlow.c vterm.h
+		vterm.c vtermlow.c vterm.h	\
+		skipagent.c skipagent.h
 
-jfbterm_LDADD = -lutil
+jfbterm_LDADD = -lutil -lpthread
 
 JFBTERM_CONFIG_SAMPLE            = jfbterm.conf.sample
 JFBTERM_CONFIG_SAMPLE_JA         = $(JFBTERM_CONFIG_SAMPLE).ja

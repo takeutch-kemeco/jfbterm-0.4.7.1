@@ -59,12 +59,12 @@
 static int gChildProcessId = 0;
 static int gExitFlag = 0;
 
-static TTerm gTerm;
+static struct TTerm gTerm;
 
-static void tterm_wakeup_shell(TTerm* p, const char* tn);
-static void tterm_final(TTerm* p);
-static void tterm_set_utmp(TTerm* p);
-static void tterm_reset_utmp(TTerm* p);
+static void tterm_wakeup_shell(struct TTerm* p, const char* tn);
+static void tterm_final(struct TTerm* p);
+static void tterm_set_utmp(struct TTerm* p);
+static void tterm_reset_utmp(struct TTerm* p);
 
 static void sigchld(int sig)
 {
@@ -91,7 +91,7 @@ static void sigchld(int sig)
  * pty, ttf ともに -1
  * name は'\0'（空）で初期設定される
  */
-static void tterm_init(TTerm* p, const char* en)
+static void tterm_init(struct TTerm* p, const char* en)
 {
 	p->ptyfd = -1;
 	p->ttyfd = -1;
@@ -105,7 +105,7 @@ static void tterm_init(TTerm* p, const char* en)
 
 /* 
  */
-static void tterm_final(TTerm* p)
+static void tterm_final(struct TTerm* p)
 {
 	tterm_reset_utmp(p);
 	tvterm_final(&(p->vterm));
@@ -113,7 +113,7 @@ static void tterm_final(TTerm* p)
 
 static void application_final(void)
 {
-	TTerm* p = &gTerm;
+	struct TTerm* p = &gTerm;
 /*
 	write(1, "\x1B[?25h", 6);
 */
@@ -133,7 +133,7 @@ static void application_final(void)
  *
  * スレーブの端末パラメーター、及び、ウインドウサイズは、デフォルト設定がセットされる
  */
-static int tterm_open(TTerm* p)
+static int tterm_open(struct TTerm* p)
 {
 	if(openpty(&p->ptyfd, &p->ttyfd, p->name, NULL, NULL) < 0) {
 		print_strerror("error: openpty()");
@@ -149,7 +149,7 @@ static int tterm_open(TTerm* p)
 #define BUF_SIZE 1024
 void tterm_start(const char* tn, const char* en)
 {
-	TTerm* p = &gTerm;
+	struct TTerm* p = &gTerm;
 
 	struct termios ntio;
 
@@ -250,7 +250,7 @@ void tterm_start(const char* tn, const char* en)
 	}
 }
 
-static void tterm_wakeup_shell(TTerm* p, const char* tn)
+static void tterm_wakeup_shell(struct TTerm* p, const char* tn)
 {
 	setenv("TERM", tn, 1);
 	close(p->ptyfd);
@@ -332,7 +332,7 @@ static char* suffix_num4(char* s)
 	return ret;
 }
 
-static void tterm_set_utmp(TTerm* p)
+static void tterm_set_utmp(struct TTerm* p)
 {
 #ifdef DEBUG_TERM
 	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
@@ -368,7 +368,7 @@ static void tterm_set_utmp(TTerm* p)
 	endutent();
 }
 
-static void tterm_reset_utmp(TTerm* p)
+static void tterm_reset_utmp(struct TTerm* p)
 {
 #ifdef DEBUG_TERM
 	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",

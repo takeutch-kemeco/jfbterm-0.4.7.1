@@ -44,6 +44,7 @@
 #include "util.h"
 #include "term.h"
 #include "vterm.h"
+#include "skipagent.h"
 #include "font.h"
 #include "csv.h"
 
@@ -79,7 +80,7 @@ static int tvterm_is_otherCS(TVterm *p);
 
 #endif
 
-void tvterm_init(TVterm* p, TTerm* pt, u_int hw, u_int hh,
+void tvterm_init(TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
                  struct TCaps *caps, const char* en)
 {
 	p->term = pt;
@@ -116,6 +117,8 @@ void tvterm_init(TVterm* p, TTerm* pt, u_int hw, u_int hh,
 	p->caps = caps;
 	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
+
+	sage_init();
 }
 
 int
@@ -488,6 +491,8 @@ void tvterm_start(TVterm* p)
 
 void tvterm_final(TVterm* p)
 {
+	sage_close();
+
 	ioctl(0, KDSETMODE, KD_TEXT);
 	tpen_final(&(p->pen));
 	if (p->savedPen) {

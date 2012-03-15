@@ -46,6 +46,7 @@ typedef struct Raw_TApplication {
 	char*  gConfEncoding;
 	bool   gOptCCW;
 	bool   gOptCW;
+	bool   gOptLegacy;
 } TApplication;
 
 extern TApplication gApp;
