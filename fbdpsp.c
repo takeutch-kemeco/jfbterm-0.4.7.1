@@ -827,13 +827,13 @@ static void tfbm_byte_to_xpix_32bpp_packed(TFrameBufferMemory* p,
 					   const u_int index)
 {
 	switch(index) {
-	case 7:	if(sb & 0x02) tfbm_set_pixel_32bpp_packed(p, x + 7, y, icol);
-	case 6:	if(sb & 0x04) tfbm_set_pixel_32bpp_packed(p, x + 6, y, icol);
-	case 5:	if(sb & 0x08) tfbm_set_pixel_32bpp_packed(p, x + 5, y, icol);
-	case 4:	if(sb & 0x10) tfbm_set_pixel_32bpp_packed(p, x + 4, y, icol);
-	case 3:	if(sb & 0x20) tfbm_set_pixel_32bpp_packed(p, x + 3, y, icol);
-	case 2:	if(sb & 0x40) tfbm_set_pixel_32bpp_packed(p, x + 2, y, icol);
-	case 1:	if(sb & 0x80) tfbm_set_pixel_32bpp_packed(p, x + 1, y, icol);
+	case 7:	if(sb & 0x02) tfbm_set_pixel_32bpp_packed(p, x + 6, y, icol);
+	case 6:	if(sb & 0x04) tfbm_set_pixel_32bpp_packed(p, x + 5, y, icol);
+	case 5:	if(sb & 0x08) tfbm_set_pixel_32bpp_packed(p, x + 4, y, icol);
+	case 4:	if(sb & 0x10) tfbm_set_pixel_32bpp_packed(p, x + 3, y, icol);
+	case 3:	if(sb & 0x20) tfbm_set_pixel_32bpp_packed(p, x + 2, y, icol);
+	case 2:	if(sb & 0x40) tfbm_set_pixel_32bpp_packed(p, x + 1, y, icol);
+	case 1:	if(sb & 0x80) tfbm_set_pixel_32bpp_packed(p, x + 0, y, icol);
 	}
 }
 
