@@ -27,7 +27,6 @@ static volatile unsigned long long prev_time  = 0;
 
 static volatile bool run_flag = false;
 static volatile bool order_flag = false;
-static volatile bool pause_flag = false;
 
 static sage_throw_func cur_func;
 static void* cur_param = NULL;
