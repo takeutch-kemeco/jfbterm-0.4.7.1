@@ -14,18 +14,20 @@
 bool sage_use = true;
 
 static pthread_t thread;
-static pthread_mutex_t mutex;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t replay_main_loop = PTHREAD_COND_INITIALIZER;
 
 static const unsigned long long loop_time  = (1000 * 1000) * 10;
 static const unsigned long long limit_time = (1000 * 1000) * 100;
 static const unsigned long long bound_time = (1000 * 1000) * 4;
 
-static unsigned long long start_time = 0;
-static unsigned long long cur_time   = 0;
-static unsigned long long prev_time  = 0;
+static volatile unsigned long long start_time = 0;
+static volatile unsigned long long cur_time   = 0;
+static volatile unsigned long long prev_time  = 0;
 
-static bool run_flag = false;
-static bool order_flag = false;
+static volatile bool run_flag = false;
+static volatile bool order_flag = false;
+static volatile bool pause_flag = false;
 
 static sage_throw_func cur_func;
 static void* cur_param = NULL;
@@ -58,20 +60,23 @@ static void* main_loop(void* _a)
 	};
 
 	while(run_flag) {
+                pthread_mutex_lock(&mutex);
+
 		cur_time = rdtsc();
 
 		if(order_flag) {
 			if(is_skip() == false) {
-				pthread_mutex_lock(&mutex);
-
 				order_flag = false;
 				cur_func(cur_param);
-
-				pthread_mutex_unlock(&mutex);
+                                
+                                pthread_cond_wait(&replay_main_loop,
+                                                  &mutex);
 			}
 			
 			prev_time = cur_time;
 		}
+
+                pthread_mutex_unlock(&mutex);
 
 		nanosleep(&loop_time_ts, NULL);
 	}
@@ -83,12 +88,17 @@ void sage_throw(sage_throw_func func, void* param)
 {
 	switch(sage_use) {
 	case true:
+		pthread_mutex_lock(&mutex);
+
 		start_time = rdtsc();
 
 		cur_func = func;
 		cur_param = param;
 
 		order_flag = true;
+
+                pthread_cond_signal(&replay_main_loop);
+		pthread_mutex_unlock(&mutex);
 		break;
 
 	case false:
@@ -124,4 +134,5 @@ void sage_init(void)
 void sage_close(void)
 {
 	run_flag = false;
+        pthread_cond_signal(&replay_main_loop);
 }
