@@ -25,6 +25,8 @@
  * 
  */
 
+#include <stdio.h>
+
 #ifndef INCLUDE_MESSAGE_H
 #define INCLUDE_MESSAGE_H
 

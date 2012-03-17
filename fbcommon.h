@@ -66,18 +66,18 @@ typedef struct Raw_TFrameBufferMemory {
 #endif
 	int ttyfd;
 #if 0
-	(*init)(void),		 /* ½é´ü²½ */
-	(*text_mode)(void),	 /* ¥Æ¥­¥¹¥È¥â¡¼¥É¤ËÀÚÂØ¤¨ */
-	(*graph_mode)(void),	 /* ¥°¥é¥Õ¥£¥Ã¥¯¥â¡¼¥É¤ËÀÚÂØ¤¨ */
-	(*wput)(u_char *code, u_char fc, u_char bc), /* ´Á»ú½ĞÎÏ */
-	(*sput)(u_char *code, u_char fc, u_char bc), /* ANK½ĞÎÏ */
+	(*init)(void),		 /* åˆæœŸåŒ– */
+	(*text_mode)(void),	 /* ãƒ†ã‚­ã‚¹ãƒˆãƒ¢ãƒ¼ãƒ‰ã«åˆ‡æ›¿ãˆ */
+	(*graph_mode)(void),	 /* ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ãƒ¢ãƒ¼ãƒ‰ã«åˆ‡æ›¿ãˆ */
+	(*wput)(u_char *code, u_char fc, u_char bc), /* æ¼¢å­—å‡ºåŠ› */
+	(*sput)(u_char *code, u_char fc, u_char bc), /* ANKå‡ºåŠ› */
 	(*set_cursor_address)(struct cursorInfo *c, u_int x, u_int y),
-	/* ¥«¡¼¥½¥ë c ¤Î¥¢¥É¥ì¥¹¤ò (x,y) ¤ËÀßÄê */
+	/* ã‚«ãƒ¼ã‚½ãƒ« c ã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’ (x,y) ã«è¨­å®š */
 	(*set_address)(u_int i),
-	/* Ê¸»ú½ñ¤­¹ş¤ß¥¢¥É¥ì¥¹¤ò i Ê¸»úÌÜ¤ËÀßÄê */
-	(*cursor)(struct cursorInfo *),	/* ¥«¡¼¥½¥ë¤ò¥È¥°¥ë */
-	(*screen_saver)(bool),	 /* ¥¹¥¯¥ê¡¼¥ó¥Ö¥é¥ó¥¯/¥¢¥ó¥Ö¥é¥ó¥¯ */
-	(*detatch)(void),	 /* ¥É¥é¥¤¥Ğ²òÊü */
+	/* æ–‡å­—æ›¸ãè¾¼ã¿ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’ i æ–‡å­—ç›®ã«è¨­å®š */
+	(*cursor)(struct cursorInfo *),	/* ã‚«ãƒ¼ã‚½ãƒ«ã‚’ãƒˆã‚°ãƒ« */
+	(*screen_saver)(bool),	 /* ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ãƒ–ãƒ©ãƒ³ã‚¯/ã‚¢ãƒ³ãƒ–ãƒ©ãƒ³ã‚¯ */
+	(*detatch)(void),	 /* ãƒ‰ãƒ©ã‚¤ãƒè§£æ”¾ */
 #endif
 } TFrameBufferMemory;
 

@@ -4,6 +4,8 @@ jfbterm_SOURCES = 				\
 		sequence.h 			\
 		fbcommon.c fbcommon.h 		\
 		fbdpsp.c fbdpsp.h 		\
+		fbdpsp32.c fbdpsp32.h		\
+		indextbl.c indextbl.h		\
 		font.c font.h 			\
 		picofont.c picofont.h 		\
 		getcap.c getcap.h 		\

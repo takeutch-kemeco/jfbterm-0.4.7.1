@@ -1,6 +1,4 @@
-/*
- * JFBTERM -
- * Copyright (C) 1999  Noritoshi MASUICHI (nmasu@ma3.justnet.ne.jp)
+/* Copyright (C) 1999  Noritoshi MASUICHI (nmasu@ma3.justnet.ne.jp)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,6 +34,8 @@
 #include <sys/types.h>
 
 #include "fbcommon.h"
+
+#include "fbdpsp32.h"
 
 #ifdef JFB_2BPP
 void tfbm_fill_rect_2bpp_packed(
@@ -115,21 +115,6 @@ void tfbm_reverse_24bpp_packed(
 	TFrameBufferMemory* p,
 	u_int sx, u_int sy, u_int lx, u_int ly, u_int color);
 #endif /* JFB_24BPP */
-
-#ifdef JFB_32BPP
-void tfbm_fill_rect_32bpp_packed(
-	TFrameBufferMemory* p,
-	u_int sx, u_int sy, u_int lx, u_int ly, u_int color);
-void tfbm_overlay_32bpp_packed(
-	TFrameBufferMemory* p,
-	u_int xd, u_int yd,
-	const u_char* ps, u_int lx, u_int ly, u_int gap, u_int color);
-void tfbm_clear_all_32bpp_packed(
-	struct Raw_TFrameBufferMemory* p, u_int color);
-void tfbm_reverse_32bpp_packed(
-	TFrameBufferMemory* p,
-	u_int sx, u_int sy, u_int lx, u_int ly, u_int color);
-#endif /* JFB_32BPP */
 
 #ifdef JFB_VGA16FB
 void tfbm_fill_rect_vga16(
