@@ -741,7 +741,7 @@ void tfbm_reverse_24bpp_packed(
 static void tfbm_rot_xy_32bpp_packed(u_int* real_x, u_int* real_y,
 				     const u_int x, const u_int y,
 			             const u_int w, const u_int h)
-{
+{	
 	switch(tfbm_scr_rot_flag) {
 	case TFBM_SCR_ROT_FLAG_CCW:
 		*real_x = y;
@@ -774,16 +774,20 @@ static void tfbm_set_pixel_32bpp_packed(TFrameBufferMemory* p,
                                         const u_int x, const u_int y,
 					const u_int icol)
 {
-	u_int* d = tfbm_seek_pix_adrs_32bpp_packed(p, x, y);
-	*d = icol;
+	if((x >= 0 && x < p->width) && (y >= 0 && y < p->height)) {
+		u_int* d = tfbm_seek_pix_adrs_32bpp_packed(p, x, y);
+		*d = icol;
+	}
 }
 
 static void tfbm_xor_pixel_32bpp_packed(TFrameBufferMemory* p,
 					const u_int x, const u_int y,
 					const u_int icol)
 {
-	u_int* d = tfbm_seek_pix_adrs_32bpp_packed(p, x, y);
-	*d ^= icol;
+	if((x >= 0 && x < p->width) && (y >= 0 && y < p->height)) {
+		u_int* d = tfbm_seek_pix_adrs_32bpp_packed(p, x, y);
+		*d ^= icol;
+	}
 }
 
 void tfbm_fill_rect_32bpp_packed(TFrameBufferMemory* p,
