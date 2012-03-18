@@ -639,9 +639,6 @@ void tfbm_open(TFrameBufferMemory* p)
 	}
 #endif
 
-        if(p->cap.bitsPerPixel == 32) {
-                tfbm_open_32bpp_packed(p);
-        }
 }
 
 void tfbm_close(TFrameBufferMemory* p)
@@ -667,9 +664,9 @@ void tfbm_close(TFrameBufferMemory* p)
 	close(p->fh);
 }
 
-int tfbm_select_visual(TFrameBufferMemory* p,
-                       struct fb_var_screeninfo* fbvs,
-		       struct fb_fix_screeninfo* fbfs)
+int tfbm_select_visual( TFrameBufferMemory* p,
+			struct fb_var_screeninfo* fbvs,
+			struct fb_fix_screeninfo* fbfs)
 {
 	int ret;
 	int static_color = 0;
