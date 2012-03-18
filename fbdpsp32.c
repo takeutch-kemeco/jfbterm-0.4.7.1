@@ -38,7 +38,7 @@ static u_int itbl_w = 0;
 static u_int itbl_h = 0;
 static u_int** itbl = NULL;
 
-static void tfbm_init_itbl_32bpp_packed(TFrameBufferMemory* p)
+static void tfbm_open_itbl_32bpp_packed(TFrameBufferMemory* p)
 {
 	itbl = itbl_new(p->width, p->height, 4, p->bytePerLine);
 	itbl_w = p->width;
@@ -54,26 +54,32 @@ static void tfbm_close_itbl_32bpp_packed(void)
 	itbl_h = 0;	
 }
 
+void tfbm_open_32bpp_packed(TFrameBufferMemory* p)
+{
+        tfbm_open_itbl_32bpp_packed(p); 
+}
+
+void tfbm_close_32bpp_packed(TFrameBufferMemory* p)
+{
+        tfbm_close_itbl_32bpp_packed(); 
+}
+
 static void tfbm_set_pixel_32bpp_packed(TFrameBufferMemory* p,
                                         const u_int x, const u_int y,
 					const u_int icol)
 {
-	if(itbl == NULL) {
-		tfbm_init_itbl_32bpp_packed(p);
+	if((x >= 0 && x < p->width) && (y >= 0 && y < p->height)) {
+		*((u_int*)(p->smem + *(*(itbl + y) + x))) = icol;
 	}
-
-	*((u_int*)(p->smem + *(*(itbl + y) + x))) = icol;
 }
 
 static void tfbm_xor_pixel_32bpp_packed(TFrameBufferMemory* p,
 					const u_int x, const u_int y,
 					const u_int icol)
 {
-	if(itbl == NULL) {
-		tfbm_init_itbl_32bpp_packed(p);
+	if((x >= 0 && x < p->width) && (y >= 0 && y < p->height)) {
+		*((u_int*)(p->smem + *(*(itbl + y) + x))) ^= icol;
 	}
-
-	*((u_int*)(p->smem + *(*(itbl + y) + x))) ^= icol;
 }
 
 void tfbm_fill_rect_32bpp_packed(TFrameBufferMemory* p,

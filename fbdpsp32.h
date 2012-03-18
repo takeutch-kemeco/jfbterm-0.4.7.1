@@ -45,5 +45,7 @@ void tfbm_reverse_32bpp_packed(TFrameBufferMemory* p,
 			       const u_int sx, const u_int sy,
 			       const u_int lx, const u_int ly,
 			       const u_int color);
+void tfbm_open_32bpp_packed(TFrameBufferMemory* p);
+void tfbm_close_32bpp_packed(TFrameBufferMemory* p);
 
 #endif /* __FBDPSP32_H__ */
