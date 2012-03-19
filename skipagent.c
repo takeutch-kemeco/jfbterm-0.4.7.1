@@ -64,7 +64,12 @@ static void* main_loop(void* _a)
 
 				pthread_mutex_lock(&mutex);
 
-				cur_func(cur_param);
+				if(cur_func != NULL && cur_param != NULL) {
+					cur_func(cur_param);
+				}
+				
+				cur_func = NULL;
+				cur_param = NULL;
 
 				pthread_mutex_unlock(&mutex);
 
