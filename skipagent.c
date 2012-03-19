@@ -36,24 +36,6 @@ static unsigned long long rdtsc(void)
 	return A;
 }
 
-static bool mutex_lock_flag = false;
-
-static void mutex_lock(void)
-{
-	while(1) {
-		if(__sync_bool_compare_and_swap(&mutex_lock_flag,
-						false,
-						true)) {
-			return;
-		}
-	}
-}
-
-static void mutex_unlock(void)
-{
-	mutex_lock_flag = false;
-}
-
 static bool is_skip(void)
 {
 	if(cur_time - start_time < limit_time) {
@@ -79,23 +61,12 @@ static void* main_loop(void* _a)
 
 		if(order_flag) {
 			if(is_skip() == false) {
-//				mutex_lock();
-
-//				if(cur_func != NULL && cur_param != NULL) {
-					cur_func(cur_param);
-//				}
-				
-//				cur_func = NULL;
-//				cur_param = NULL;
-
 				cur_func(cur_param);
 				nanosleep(&loop_time_ts, NULL);
 				cur_func(cur_param);
 
 				prev_time = rdtsc();
 				order_flag = false;
-
-//				mutex_unlock();
 			}
 
 			prev_time = cur_time;
@@ -111,15 +82,11 @@ void sage_throw(sage_throw_func func, void* param)
 {
 	switch(sage_use) {
 	case true:
-//		mutex_lock();
-
 		cur_func = func;
 		cur_param = param;
 
 		start_time = rdtsc();
 		order_flag = true;
-
-//		mutex_unlock();
 
 		break;
 
@@ -151,10 +118,5 @@ void sage_init(void)
 
 void sage_close(void)
 {
-	pthread_kill(&thread, SIGKILL);
-//	mutex_lock();
-
-//	run_flag = false;
-
-//	mutex_unlock();
+	run_flag = false;
 }
