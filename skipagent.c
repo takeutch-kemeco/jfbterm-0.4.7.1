@@ -14,10 +14,11 @@
 bool sage_use = true;
 
 static pthread_t thread;
+static pthread_mutex_t mutex;
 
-static const unsigned long long loop_time  = (1000 * 1000) * 4;
-static const unsigned long long limit_time = (1000 * 1000) * 200;
-static const unsigned long long bound_time = (1000 * 1000) * 16;
+static const unsigned long long loop_time  = (1000 * 1000) * 10;
+static const unsigned long long limit_time = (1000 * 1000) * 100;
+static const unsigned long long bound_time = (1000 * 1000) * 4;
 
 static unsigned long long start_time = 0;
 static unsigned long long cur_time   = 0;
@@ -38,11 +39,11 @@ static unsigned long long rdtsc(void)
 
 static bool is_skip(void)
 {
-	if(cur_time - start_time < limit_time) {
-		if(cur_time - prev_time < bound_time) {
-			return true;
-		} else {
+	if(cur_time - prev_time < bound_time) {
+		if(cur_time - start_time >= limit_time) {
 			return false;
+		} else {
+			return true;
 		}
 	}
 
@@ -61,14 +62,14 @@ static void* main_loop(void* _a)
 
 		if(order_flag) {
 			if(is_skip() == false) {
-				cur_func(cur_param);
-				nanosleep(&loop_time_ts, NULL);
-				cur_func(cur_param);
+				pthread_mutex_lock(&mutex);
 
-				prev_time = rdtsc();
 				order_flag = false;
-			}
+				cur_func(cur_param);
 
+				pthread_mutex_unlock(&mutex);
+			}
+			
 			prev_time = cur_time;
 		}
 
@@ -82,12 +83,12 @@ void sage_throw(sage_throw_func func, void* param)
 {
 	switch(sage_use) {
 	case true:
+		start_time = rdtsc();
+
 		cur_func = func;
 		cur_param = param;
 
-		start_time = rdtsc();
 		order_flag = true;
-
 		break;
 
 	case false:
@@ -113,6 +114,10 @@ void sage_init(void)
 
 	if(pthread_create(&thread, &attr, main_loop, NULL) != 0) {
 		die("sage_init(): thread create err\n");
+	}
+
+	if(pthread_mutex_init(&mutex, NULL) != 0) {
+		die("sage_init(): mutex create err\n");
 	}
 }
 
