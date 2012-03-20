@@ -14,8 +14,6 @@
 bool sage_use = true;
 
 static pthread_t thread;
-//static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-//static pthread_cond_t run_main_loop = PTHREAD_COND_INITIALIZER;
 
 static const unsigned long long limit_time = (1000 * 1000) * 100;
 static const unsigned long long bound_time = (1000 * 1000) * 16;
@@ -66,8 +64,6 @@ static bool is_skip(void)
 static void* main_loop(void* _a)
 {
 	while((volatile bool)run_flag) {
-//		pthread_mutex_lock(&lock);
-
 		if(order_flag) {
 			cur_time = rdtsc();
 			if(is_skip() == false) {
@@ -78,8 +74,6 @@ static void* main_loop(void* _a)
 				refresh_flag = true;
 
 				start_time = cur_time;
-
-//				pthread_cond_wait(&run_main_loop, &lock);
 			}
 
 			prev_time = cur_time;
@@ -92,36 +86,24 @@ static void* main_loop(void* _a)
 			cur_func(cur_param);
 		}
 
-//		pthread_mutex_unlock(&lock);
-
 		nanosleep(&loop_time_ts, NULL);
 	}
 
 	return NULL;
 }
 
-static void dummy_func(void* _a) {}
-//static void* dummy_param = NULL;
-
 void sage_throw(sage_throw_func func, void* param)
 {
 	switch(sage_use) {
 	case true:
-//		pthread_mutex_lock(&lock);
-
 		if(run_flag) {
 			order_flag = true;
 
 			if(order_flag == true) {
-				cur_func = func;
 				cur_param = param;
+				cur_func = func;
 			}
-
-//			pthread_cond_signal(&run_main_loop);
 		}
-
-//		pthread_mutex_unlock(&lock);
-
 		break;
 
 	case false:
@@ -147,22 +129,10 @@ void sage_init(void)
 	}
 }
 
+static void dummy_func(void* _a) {}
+
 void sage_close(void)
 {
-////	pthread_mutex_lock(&lock);
-
 	run_flag = false;
 	cur_func = dummy_func;
-
-//	pthread_cond_signal(&run_main_loop);
-
-////	cur_param = dummy_param;
-
-////	pthread_mutex_unlock(&lock);
-
-////	while(order_flag) {
-////		nanosleep(&loop_time_ts, NULL);
-////	}
-
-////	pthread_join(thread, NULL);
 }
