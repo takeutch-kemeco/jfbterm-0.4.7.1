@@ -117,8 +117,6 @@ void tvterm_init(TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->caps = caps;
 	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
-
-	sage_init();
 }
 
 int
@@ -487,6 +485,8 @@ void tvterm_start(TVterm* p)
         /*  */
 	tvterm_register_signal(p);
 	tvterm_set_window_size(p);
+
+	sage_init();
 }
 
 void tvterm_final(TVterm* p)
