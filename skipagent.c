@@ -126,6 +126,8 @@ void sage_throw(sage_throw_func func, void* param)
 
 void sage_init(void)
 {
+	pthread_mutex_lock(&lock);
+
 	start_time = 0;
 	cur_time = 0;
 	prev_time = 0;
@@ -139,6 +141,8 @@ void sage_init(void)
 	if(pthread_create(&thread, NULL, main_loop, NULL) != 0) {
 		die("sage_init(): thread create err\n");
 	}
+
+	pthread_mutex_unlock(&lock);
 }
 
 void sage_close(void)
