@@ -57,7 +57,6 @@
 #include "config.h"
 
 static int gChildProcessId = 0;
-static int gExitFlag = 0;
 
 static struct TTerm gTerm;
 
@@ -68,21 +67,23 @@ static void tterm_reset_utmp(struct TTerm* p);
 
 static void sigchld(int sig)
 {
-	int st;
-	int ret = wait(&st);
-	if(ret == gChildProcessId || ret == ECHILD) {
+	int ret = waitpid(gChildProcessId, &sig, WNOHANG);
+
 #ifdef DEBUG_TERM
-	print_message_f("sigchld(): ret[%d], gChildProcessId[%d], ECHILD[%d]\n",
-			ret, gChildProcessId, ECHILD);
+	print_message_f("sigchld(): "
+		        "ret[%d], "
+			"gChildProcessId[%d]\n",
+			ret, gChildProcessId);
 #endif
+
+	if(ret == gChildProcessId) {
 		tvterm_unregister_signal();
 		tterm_final(&gTerm);
 
 		exit(EXIT_SUCCESS);
 	}
-	
+
 	signal(SIGCHLD, sigchld);
-	gExitFlag = 1;
 }
 
 /* term に初期状態をセットする
@@ -201,7 +202,7 @@ void tterm_start(const char* tn, const char* en)
 	 * VtInit();
 	 * VtStart();
 	 */
-	while (gExitFlag == 0) {
+	while (1) {
 		fd_set fds;
 		int max = 0;
 		tv.tv_sec = 0;
@@ -209,9 +210,12 @@ void tterm_start(const char* tn, const char* en)
 		FD_ZERO(&fds);
 		FD_SET(0,&fds);
 		FD_SET(p->ptyfd,&fds);
-		if (p->ptyfd > max) max = p->ptyfd;
+		if (p->ptyfd > max) {
+			max = p->ptyfd;
+		}
+		
 		ret = select(max+1, &fds, NULL, NULL, &tv);
-                if (ret == 0 || (ret < 0 && errno == EINTR)) {
+		if (ret == 0 || (ret < 0 && errno == EINTR)) {
 #ifdef JFB_ENABLE_DIMMER
 			if (!blank && ++idle_time > DIMMER_TIMEOUT) {
 				// Goto blank
@@ -226,6 +230,7 @@ void tterm_start(const char* tn, const char* en)
 		if (ret < 0) {
 			print_strerror_and_exit("select");
 		}
+
 		if (FD_ISSET(0, &fds)) {
 			ret = read(0, buf, BUF_SIZE);
 #ifdef JFB_ENABLE_DIMMER
