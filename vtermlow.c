@@ -284,87 +284,89 @@ static void __tvterm_refresh(void* __p)
 {
 	TVterm* p = __p;
 
-	u_int i;
-	u_int x, y;
-	u_int lang;
-	u_char ch, ch2;
-	u_int chlw;
-	u_char fc, bc, fg;
-	TFont* pf;
-	const u_char* glyph;
-	u_int w, gw;
-
 	p->busy = true;
-	if (!p->active) {
+	if(!p->active) {
 		p->busy = false;
 		return;
 	}
 	
 	tvterm_show_cursor(p, false);
 
-	if (p->textClear) {
-		gFramebuffer.cap.fill(&gFramebuffer, 0, 0,
-				gFramebuffer.width, gFramebuffer.height, 0);
+	if(p->textClear) {
+		gFramebuffer.cap.fill(&gFramebuffer,
+				      0, 0,
+				      gFramebuffer.width,
+				      gFramebuffer.height,
+				      0);
 		p->textClear = false;
 	}
 
-	for (y = 0; y < p->ycap; y ++) {
-		for (x = 0; x < p->xcap; x ++) {
-			w = 1;
-			i = tvterm_coord_to_index(p, x, y);
-			fg = p->flag[i];
-			if (fg & CLEAN_S) {
+	u_int y;
+	for(y = 0; y < p->ycap; y++) {
+		u_int x;
+		for(x = 0; x < p->xcap; x++) {
+			u_int i = tvterm_coord_to_index(p, x, y);
+
+			u_char fg = p->flag[i];
+			if(fg & CLEAN_S) {
 				 continue; /* already clean */
 			}
-			fc = p->attr[i] & 0xf;
-			bc = p->attr[i] >> 4;
-			chlw = p->text[i];
-			ch2 = (chlw >> 8) & 0xFF;
-			ch  = chlw & 0xFF;
-			lang = (chlw >> 24) & 0xFF;
+
+			u_char fc = p->attr[i] & 0x0F;
+			u_char bc = p->attr[i] >> 4;
+
+			u_int  chlw = p->text[i];
+			u_int  lang = (chlw >> 24) & 0xFF;
+
 			p->flag[i] |= CLEAN_S;
 
-			if (fg & CODEIS_1) {
+			TFont* pf;
+			u_int w;
+			if(fg & CODEIS_1) {
+				w = 2;
 				pf = &(gFont[lang]);
+
 				i++;
 				p->flag[i] |= CLEAN_S;
-				w = 2;
-#if 0
-				if (p->ins) {
-					tvterm_insert_n_chars(p, 2);
-				}
-#endif
 			} else {
+				w = 1;
 				pf = &(gFont[lang]);
-#if 0
-				if (p->ins) {
-					tvterm_insert_n_chars(p, 1);
-				}
-#endif
 			}
+
 			/* XXX: multiwidth support (unifont) */
-			glyph = pf->conv(pf, chlw, &gw);
+			u_int gw;
+			const u_char* glyph = pf->conv(pf, chlw, &gw);
 			gFramebuffer.cap.fill(&gFramebuffer,
-				gFontsWidth * x, gFontsHeight * y,
-				gFontsWidth * w,
-				gFontsHeight, bc);
-			if (chlw == 0)
+					      gFontsWidth * x,
+					      gFontsHeight * y,
+					      gFontsWidth * w,
+					      gFontsHeight,
+					      bc);
+
+			if(chlw == 0) {
 				continue;
+			}
+
 			gFramebuffer.cap.overlay(&gFramebuffer,
-				gFontsWidth * x, gFontsHeight * y,
-				glyph, gw, pf->height, pf->bytew, fc);
+						 gFontsWidth * x,
+						 gFontsHeight * y,
+						 glyph,
+						 gw,
+						 pf->height, pf->bytew,
+						 fc);
 		}
 	}
-	if (p->pen.x < p->xcap && p->pen.y < p->ycap) {
-	    /* XXX: pen position go out of screen by resize(1) for example */
-	    tvterm_set_cursor_wide(p, IsKanji(p,p->pen.x,p->pen.y));
-	    p->cursor.x = p->pen.x;
-	    p->cursor.y = p->pen.y;
-	    tvterm_show_cursor(p, true);
+
+	if(p->pen.x < p->xcap && p->pen.y < p->ycap) {
+		/* XXX: pen position go out of screen by resize(1) for example */
+		tvterm_set_cursor_wide(p, IsKanji(p,p->pen.x,p->pen.y));
+		p->cursor.x = p->pen.x;
+		p->cursor.y = p->pen.y;
+		tvterm_show_cursor(p, true);
 	}
 
 	p->busy = false;
-	if (p->release) {
+	if(p->release) {
                 sig_leave_virtual_console(SIGUSR1);
 	}
 }
