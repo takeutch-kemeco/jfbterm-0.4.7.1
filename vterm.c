@@ -360,7 +360,7 @@ static void __tvterm_switch_to_otherCS(struct TVterm* p,
 	}
 
 	/* ok */
-	struct TCodingSystem otherCS;
+	static struct TCodingSystem otherCS;
 	memcpy(&otherCS, ocs, sizeof(otherCS));
 	memset(otherCS.inbuf, 0, sizeof(otherCS.inbuf));
 	otherCS.inbuflen = 0;
@@ -414,7 +414,7 @@ static inline void tvterm_set_default_encoding_other(struct TVterm* p,
 
 	const char* g = tcsv_get_token(&farg);
 	if (strcmp(g, "other") == 0) {
-		struct TCodingSystem otherCS;
+		static struct TCodingSystem otherCS;
 		if (tvterm_parse_otherCS(en, &otherCS)) {
 			tvterm_switch_to_otherCS(p, &otherCS);
 		}
@@ -1394,7 +1394,7 @@ static void tvterm_esc_status_line(struct TVterm* p, u_char mode)
 static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 {
 	u_char	n;
-	static u_short varg[MAX_NARG], narg;
+	static u_short varg[MAX_NARG], narg, question;
 
 	if(ch >= '0' && ch <= '9') {
 		varg[narg] = (varg[narg] * 10) + (ch - '0');
@@ -1526,7 +1526,9 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 
 		case 'n':
 		case 'c':
-			tvterm_esc_report(p, ch, varg[0]);
+			if(question != true) {
+				tvterm_esc_report(p, ch, varg[0]);
+			}
 			break;
 
 		case 'R':
@@ -1534,7 +1536,7 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 		}
 
 		if(p->esc == NULL) {
-			narg = varg[0] = varg[1] = 0;
+			question = narg = varg[0] = varg[1] = 0;
 		}
 	}
 }
