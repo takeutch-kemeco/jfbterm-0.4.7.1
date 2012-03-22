@@ -66,25 +66,25 @@ static void ShowCursor(struct cursorInfo *, bool);
 static void sig_leave_virtual_console(int signum);
 static void sig_enter_virtual_console(int signum);
 
-static void tvterm_text_clean_band(TVterm* p, u_int top, u_int btm);
+static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm);
 
 /* おそらくx,y座標からテキストバッファーのインデックスへの変換 */
-static inline u_int tvterm_coord_to_index(TVterm* p, u_int x, u_int y)
+static inline u_int tvterm_coord_to_index(struct TVterm* p, u_int x, u_int y)
 {
 	return (p->textHead + x + y * p->xcap4) % p->tsize;
 }
 
-static inline int IsKanji(TVterm* p, u_int x, u_int y)
+static inline int IsKanji(struct TVterm* p, u_int x, u_int y)
 {
 	return p->flag[tvterm_coord_to_index(p, x, y)] & CODEIS_1;
 }
 
-static inline int IsKanji2(TVterm* p, u_int x, u_int y)
+static inline int IsKanji2(struct TVterm* p, u_int x, u_int y)
 {
 	return p->flag[tvterm_coord_to_index(p, x, y)] & CODEIS_2;
 }
 
-static inline void KanjiAdjust(TVterm* p, u_int *x, u_int *y)
+static inline void KanjiAdjust(struct TVterm* p, u_int *x, u_int *y)
 {
 	if (IsKanji2(p, *x, *y)) {
 		--*x;
@@ -131,7 +131,7 @@ static inline void llatch(void *head, int n)
  *
  * 実質上はコピーする。ただし、範囲が重複していても正しくコピーされる。
  */
-static inline void tvterm_move(TVterm* p, int dst, int src, int n)
+static inline void tvterm_move(struct TVterm* p, int dst, int src, int n)
 {
 	memmove(p->text+dst, p->text+src, n*sizeof(u_int));
 	memmove(p->attr+dst, p->attr+src, n);
@@ -139,7 +139,7 @@ static inline void tvterm_move(TVterm* p, int dst, int src, int n)
 }
 
 /* p - index を始点としての tvterm_move() */
-static inline void tvterm_brmove(TVterm* p, int dst, int src, int n)
+static inline void tvterm_brmove(struct TVterm* p, int dst, int src, int n)
 {
 	brmove(p->text+dst, p->text+src, n*sizeof(u_int));
 	brmove(p->attr+dst, p->attr+src, n);
@@ -147,7 +147,7 @@ static inline void tvterm_brmove(TVterm* p, int dst, int src, int n)
 }
 
 /* tvterm 内のバッファー text, attr, flag において、指定範囲をクリアーする */
-static inline void tvterm_clear(TVterm* p, int top, int n)
+static inline void tvterm_clear(struct TVterm* p, int top, int n)
 {
 	bzero(p->text+top, n*sizeof(u_int));
 	bzero(p->flag+top, n);
@@ -161,7 +161,7 @@ static inline void tvterm_clear(TVterm* p, int top, int n)
  * 現在の pen の位置へ、”n文字先～行末”までを、まるごとスライドしてくる。
  * その後、スライドした分だけ空白になるはずの行末領域を、クリアーで埋める。
  */
-void tvterm_delete_n_chars(TVterm* p, int n)
+void tvterm_delete_n_chars(struct TVterm* p, int n)
 {
 	u_int addr;
 	u_int dx;
@@ -177,7 +177,7 @@ void tvterm_delete_n_chars(TVterm* p, int n)
 }
 
 /* 現在の pen の位置の手前に、n 文字分の空白スペースを挿入する。（上書きではなく） */
-void tvterm_insert_n_chars(TVterm* p, int n)
+void tvterm_insert_n_chars(struct TVterm* p, int n)
 {
 	u_int addr;
 	u_int dx;
@@ -192,7 +192,7 @@ void tvterm_insert_n_chars(TVterm* p, int n)
 }
 
 #if 0 /* ハードウエアスクロールする際に使う。(現在未使用) */
-static void tvterm_scroll_up_n_lines(TVterm* p, int n)
+static void tvterm_scroll_up_n_lines(struct TVterm* p, int n)
 {
 	int	h;
 	int	t;
@@ -216,7 +216,7 @@ static void tvterm_scroll_up_n_lines(TVterm* p, int n)
  *
  * textHead 以下に空きスペースができるはずなので、そこをクリアーする処理がメイン。
  */
-static void tvterm_scroll_down_n_lines(TVterm* p, int n)
+static void tvterm_scroll_down_n_lines(struct TVterm* p, int n)
 {
 	int	h;
 	int	t;
@@ -236,12 +236,12 @@ static void tvterm_scroll_down_n_lines(TVterm* p, int n)
 }
 #endif
 
-void tvterm_set_cursor_wide(TVterm* p, bool b)
+void tvterm_set_cursor_wide(struct TVterm* p, bool b)
 {
 	p->cursor.wide = b;
 }
 
-void tvterm_show_cursor(TVterm* p, bool b)
+void tvterm_show_cursor(struct TVterm* p, bool b)
 {
 	if (!p->cursor.on) {
 		return;
@@ -282,7 +282,7 @@ void tvterm_show_cursor(TVterm* p, bool b)
 
 static void __tvterm_refresh(void* __p)
 {
-	TVterm* p = __p;
+	struct TVterm* p = __p;
 
 	p->busy = true;
 	if(!p->active) {
@@ -371,14 +371,12 @@ static void __tvterm_refresh(void* __p)
 	}
 }
 
-void tvterm_refresh(TVterm* p)
+void tvterm_refresh(struct TVterm* p)
 {
 	sage_throw(__tvterm_refresh, (void*)p);
 }
 
-/*---------------------------------------------------------------------------*/
-
-static TVterm* sig_obj = NULL;
+static struct TVterm* sig_obj = NULL;
 
 void tvterm_unregister_signal(void)
 {
@@ -396,7 +394,7 @@ void tvterm_unregister_signal(void)
         ioctl(0, TIOCCONS, NULL);
 }
 
-void tvterm_register_signal(TVterm* p)
+void tvterm_register_signal(struct TVterm* p)
 {
         struct vt_mode vtm;
 
@@ -419,7 +417,7 @@ void tvterm_register_signal(TVterm* p)
 }
 
 
-static void     sig_leave_virtual_console(int signum)
+static void sig_leave_virtual_console(int signum)
 {
 
         signal(SIGUSR1, sig_leave_virtual_console);
@@ -436,7 +434,7 @@ static void     sig_leave_virtual_console(int signum)
         }
 }
 
-static void     sig_enter_virtual_console(int signum)
+static void sig_enter_virtual_console(int signum)
 {
         signal(SIGUSR2, sig_enter_virtual_console);
         if (!sig_obj->active) {
@@ -446,7 +444,7 @@ static void     sig_enter_virtual_console(int signum)
         }
 }
 
-void tvterm_wput(TVterm* p, u_int idx, u_char ch1, u_char ch2)
+void tvterm_wput(struct TVterm* p, u_int idx, u_char ch1, u_char ch2)
 {
 	u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
@@ -457,7 +455,7 @@ void tvterm_wput(TVterm* p, u_int idx, u_char ch1, u_char ch2)
 	p->flag[a+1] = LATCH_2;
 }
 
-void tvterm_sput(TVterm* p, u_int idx, u_char ch)
+void tvterm_sput(struct TVterm* p, u_int idx, u_char ch)
 {
 	u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
@@ -467,7 +465,7 @@ void tvterm_sput(TVterm* p, u_int idx, u_char ch)
 }
 
 #ifdef JFB_UTF8
-void tvterm_uput1(TVterm* p, u_int idx, u_int ch)
+void tvterm_uput1(struct TVterm* p, u_int idx, u_int ch)
 {
 	u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
@@ -476,7 +474,7 @@ void tvterm_uput1(TVterm* p, u_int idx, u_int ch)
 	p->flag[a] = LATCH_S;
 }
 
-void tvterm_uput2(TVterm* p, u_int idx, u_int ch)
+void tvterm_uput2(struct TVterm* p, u_int idx, u_int ch)
 {
 	u_int a= tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
@@ -491,7 +489,7 @@ void tvterm_uput2(TVterm* p, u_int idx, u_int ch)
 /**
 	行区間 [0, TVterm::ymax) をクリアする。
 **/
-void tvterm_text_clear_all(TVterm* p)
+void tvterm_text_clear_all(struct TVterm* p)
 {
 	u_int y;
 	u_int a;
@@ -510,7 +508,7 @@ mode
 2	行 TVterm::y をクリアする。
 ow	行 TVterm::y カラム[TVterm::x, TVterm::xcap) をクリアする。
 **/
-void tvterm_text_clear_eol(TVterm* p, u_char mode)
+void tvterm_text_clear_eol(struct TVterm* p, u_char mode)
 {
 	u_int a;
 	u_char len;
@@ -541,7 +539,7 @@ mode
 ow	行 [TVterm::y+1, TVterm::ycap) をクリアし、さらに
 	行 TVterm::y カラム[TVterm::x, TVterm::xcap) をクリアする。
 **/
-void tvterm_text_clear_eos(TVterm* p, u_char mode)
+void tvterm_text_clear_eos(struct TVterm* p, u_char mode)
 {
 	u_int	a;
 	u_int	len;
@@ -567,7 +565,7 @@ void tvterm_text_clear_eos(TVterm* p, u_char mode)
 /**
 	行区間 [top, btm) をクリアする。
 **/
-static void tvterm_text_clean_band(TVterm* p, u_int top, u_int btm)
+static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm)
 {
 	u_int	y;
 	u_int	a;
@@ -581,12 +579,12 @@ static void tvterm_text_clean_band(TVterm* p, u_int top, u_int btm)
 
 /**
 **/
-void tvterm_text_scroll_down(TVterm* p, int line)
+void tvterm_text_scroll_down(struct TVterm* p, int line)
 {
 	tvterm_text_move_down(p, p->ymin, p->ymax, line);
 }
 
-void tvterm_text_move_down(TVterm* p, int top, int btm, int line)
+void tvterm_text_move_down(struct TVterm* p, int top, int btm, int line)
 {
 	u_int	n;
 	u_int	src;
@@ -607,12 +605,12 @@ void tvterm_text_move_down(TVterm* p, int top, int btm, int line)
 
 /**
 **/
-void tvterm_text_scroll_up(TVterm* p, int line)
+void tvterm_text_scroll_up(struct TVterm* p, int line)
 {
 	tvterm_text_move_up(p, p->ymin, p->ymax, line);
 }
 
-void tvterm_text_move_up(TVterm* p, int top, int btm, int line)
+void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
 {
 	u_int	n;
 	u_int	src;
@@ -631,7 +629,7 @@ void tvterm_text_move_up(TVterm* p, int top, int btm, int line)
 	}
 }
 
-void	tvterm_text_reverse(TVterm* p,int fx, int fy, int tx, int ty)
+void	tvterm_text_reverse(struct TVterm* p,int fx, int fy, int tx, int ty)
 {
 	u_int	from, to, y, swp, xx, x;
 	u_char	fc, bc, fc2, bc2;
@@ -762,4 +760,3 @@ static int	ConfigSaver(const char *confstr)
 	return SUCCESS;
 }
 #endif
-

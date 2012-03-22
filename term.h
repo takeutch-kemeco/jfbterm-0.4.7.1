@@ -38,7 +38,7 @@ struct TTerm {
 	int ttyfd;
 	char name[0x1000];
 	struct termios ttysave;
-	TVterm vterm;
+	struct TVterm vterm;
 };
 
 void tterm_start(const char* tn, const char* en);
