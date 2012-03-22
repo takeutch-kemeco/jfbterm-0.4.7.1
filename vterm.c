@@ -373,51 +373,70 @@ tvterm_is_otherCS(TVterm *p)
 
 #endif
 
-
-void tvterm_set_default_encoding(TVterm* p, const char* en)
+/* other,<coding-system>,iconv,<std-coding-system> */
+static inline void tvterm_set_default_encoding_other(TVterm* p,
+						     const char* en)
 {
-	const char *g;
-	int i;
-	int idx[6];
-	struct TCsv farg;
-	int ncap;
-
-	tcsv_init(&farg, en);
-	ncap = farg.cap;
-	/* first token */
-	g = tcsv_get_token(&farg);
 #ifdef JFB_OTHER_CODING_SYSTEM
+	struct TCsv farg;
+	tcsv_init(&farg, en);
+
+	const char* g = tcsv_get_token(&farg);
 	if (strcmp(g, "other") == 0) {
-		/* other,<coding-system>,iconv,<std-coding-system> */
 		static TCodingSystem otherCS;
-		if (tvterm_parse_otherCS(en, &otherCS) == 0)
-			goto FINALIZE;
-		tvterm_switch_to_otherCS(p, &otherCS);
-		goto FINALIZE;
+		if (tvterm_parse_otherCS(en, &otherCS)) {
+			tvterm_switch_to_otherCS(p, &otherCS);
+		}
 	}
+
+	tcsv_final(&farg);
 #endif
+}
+
+/* UTF-8,<fontsetname> */
+static inline void tvterm_set_default_encoding_utf8(TVterm* p,
+						    const char* en)
+{
 #ifdef JFB_UTF8
+	struct TCsv farg;
+	tcsv_init(&farg, en);
+
+	const char* g = tcsv_get_token(&farg);
 	if (strcmp(g, "UTF-8") == 0) {
 		/* UTF-8,<fontsetname> */
 		p->utf8DefaultIdx = tvterm_UTF8index(en);
 		tvterm_switch_to_UTF8(p);
-		goto FINALIZE;
 	}
-#endif
-	/* ISO-2022 */
-	if (tvterm_parse_encoding(en, idx) == 0) {
-		goto FINALIZE;
-	}
-	/* GL */
-	p->gDefaultL = idx[0];
-	/* GR */
-	p->gDefaultR = idx[1];
-	/* G0 .. G3 */
-	for (i = 0 ; i < 4 ; i++) {
-		p->gDefaultIdx[i] = idx[2+i];
-	}
-FINALIZE:	
+
 	tcsv_final(&farg);
+#endif
+}
+
+/* ISO-2022 */
+static inline void tvterm_set_default_encoding_iso2022(TVterm* p,
+						       const char* en)
+{
+	int idx[6];
+	if (tvterm_parse_encoding(en, idx)) {
+		/* GL */
+		p->gDefaultL = idx[0];
+
+		/* GR */
+		p->gDefaultR = idx[1];
+
+		/* G0 .. G3 */
+		int i;	
+		for(i = 0; i < 4; i++) {
+			p->gDefaultIdx[i] = idx[2+i];
+		}
+	}
+}
+
+void tvterm_set_default_encoding(TVterm* p, const char* en)
+{
+	tvterm_set_default_encoding_other(p, en);
+	tvterm_set_default_encoding_utf8(p, en);
+	tvterm_set_default_encoding_iso2022(p, en);
 }
 
 void tvterm_set_default_invoke_and_designate(TVterm* p)
