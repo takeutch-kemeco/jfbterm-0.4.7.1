@@ -44,4 +44,10 @@ void util_swap(u_int* a, u_int* b);
 
 #define util_free(p) {free(p); (p) = NULL;}
 
+#define UTIL_SWAP(a, b) {	\
+	typeof(a) tmp = a;	\
+	a = b;			\
+	b = tmp;		\
+}
+
 #endif /* INCLUDE_UTIL_H */

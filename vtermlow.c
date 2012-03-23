@@ -52,42 +52,34 @@
 #include "config.h"
 #include "skipagent.h"
 
-#if 0
-
-static int	saveTime, saverCount;
-static bool	saved;
-static volatile bool	busy;		 /* TRUE iff updating screen */
-static volatile bool	release;	 /* delayed VC switch flag */
-
-static void ShowCursor(struct cursorInfo *, bool);
-
-#endif
-
 static void sig_leave_virtual_console(int signum);
 static void sig_enter_virtual_console(int signum);
 
 static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm);
 
-/* おそらくx,y座標からテキストバッファーのインデックスへの変換 */
-static inline u_int tvterm_coord_to_index(struct TVterm* p, u_int x, u_int y)
+/* x,y座標からテキストバッファーのインデックスへの変換 */
+static inline u_int tvterm_coord_to_index(struct TVterm* p,
+					  u_int x, u_int y)
 {
 	return (p->textHead + x + y * p->xcap4) % p->tsize;
 }
 
 static inline int IsKanji(struct TVterm* p, u_int x, u_int y)
 {
-	return p->flag[tvterm_coord_to_index(p, x, y)] & CODEIS_1;
+	const u_int index = tvterm_coord_to_index(p, x, y);
+	return p->flag[index] & CODEIS_1;
 }
 
 static inline int IsKanji2(struct TVterm* p, u_int x, u_int y)
 {
-	return p->flag[tvterm_coord_to_index(p, x, y)] & CODEIS_2;
+	const u_int index = tvterm_coord_to_index(p, x, y);
+	return p->flag[index] & CODEIS_2;
 }
 
-static inline void KanjiAdjust(struct TVterm* p, u_int *x, u_int *y)
+static inline void KanjiAdjust(struct TVterm* p, u_int* x, u_int* y)
 {
-	if (IsKanji2(p, *x, *y)) {
-		--*x;
+	if(IsKanji2(p, *x, *y)) {
+		(*x) -= 1;
 	}
 }
 
@@ -110,7 +102,7 @@ static inline void blatch(void* head, int n)
  	u_char* c = (u_char*)head;
 	u_char* e = (u_char*)head + n;
 	while(c < e) {
-		*c++ &= 0x7f;
+		*c++ &= 0x7F;
 	}
 }
 
@@ -123,7 +115,7 @@ static inline void llatch(void *head, int n)
 	u_long* a = (u_long*)head;
 	u_long* e = (u_long*)head + (n>>2);
 	while(a < e) {
-		*a++ &= 0x7f7f7f7f;
+		*a++ &= 0x7F7F7F7F;
 	}
 }
 
@@ -133,7 +125,7 @@ static inline void llatch(void *head, int n)
  */
 static inline void tvterm_move(struct TVterm* p, int dst, int src, int n)
 {
-	memmove(p->text+dst, p->text+src, n*sizeof(u_int));
+	memmove(p->text+dst, p->text+src, n * sizeof(u_int));
 	memmove(p->attr+dst, p->attr+src, n);
 	memmove(p->flag+dst, p->flag+src, n);
 }
@@ -141,7 +133,7 @@ static inline void tvterm_move(struct TVterm* p, int dst, int src, int n)
 /* p - index を始点としての tvterm_move() */
 static inline void tvterm_brmove(struct TVterm* p, int dst, int src, int n)
 {
-	brmove(p->text+dst, p->text+src, n*sizeof(u_int));
+	brmove(p->text+dst, p->text+src, n * sizeof(u_int));
 	brmove(p->attr+dst, p->attr+src, n);
 	brmove(p->flag+dst, p->flag+src, n);
 }
@@ -149,9 +141,9 @@ static inline void tvterm_brmove(struct TVterm* p, int dst, int src, int n)
 /* tvterm 内のバッファー text, attr, flag において、指定範囲をクリアーする */
 static inline void tvterm_clear(struct TVterm* p, int top, int n)
 {
-	bzero(p->text+top, n*sizeof(u_int));
-	bzero(p->flag+top, n);
-	memset(p->attr+top, (p->pen.bcol<<4), n);
+	memset(p->text + top, 0, n * sizeof(*(p->text)));
+	memset(p->flag + top, 0, n * sizeof(*(p->flag)));
+	memset(p->attr + top, (p->pen.bcol << 4), n * sizeof(*(p->attr)));
 }
 
 /* 現在の pen の位置から n 文字分をカットする（デルではない）。
@@ -163,14 +155,11 @@ static inline void tvterm_clear(struct TVterm* p, int top, int n)
  */
 void tvterm_delete_n_chars(struct TVterm* p, int n)
 {
-	u_int addr;
-	u_int dx;
+	u_int addr = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
+	u_int dx = p->xcap - p->pen.x - n;
 	
-	addr = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
-	dx = p->xcap - p->pen.x - n;
-	
-	tvterm_move(p, addr, addr+n, dx); /* bmove */
-	blatch(p->flag+addr, dx);
+	tvterm_move(p, addr, addr + n, dx); /* bmove */
+	blatch(p->flag + addr, dx);
 	
 	addr = tvterm_coord_to_index(p, p->xcap-n, p->pen.y);
 	tvterm_clear(p, addr, n);
@@ -179,102 +168,87 @@ void tvterm_delete_n_chars(struct TVterm* p, int n)
 /* 現在の pen の位置の手前に、n 文字分の空白スペースを挿入する。（上書きではなく） */
 void tvterm_insert_n_chars(struct TVterm* p, int n)
 {
-	u_int addr;
-	u_int dx;
-	
-	addr = tvterm_coord_to_index(p, p->xcap-1, p->pen.y);
-	dx = p->xcap - p->pen.x - n;
-	tvterm_brmove(p, addr, addr-n, dx);
+	u_int addr = tvterm_coord_to_index(p, p->xcap - 1, p->pen.y);
+	u_int dx = p->xcap - p->pen.x - n;
+
+	tvterm_brmove(p, addr, addr - n, dx);
 	
 	addr = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
-	blatch(p->flag+addr+n, dx);
+	blatch(p->flag + addr + n, dx);
 	tvterm_clear(p, addr, n);
 }
-
-#if 0 /* ハードウエアスクロールする際に使う。(現在未使用) */
-static void tvterm_scroll_up_n_lines(struct TVterm* p, int n)
-{
-	int	h;
-	int	t;
-
-	h = p->textHead;
-	textHead += n * p->xcap4;
-	if (p->textHead > p->tsize) {
-		p->textHead -= p->tsize;
-		n = p->tsize - h;
-		if (p->textHead) {
-			tvterm_clear(p, 0, p->textHead); /* lclear */
-		}
-	} else  {
-		n = p->textHead - h;
-	}
-	tvterm_clear(p, h, n); /* lclear */
-}
-
-/* n 行だけダウンスクロールする。
- * （ダウンスクロール　＝　↓カーソルを押された時の動き）
- *
- * textHead 以下に空きスペースができるはずなので、そこをクリアーする処理がメイン。
- */
-static void tvterm_scroll_down_n_lines(struct TVterm* p, int n)
-{
-	int	h;
-	int	t;
-
-	h = p->textHead;
-	p->textHead -= n * p->xcap4;
-	if (p->textHead < 0) {
-		p->textHead += p->tsize;
-		if (h) {
-			tvterm_clear(p, 0, h); /* lclear */
-		}
-		n = p->tsize - p->textHead;
-	} else {
-		n = h - p->textHead;
-	}
-	tvterm_clear(p, h, n); /* lclear */
-}
-#endif
 
 void tvterm_set_cursor_wide(struct TVterm* p, bool b)
 {
 	p->cursor.wide = b;
 }
 
+/* -- kei --
+ *	On this implementation, JFB_REVERSEVIDEO is effective on
+ *	only 2bpp machine.
+ *	On reverse video mode, cursor should be 0x00.
+ *	On non reverse video mode, cursor should be 0xf.
+ *	Yes, I know following is little bit dirty code, but
+ *	temporal fix...
+ */
+static inline void tvterm_show_cursor_reverse_video(struct TVterm* p)
+{
+#ifdef JFB_REVERSEVIDEO
+	const u_int x = gFontsWidth  * p->cursor.x;
+	const u_int y = gFontsHeight * p->cursor.y;
+
+	u_int lx;
+	if(p->cursor.wide) {
+		lx = p->cursor.width * 2;
+	} else {
+		lx = p->cursor.width;
+	}
+
+	const u_int ly = p->cursor.height;
+	
+	u_int color;
+	if(gFramebuffer.cap.bitsPerPixel == 2) {
+		color = 0x00;
+	} else {
+		color = 0x0F;
+	}
+
+	gFramebuffer.cap.reverse(&gFramebuffer, x, y, lx, ly, color);
+#endif
+}
+
+static inline void tvterm_show_cursor_normal(struct TVterm* p)
+{
+#ifndef JFB_REVERSEVIDEO
+	const u_int x = gFontsWidth  * p->cursor.x;
+	const u_int y = gFontsHeight * p->cursor.y;
+
+	u_int lx;
+	if(p->cursor.wide) {
+		lx = p->cursor.width * 2;
+	} else {
+		lx = p->cursor.width;
+	}
+
+	const u_int ly = p->cursor.height;
+	
+	const u_int color = 0x0F;
+
+	gFramebuffer.cap.reverse(&gFramebuffer, x, y, lx, ly, color);
+#endif
+}
+
 void tvterm_show_cursor(struct TVterm* p, bool b)
 {
-	if (!p->cursor.on) {
+	if(!p->cursor.on) {
 		return;
 	}
-	if (p->cursor.shown != b) {
+
+	if(p->cursor.shown != b) {
 #ifdef JFB_REVERSEVIDEO
-/* -- kei --
-	On this implementation, JFB_REVERSEVIDEO is effective on
-	only 2bpp machine.
-	On reverse video mode, cursor should be 0x00.
-	On non reverse video mode, cursor should be 0xf.
-	Yes, I know following is little bit dirty code, but
-	temporal fix...
-*/
-		if (gFramebuffer.cap.bitsPerPixel == 2) {
-			gFramebuffer.cap.reverse(&gFramebuffer,
-				gFontsWidth * p->cursor.x,
-				gFontsHeight * p->cursor.y,
-				p->cursor.width + (p->cursor.wide ? p->cursor.width : 0),
-				p->cursor.height, 0x0);
-		} else {
-			gFramebuffer.cap.reverse(&gFramebuffer,
-				gFontsWidth * p->cursor.x,
-				gFontsHeight * p->cursor.y,
-				p->cursor.width + (p->cursor.wide ? p->cursor.width : 0),
-				p->cursor.height, 0xf);
-		}
+		tvterm_show_cursor_reverse_video(p);
 #else
-		gFramebuffer.cap.reverse(&gFramebuffer,
-			gFontsWidth * p->cursor.x,
-			gFontsHeight * p->cursor.y,
-			p->cursor.width + (p->cursor.wide ? p->cursor.width : 0),
-			p->cursor.height, 0xf);
+		tvterm_show_cursor_normal(p);
 #endif
 		p->cursor.shown = b;
 	}
@@ -380,11 +354,10 @@ static struct TVterm* sig_obj = NULL;
 
 void tvterm_unregister_signal(void)
 {
-        struct vt_mode vtm;
-
         signal(SIGUSR1, SIG_DFL);
         signal(SIGUSR2, SIG_DFL);
 
+        struct vt_mode vtm;
         vtm.mode = VT_AUTO;
         vtm.waitv = 0;
         vtm.relsig = 0;
@@ -396,19 +369,17 @@ void tvterm_unregister_signal(void)
 
 void tvterm_register_signal(struct TVterm* p)
 {
-        struct vt_mode vtm;
-
-        sig_obj = p;
-
         signal(SIGUSR1, sig_leave_virtual_console);
         signal(SIGUSR2, sig_enter_virtual_console);
 
+        struct vt_mode vtm;
         vtm.mode = VT_PROCESS;
         vtm.waitv = 0;
         vtm.relsig = SIGUSR1;
         vtm.acqsig = SIGUSR2;
         ioctl(0, VT_SETMODE, &vtm);
 
+        sig_obj = p;
         ioctl(sig_obj->term->ttyfd, TIOCCONS, NULL);
 
         llatch(p->flag, p->tsize);
@@ -421,7 +392,7 @@ static void sig_leave_virtual_console(int signum)
 {
 
         signal(SIGUSR1, sig_leave_virtual_console);
-        if (sig_obj->busy) {
+        if(sig_obj->busy) {
                 sig_obj->release = true;
                 return;
         } else {
@@ -437,7 +408,7 @@ static void sig_leave_virtual_console(int signum)
 static void sig_enter_virtual_console(int signum)
 {
         signal(SIGUSR2, sig_enter_virtual_console);
-        if (!sig_obj->active) {
+        if(!sig_obj->active) {
                 sig_obj->active = true;
                 tvterm_register_signal(sig_obj);
                 signal(SIGUSR2, sig_enter_virtual_console);
@@ -446,28 +417,29 @@ static void sig_enter_virtual_console(int signum)
 
 void tvterm_wput(struct TVterm* p, u_int idx, u_char ch1, u_char ch2)
 {
-	u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
+	const u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
 	p->attr[a] = p->pen.fcol | (p->pen.bcol << 4);
-	p->text[a] = (idx << 24) | (ch1 << 8) | ch2;
-	p->text[a+1] = 0;
-	p->flag[a] = LATCH_1;
-	p->flag[a+1] = LATCH_2;
+
+	p->text[a + 0] = (idx << 24) | (ch1 << 8) | ch2;
+	p->text[a + 1] = 0;
+
+	p->flag[a + 0] = LATCH_1;
+	p->flag[a + 1] = LATCH_2;
 }
 
 void tvterm_sput(struct TVterm* p, u_int idx, u_char ch)
 {
-	u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
+	const u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
 	p->attr[a] = p->pen.fcol | (p->pen.bcol << 4);
 	p->text[a] = (idx << 24) |ch;
 	p->flag[a] = LATCH_S;
 }
 
-#ifdef JFB_UTF8
 void tvterm_uput1(struct TVterm* p, u_int idx, u_int ch)
 {
-	u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
+	const u_int a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
 	p->attr[a] = p->pen.fcol | (p->pen.bcol << 4);
 	p->text[a] = (idx << 24) | ch;
@@ -476,15 +448,16 @@ void tvterm_uput1(struct TVterm* p, u_int idx, u_int ch)
 
 void tvterm_uput2(struct TVterm* p, u_int idx, u_int ch)
 {
-	u_int a= tvterm_coord_to_index(p, p->pen.x, p->pen.y);
+	const u_int a= tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 
 	p->attr[a] = p->pen.fcol | (p->pen.bcol << 4);
-	p->text[a] = (idx << 24) | ch;
-	p->text[a+1] = 0;
-	p->flag[a] = LATCH_1;
-	p->flag[a+1] = LATCH_2;
+
+	p->text[a + 0] = (idx << 24) | ch;
+	p->text[a + 1] = 0;
+
+	p->flag[a + 0] = LATCH_1;
+	p->flag[a + 1] = LATCH_2;
 }
-#endif
 
 /**
 	行区間 [0, TVterm::ymax) をクリアする。
@@ -492,10 +465,8 @@ void tvterm_uput2(struct TVterm* p, u_int idx, u_int ch)
 void tvterm_text_clear_all(struct TVterm* p)
 {
 	u_int y;
-	u_int a;
-
 	for (y = 0; y < p->ymax; y++) {
-		a = tvterm_coord_to_index(p, 0, y);
+		const u_int a = tvterm_coord_to_index(p, 0, y);
 		tvterm_clear(p, a, p->xcap4); /* lclear */
 	}
 	p->textClear = true;
@@ -510,23 +481,27 @@ ow	行 TVterm::y カラム[TVterm::x, TVterm::xcap) をクリアする。
 **/
 void tvterm_text_clear_eol(struct TVterm* p, u_char mode)
 {
-	u_int a;
 	u_char len;
-	u_char x = 0;
+	u_char x;
 	
 	switch(mode) {
 	case 1:
+		x = 0;
 		len = p->pen.x;
 		break;
+
 	case 2:
+		x = 0;
 		len = p->xcap;
 		break;
+
 	default:
 		x = p->pen.x;
 		len = p->xcap - p->pen.x;
 		break;
 	}
-	a = tvterm_coord_to_index(p, x, p->pen.y);
+
+	const u_int a = tvterm_coord_to_index(p, x, p->pen.y);
 	tvterm_clear(p, a, len);
 }
 
@@ -541,8 +516,8 @@ ow	行 [TVterm::y+1, TVterm::ycap) をクリアし、さらに
 **/
 void tvterm_text_clear_eos(struct TVterm* p, u_char mode)
 {
-	u_int	a;
-	u_int	len;
+	u_int len;
+	u_int a;
 	
 	switch(mode) {
 	case 1:
@@ -550,9 +525,11 @@ void tvterm_text_clear_eos(struct TVterm* p, u_char mode)
 		a = tvterm_coord_to_index(p, 0, p->pen.y);
 		tvterm_clear(p, a, p->pen.x);
 		break;
+
 	case 2:
 		tvterm_text_clear_all(p);
 		break;
+
 	default:
 		tvterm_text_clean_band(p, p->pen.y + 1, p->ycap);
 		a = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
@@ -567,11 +544,9 @@ void tvterm_text_clear_eos(struct TVterm* p, u_char mode)
 **/
 static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm)
 {
-	u_int	y;
-	u_int	a;
-	
-	for (y = top; y < btm; y ++) {
-		a = tvterm_coord_to_index(p, 0, y);
+	u_int y;
+	for(y = top; y < btm; y ++) {
+		const u_int a = tvterm_coord_to_index(p, 0, y);
 		tvterm_clear(p, a, p->xcap4); /* lclear */
 		/* needless to latch */
 	}
@@ -586,16 +561,13 @@ void tvterm_text_scroll_down(struct TVterm* p, int line)
 
 void tvterm_text_move_down(struct TVterm* p, int top, int btm, int line)
 {
-	u_int	n;
-	u_int	src;
-	u_int	dst;
-
 	if (btm <= top + line) {
 		tvterm_text_clean_band(p, top, btm);
 	} else {
+		u_int n;
 		for (n = btm-1; n >= top + line; n --) {
-			dst = tvterm_coord_to_index(p, 0, n);
-			src = tvterm_coord_to_index(p, 0, n-line);
+			u_int dst = tvterm_coord_to_index(p, 0, n);
+			u_int src = tvterm_coord_to_index(p, 0, n - line);
 			tvterm_move(p, dst, src, p->xcap4); /* lmove */
 			llatch(p->flag + dst, p->xcap4);
 		}
@@ -612,16 +584,13 @@ void tvterm_text_scroll_up(struct TVterm* p, int line)
 
 void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
 {
-	u_int	n;
-	u_int	src;
-	u_int	dst;
-	
 	if (btm <= top + line) {
 		tvterm_text_clean_band(p, top, btm);
 	} else {
+		u_int n;
 		for (n = top; n < btm - line; n ++) {
-			dst = tvterm_coord_to_index(p, 0, n);
-			src = tvterm_coord_to_index(p, 0, n+line);
+			u_int dst = tvterm_coord_to_index(p, 0, n);
+			u_int src = tvterm_coord_to_index(p, 0, n+line);
 			tvterm_move(p, dst, src, p->xcap4); /* lmove */
 			llatch(p->flag + dst, p->xcap4);
 		}
@@ -629,134 +598,47 @@ void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
 	}
 }
 
-void	tvterm_text_reverse(struct TVterm* p,int fx, int fy, int tx, int ty)
+void tvterm_text_reverse(struct TVterm* p, int fx, int fy, int tx, int ty)
 {
-	u_int	from, to, y, swp, xx, x;
-	u_char	fc, bc, fc2, bc2;
-	
 	KanjiAdjust(p, &fx, &fy);
 	KanjiAdjust(p, &tx, &ty);
-	if (fy > ty) {
-		swp = fy;
-		fy = ty;
-		ty = swp;
-		swp = fx;
-		fx = tx;
-		tx = swp;
-	} else if (fy == ty && fx > tx) {
-		swp = fx;
-		fx = tx;
-		tx = swp;
+
+	if(fy > ty) {
+		UTIL_SWAP(fx, tx)
+		UTIL_SWAP(fy, ty)
+	} else if(fy == ty && fx > tx) {
+		UTIL_SWAP(fx, tx)
 	}
-	for (xx = p->xcap, y = fy; y <= ty; y ++) {
-		if (y == ty) xx = tx;
-		from = tvterm_coord_to_index(p, fx, y);
-		to = tvterm_coord_to_index(p, xx, y);
-		if (p->flag[from] & CODEIS_2)
+
+	u_int xx;
+	u_int y;
+	for(xx = p->xcap, y = fy; y <= ty; y++) {
+		if (y == ty) {
+			xx = tx;
+		}
+
+		u_int from = tvterm_coord_to_index(p, fx, y);
+		u_int to   = tvterm_coord_to_index(p, xx, y);
+
+		if (p->flag[from] & CODEIS_2) {
 			/* 2nd byte of kanji */
 			from--;
-		for (x = from; x <= to; x ++) {
-			if (!p->text[x]) continue;
-			fc = p->attr[x];
-			bc = fc >> 4;
-			bc2 = (bc & 8) | (fc & 7);
-			fc2 = (fc & 8) | (bc & 7);
+		}
+
+		u_int x;
+		for(x = from; x <= to; x++) {
+			if (!p->text[x]) {
+				continue;
+			}
+
+			u_char fc = p->attr[x];
+			u_char bc = fc >> 4;
+			u_char bc2 = (bc & 0x08) | (fc & 0x07);
+			u_char fc2 = (fc & 0x08) | (bc & 0x07);
 			p->attr[x] = fc2 | (bc2 << 4);
 			p->flag[x] &= ~CLEAN_S;
 		}
+
 		fx = 0;
 	}
 }
-
-#if 0
-/* Cursor related routines. */
-
-static void	ToggleCursor(struct cursorInfo *c)
-{
-	c->count = 0;
-	if (con.text_mode)
-	return;
-	c->shown = ! c->shown;
-	vInfo.cursor(c);
-}
-
-static void	ShowCursor(struct cursorInfo *c, bool show)
-{
-	if (!con.active || !c->sw)
-	return;
-	if (c->shown != show)
-	ToggleCursor(c);
-}
-
-static void	SaveScreen(bool save)
-{
-	if (saved != save) {
-	saved = save;
-	vInfo.screen_saver(save);
-	}
-	saverCount = 0;
-}
-#endif
-
-#if 0
-/* Called when some action was over, or every 1/10 sec when idle. */
-
-void	PollCursor(bool wakeup)
-{
-	if (!con.active)
-	return;
-	if (wakeup) {
-	SaveScreen(false);
-	ShowCursor(&cInfo, true);
-	return;
-	}
-	/* Idle. */
-	if (saved)
-	return;
-	if ((saveTime > 0) && (++saverCount == saveTime)) {
-	ShowCursor(&cInfo, false);
-	SaveScreen(true);
-	return;
-	}
-	if ((cInfo.interval > 0) && (++cInfo.count == cInfo.interval)) {
-	ToggleCursor(&cInfo);
-	}
-}
-
-#endif
-
-#if 0
-/* Beep routines. */
-
-#define	COUNTER_ADDR	0x61
-
-static int	beepCount;
-
-static int	ConfigBeep(const char *confstr)
-{
-	beepCount = atoi(confstr) * 10000;
-	if (beepCount > 0)
-	ioperm(COUNTER_ADDR, 1, true);
-	return SUCCESS;
-}
-
-void	Beep(void)
-{
-	if (!con.active || beepCount <= 0) return;
-	PortOutb(PortInb(COUNTER_ADDR)|3, COUNTER_ADDR);
-	usleep(beepCount);
-	PortOutb(PortInb(COUNTER_ADDR)&0xFC, COUNTER_ADDR);
-}
-
-static int	ConfigInterval(const char *confstr)
-{
-	cInfo.interval = atoi(confstr);
-	return SUCCESS;
-}
-
-static int	ConfigSaver(const char *confstr)
-{
-	saveTime = atoi(confstr) * 600; /* convert unit from minitue to 1/10 sec */
-	return SUCCESS;
-}
-#endif
