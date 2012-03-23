@@ -44,10 +44,18 @@ void util_swap(u_int* a, u_int* b);
 
 #define util_free(p) {free(p); (p) = NULL;}
 
-#define UTIL_SWAP(a, b) {	\
-	typeof(a) tmp = a;	\
-	a = b;			\
-	b = tmp;		\
+#define UTIL_SWAP(a, b) {			\
+	typeof(a) __UTIL_SWAP_TMP__ = (a);	\
+	(a) = (b);				\
+	(b) = __UTIL_SWAP_TMP__;		\
+}
+
+#define LIMIT_INNER(a, min, max) {		\
+	if((a) < (min)) {			\
+		(a) = (min);			\
+	} else if((a) > (max)) {		\
+		(a) = (max);			\
+	}					\
 }
 
 #endif /* INCLUDE_UTIL_H */

@@ -203,7 +203,7 @@ static int tvterm_UTF8index(const char* en)
 		if(strcmp(gFont[i].name, g) == 0) {
 			if(tfont_is_loaded(&gFont[i])) {
 				id = i;
-				break;
+				goto FINALIZE;
 			}
 		}
 	}
@@ -313,7 +313,7 @@ static void __tvterm_switch_to_otherCS(struct TVterm* p,
 				       struct TCodingSystem* ocs,
 				       char* tocode)
 {
-	if (strcmp(ocs->tocode, "UTF-8") == 0) {
+	if(strcmp(ocs->tocode, "UTF-8") == 0) {
 		tvterm_switch_to_UTF8(p);
 		tocode = "UCS-2BE"; /* XXX */
 	} else {
@@ -337,7 +337,7 @@ static void __tvterm_switch_to_otherCS(struct TVterm* p,
 		}
 
 		int i;
-		for (i = 0; i < 4; i++) {
+		for(i = 0; i < 4; i++) {
 			p->gIdx[i] = idx[2+i];
 		}
 		tvterm_invoke_gx(p, &(p->gl), idx[0]);
@@ -385,7 +385,7 @@ static void tvterm_switch_to_otherCS(struct TVterm* p,
 	ocs->gSavedR = p->gr.invokedGn;
 
 	int i;
-	for (i = 0; i < 4; i++) {
+	for(i = 0; i < 4; i++) {
 		ocs->gSavedIdx[i] = p->gIdx[i];
 	}
 	ocs->utf8SavedIdx = p->utf8Idx;
@@ -413,7 +413,7 @@ static inline void tvterm_set_default_encoding_other(struct TVterm* p,
 	tcsv_init(&farg, en);
 
 	const char* g = tcsv_get_token(&farg);
-	if (strcmp(g, "other") == 0) {
+	if(strcmp(g, "other") == 0) {
 		static struct TCodingSystem otherCS;
 		if (tvterm_parse_otherCS(en, &otherCS)) {
 			tvterm_switch_to_otherCS(p, &otherCS);
@@ -433,7 +433,7 @@ static inline void tvterm_set_default_encoding_utf8(struct TVterm* p,
 	tcsv_init(&farg, en);
 
 	const char* g = tcsv_get_token(&farg);
-	if (strcmp(g, "UTF-8") == 0) {
+	if(strcmp(g, "UTF-8") == 0) {
 		/* UTF-8,<fontsetname> */
 		p->utf8DefaultIdx = tvterm_UTF8index(en);
 		tvterm_switch_to_UTF8(p);
@@ -448,7 +448,7 @@ static inline void tvterm_set_default_encoding_iso2022(struct TVterm* p,
 						       const char* en)
 {
 	int idx[6];
-	if (tvterm_parse_encoding(en, idx)) {
+	if(tvterm_parse_encoding(en, idx)) {
 		/* GL */
 		p->gDefaultL = idx[0];
 
@@ -568,9 +568,10 @@ void tvterm_push_current_pen(struct TVterm* p, bool b)
 	base = b ? &(p->savedPen) : &(p->savedPenSL);
 	t = (struct TPen*)malloc(sizeof(*t));
 
-	if (!t) {
+	if(!t) {
 		return;
 	}
+
 	tpen_init(t);
 	tpen_copy(t, &(p->pen));
 	t->prev = *base;
@@ -584,13 +585,13 @@ void tvterm_pop_pen_and_set_currnt_pen(struct TVterm* p, bool b)
 	base = b ? &(p->savedPen) : &(p->savedPenSL);
 	t = *base;
 
-	if (!t) {
+	if(!t) {
 		return;
 	}
+
 	tpen_copy(&(p->pen), t);
 
-	if (p->pen.y < p->ymin) p->pen.y = p->ymin;
-	if (p->pen.y >= p->ymax-1) p->pen.y = p->ymax -1;
+	LIMIT_INNER(p->pen.y, p->ymin, p->ymax - 1);
 	
 	*base = t->prev;
 	free(t);
@@ -1275,8 +1276,12 @@ static void tvterm_esc_report(struct TVterm* p, u_char mode, u_short arg)
 	switch(mode) {
 	case 'n':
 		if(arg == 6) {
-			int x = (p->pen.x < p->xmax-1) ? p->pen.x : p->xmax-1;
-			int y = (p->pen.y < p->ymax-1) ? p->pen.y : p->ymax-1;
+			int x = p->pen.x;
+			LIMIT_INNER(x, x, p->xmax - 1);
+
+			int y = p->pen.y;
+			LIMIT_INNER(y, y, p->ymax - 1);
+			
 			sprintf(p->report, "\x1B[%d;%dR", y, x);
 		} else if(arg == 5) {
 			strcpy(p->report, "\x1B[0n\0");
@@ -1400,7 +1405,7 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 		varg[narg] = (varg[narg] * 10) + (ch - '0');
 	} else if(ch == ';') {
 		if(narg < MAX_NARG) {
-			narg ++;
+			narg++;
 			varg[narg] = 0;
 		} else {
 			p->esc = NULL;
@@ -1541,10 +1546,6 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 	}
 }
 
-/* まったく意味不明
- *
- * 初期化されてない argidx と比較してるし、何を意図してるのかまったく不明
- */
 /*
  * ESC  ]    p... F
  * 1/11 5/13 p... F
@@ -1631,13 +1632,13 @@ static int tvterm_find_font_index(int fsig)
 
 static void tvterm_esc_designate_font(struct TVterm* p, u_char ch)
 {
-	int i;
 	if(!tvterm_is_ISO2022(p)) {
 		p->esc = NULL;
 		return;
 	}
 
-	if((i = tvterm_find_font_index(ch | p->escSignature)) >= 0) {
+	const int i = tvterm_find_font_index(ch | p->escSignature);
+	if(i >= 0) {
 		p->gIdx[p->escGn] = i;
 		tvterm_re_invoke_gx(p, &(p->gl));
 		tvterm_re_invoke_gx(p, &(p->gr));
@@ -1666,22 +1667,20 @@ static void tvterm_esc_designate_otherCS(struct TVterm* p, u_char ch)
 
 static void tvterm_esc_traditional_multibyte_fix(struct TVterm* p, u_char ch)
 {
-	if(ch == 0x40 || ch == 0x41 || ch == 0x42) {
+	switch(ch) {
+	case 0x40 ... 0x42:
 		tvterm_esc_designate_font(p, ch);
-	} else {
+		break;
+
+	default:
 		tvterm_esc_start(p, ch);
+		break;
 	}
 }
 
 
 void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 {
-	static const char *invokeL[] = {"\017", "\016", "\033n", "\033o"};
-	static const char *invokeR[] = {"", "\033~", "\033}", "\033|"};
-	static const char csr4[] = {ISO_GZD4, ISO_G1D4, ISO_G2D4, ISO_G3D4};
-	static const char csr6[] = {MULE__GZD6, ISO_G1D6, ISO_G2D6, ISO_G3D6};
-	int idx[6];
-
 	struct TCsv farg;
 	tcsv_init(&farg, en);
 	const char *g = tcsv_get_token(&farg);
@@ -1701,6 +1700,8 @@ void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 		goto FINALIZE;
 	}
 
+	int idx[6];
+
 	/* ISO-2022 */
 	fprintf(tf, "%s", "\033%@");
 	if(tvterm_parse_encoding(en, idx) == 0) {
@@ -1709,9 +1710,11 @@ void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 	}
 
 	/* GL */
+	static const char *invokeL[] = {"\017", "\016", "\033n", "\033o"};
 	fprintf(tf, "%s", invokeL[idx[0]]);
 
 	/* GR */
+	static const char *invokeR[] = {"", "\033~", "\033}", "\033|"};
 	fprintf(tf, "%s", invokeR[idx[1]]);
 
 	/* G0 .. G3 */
@@ -1722,6 +1725,14 @@ void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 		char c = n & 255;
 		u_int f1 = n & TFONT_FT_DOUBLE;
 		u_int f2 = n & TFONT_FT_96CHAR;
+
+		static const char csr4[] = {
+			ISO_GZD4, ISO_G1D4, ISO_G2D4, ISO_G3D4
+		};
+
+		static const char csr6[] = {
+			MULE__GZD6, ISO_G1D6, ISO_G2D6, ISO_G3D6
+		};
 
 		fprintf(tf,
 			"\033%s%c%c",
