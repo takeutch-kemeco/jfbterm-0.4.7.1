@@ -15,8 +15,8 @@ bool sage_use = true;
 
 static pthread_t thread;
 
-static const unsigned long long limit_time = (1000 * 1000) * 100;
-static const unsigned long long bound_time = (1000 * 1000) * 16;
+static const unsigned long long limit_time = (1000 * 1000) * 16;
+static const unsigned long long bound_time = (1000 * 1000) * 8;
 
 #define LOOP_TIME ((1000 * 1000) * 4)
 static const struct timespec loop_time_ts = {
@@ -24,7 +24,7 @@ static const struct timespec loop_time_ts = {
 	.tv_nsec = LOOP_TIME,
 };
 
-#define REFRESH_TIME ((1000 * 1000) * 16)
+#define REFRESH_TIME ((1000 * 1000) * 8)
 static const struct timespec refresh_time_ts = {
 	.tv_sec  = 0,
 	.tv_nsec = REFRESH_TIME,
