@@ -592,20 +592,20 @@ void tfbm_open(TFrameBufferMemory* p)
 	p->height = fb_var.yres;
 	p->bytePerLine = fb_fix.line_length;
 
-	p->soff = (u_long)(fb_fix.smem_start) & (~PAGE_MASK);
+	p->soff = (u_int)(fb_fix.smem_start) & (~PAGE_MASK);
 	p->slen = (fb_fix.smem_len + p->soff + ~PAGE_MASK) & PAGE_MASK;
 	p->smem = (u_char*)mmap(NULL, p->slen, PROT_READ|PROT_WRITE,
 				MAP_SHARED, p->fh, (off_t)0);
-	if ((long)p->smem == -1) {
+	if ((int)p->smem == -1) {
 		die("cannot mmap(smem)");
 	}
 	p->smem = (char *)p->smem + p->soff;
 
-	p->moff = (u_long)(fb_fix.mmio_start) & (~PAGE_MASK);
+	p->moff = (u_int)(fb_fix.mmio_start) & (~PAGE_MASK);
 	p->mlen = (fb_fix.mmio_len + p->moff + ~PAGE_MASK) & PAGE_MASK;
 	p->mmio = (u_char*)mmap(NULL, p->mlen, PROT_READ|PROT_WRITE,
 				MAP_SHARED, p->fh, p->slen);
-	if ((long)p->mmio == -1) {
+	if ((int)p->mmio == -1) {
 #ifdef JFB_MMIO_CHECK 
 		die("cannot mmap(mmio)");
 #else
@@ -646,11 +646,11 @@ void tfbm_close(TFrameBufferMemory* p)
 	if (p->fh == -1) {
 		return;
 	}
-	if ((long)p->smem != -1) {
-		munmap((caddr_t)((u_long)p->smem & PAGE_MASK), p->slen);
+	if ((int)p->smem != -1) {
+		munmap((caddr_t)((u_int)p->smem & PAGE_MASK), p->slen);
 	}
-	if ((long)p->mmio != -1) {
-		munmap((caddr_t)((u_long)p->mmio & PAGE_MASK), p->mlen);
+	if ((int)p->mmio != -1) {
+		munmap((caddr_t)((u_int)p->mmio & PAGE_MASK), p->mlen);
 	}
 	if (cmapSaved == true) {
 		tfbm_put_cmap(p->fh, &ocmap);

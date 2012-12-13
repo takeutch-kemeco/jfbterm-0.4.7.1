@@ -36,7 +36,7 @@ void util_privilege_init(void);
 void util_privilege_on(void);
 void util_privilege_off(void);
 int util_privilege_open(char *pathname, int flags);
-int util_privilege_ioperm(u_long from, u_int num, int turn_on);
+int util_privilege_ioperm(u_int from, u_int num, int turn_on);
 uid_t util_getuid();
 void util_privilege_drop();
 int util_search_string(const char* s, const char** array);

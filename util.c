@@ -90,7 +90,7 @@ int util_privilege_open(char* pathname, int flags)
 
 #ifdef HAVE_IOPERM
 /* ポートの入出力許可をeffectiveユーザー権限で得る */
-int util_privilege_ioperm(u_long from, u_int num, int turn_on)
+int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 {
 	util_privilege_on();
 	int r = ioperm(from, num, turn_on);
@@ -99,7 +99,7 @@ int util_privilege_ioperm(u_long from, u_int num, int turn_on)
 	return r;
 }
 #else
-inline int util_privilege_ioperm(u_long from, u_int num, int turn_on)
+inline int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 {
 	return -1
 }

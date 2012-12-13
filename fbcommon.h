@@ -51,12 +51,12 @@ typedef struct Raw_TFrameBufferMemory {
 	u_int bytePerLine;
 	/* --- */
 	int fh;
-	u_long sstart;
-	u_long soff;
-	u_long slen;
-	u_long mstart;
-	u_long moff;
-	u_long mlen;
+	u_int sstart;
+	u_int soff;
+	u_int slen;
+	u_int mstart;
+	u_int moff;
+	u_int mlen;
 	u_char* smem;
 	u_char* mmio;
 	/* function hooks */

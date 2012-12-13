@@ -112,8 +112,8 @@ static inline void blatch(void* head, int n)
  */
 static inline void llatch(void *head, int n)
 {
-	u_long* a = (u_long*)head;
-	u_long* e = (u_long*)head + (n>>2);
+	u_int* a = (u_int*)head;
+	u_int* e = (u_int*)head + (n>>2);
 	while(a < e) {
 		*a++ &= 0x7F7F7F7F;
 	}
