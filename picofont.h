@@ -1,5 +1,5 @@
 /*
- * JFBTERM - 
+ * JFBTERM -
  * Copyright (c) 2000 Noritoshi Masuichi (nmasu@ma3.justnet.ne.jp)
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,17 +22,17 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
+
+#include <stdint.h>
 
 #ifndef INCLUDE_PICOFONT_H
 #define INCLUDE_PICOFONT_H
 
-#include <sys/types.h>
-
 #define PICOFONT_WIDTH 8
 #define PICOFONT_HEIGHT 16
 
-extern u_char gPicoFontLeft[];
+extern uint8_t gPicoFontLeft[];
 
 #endif /* INCLUDE_PICOFONT_H */

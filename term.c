@@ -33,6 +33,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <dlfcn.h>
 #include <time.h>
 #include <sys/types.h>
@@ -56,18 +57,18 @@
 
 #include "config.h"
 
-static int gChildProcessId = 0;
+static int32_t gChildProcessId = 0;
 
 static struct TTerm gTerm;
 
-static void tterm_wakeup_shell(struct TTerm* p, const char* tn);
-static void tterm_final(struct TTerm* p);
-static void tterm_set_utmp(struct TTerm* p);
-static void tterm_reset_utmp(struct TTerm* p);
+static void tterm_wakeup_shell(struct TTerm *p, const uint8_t *tn);
+static void tterm_final(struct TTerm *p);
+static void tterm_set_utmp(struct TTerm *p);
+static void tterm_reset_utmp(struct TTerm *p);
 
-static void sigchld(int sig)
+static void sigchld(int32_t sig)
 {
-	int ret = waitpid(gChildProcessId, &sig, WNOHANG);
+	int32_t ret = waitpid(gChildProcessId, &sig, WNOHANG);
 
 #ifdef DEBUG_TERM
 	print_message_f("sigchld(): "
@@ -76,7 +77,7 @@ static void sigchld(int sig)
 			ret, gChildProcessId);
 #endif
 
-	if(ret == gChildProcessId) {
+	if (ret == gChildProcessId) {
 		tvterm_unregister_signal();
 		tterm_final(&gTerm);
 
@@ -92,7 +93,7 @@ static void sigchld(int sig)
  * pty, ttf ともに -1
  * name は'\0'（空）で初期設定される
  */
-static void tterm_init(struct TTerm* p, const char* en)
+static void tterm_init(struct TTerm *p, const uint8_t *en)
 {
 	p->ptyfd = -1;
 	p->ttyfd = -1;
@@ -100,13 +101,13 @@ static void tterm_init(struct TTerm* p, const char* en)
 	tcgetattr(0, &(p->ttysave));
 	tvterm_init(&(p->vterm), p,
 		    gFramebuffer.width / gFontsWidth,
-		    gFramebuffer.height / gFontsHeight, 
+		    gFramebuffer.height / gFontsHeight,
 		    &(gApp.gCaps), en);
 }
 
-/* 
+/*
  */
-static void tterm_final(struct TTerm* p)
+static void tterm_final(struct TTerm *p)
 {
 	tterm_reset_utmp(p);
 	tvterm_final(&(p->vterm));
@@ -114,7 +115,7 @@ static void tterm_final(struct TTerm* p)
 
 static void application_final(void)
 {
-	struct TTerm* p = &gTerm;
+	struct TTerm *p = &gTerm;
 /*
 	write(1, "\x1B[?25h", 6);
 */
@@ -134,9 +135,9 @@ static void application_final(void)
  *
  * スレーブの端末パラメーター、及び、ウインドウサイズは、デフォルト設定がセットされる
  */
-static int tterm_open(struct TTerm* p)
+static int32_t tterm_open(struct TTerm *p)
 {
-	if(openpty(&p->ptyfd, &p->ttyfd, p->name, NULL, NULL) < 0) {
+	if (openpty(&p->ptyfd, &p->ttyfd, p->name, NULL, NULL) < 0) {
 		print_strerror("error: openpty()");
 		return 0;
 	}
@@ -148,26 +149,25 @@ static int tterm_open(struct TTerm* p)
 }
 
 #define BUF_SIZE 1024
-void tterm_start(const char* tn, const char* en)
+void tterm_start(const uint8_t *tn, const uint8_t *en)
 {
-	struct TTerm* p = &gTerm;
+	struct TTerm *p = &gTerm;
 
 	struct termios ntio;
 
-	int ret;
+	int32_t ret;
 	struct timeval tv;
-	u_char buf[BUF_SIZE+1];
+	uint8_t buf[BUF_SIZE+1];
 #ifdef JFB_ENABLE_DIMMER
-	u_int idle_time = 0;
-	u_int blank = 0;
-	int tfbm_set_blank(int, int);
+	uint32_t idle_time = 0;
+	uint32_t blank = 0;
+	int32_t tfbm_set_blank(int32_t, int32_t);
 #  define DIMMER_TIMEOUT (3 * 60 * 10)        /* 3 min */
 #endif
 
 	tterm_init(p, en);
-	if (!tterm_open(p)) {
+	if (!tterm_open(p))
 		die("Cannot get free pty-tty.\n");
-	}
 
 	ntio = p->ttysave;
 	ntio.c_lflag &= ~(ECHO|ISIG|ICANON|XCASE);
@@ -204,16 +204,15 @@ void tterm_start(const char* tn, const char* en)
 	 */
 	while (1) {
 		fd_set fds;
-		int max = 0;
+		int32_t max = 0;
 		tv.tv_sec = 0;
 		tv.tv_usec = 100000;	// 100 msec
 		FD_ZERO(&fds);
 		FD_SET(0,&fds);
 		FD_SET(p->ptyfd,&fds);
-		if (p->ptyfd > max) {
+		if (p->ptyfd > max)
 			max = p->ptyfd;
-		}
-		
+
 		ret = select(max+1, &fds, NULL, NULL, &tv);
 		if (ret == 0 || (ret < 0 && errno == EINTR)) {
 #ifdef JFB_ENABLE_DIMMER
@@ -227,9 +226,8 @@ void tterm_start(const char* tn, const char* en)
 			continue;
 		}
 
-		if (ret < 0) {
+		if (ret < 0)
 			print_strerror_and_exit("select");
-		}
 
 		if (FD_ISSET(0, &fds)) {
 			ret = read(0, buf, BUF_SIZE);
@@ -241,9 +239,9 @@ void tterm_start(const char* tn, const char* en)
 				tfbm_set_blank(gFramebuffer.fh, 0);
 			}
 #endif
-			if (ret > 0) {
+			if (ret > 0)
 				write(p->ptyfd, buf, ret);
-			}
+
 		} else if (FD_ISSET(p->ptyfd,&fds)) {
 			ret = read(p->ptyfd, buf, BUF_SIZE);
 			if (ret > 0) {
@@ -255,7 +253,7 @@ void tterm_start(const char* tn, const char* en)
 	}
 }
 
-static void tterm_wakeup_shell(struct TTerm* p, const char* tn)
+static void tterm_wakeup_shell(struct TTerm *p, const uint8_t *tn)
 {
 	setenv("TERM", tn, 1);
 	close(p->ptyfd);
@@ -280,17 +278,17 @@ static void tterm_wakeup_shell(struct TTerm* p, const char* tn)
  *
  * "/devian"      => "/devian"
  */
-static char* skip_dev(char* s)
+static uint8_t* skip_dev(uint8_t *s)
 {
-	char dev_str[] = "/dev/";
-	char* p = s;
+	uint8_t dev_str[] = "/dev/";
+	uint8_t *p = s;
 
-	while(*p != '\0') {
+	while (*p != '\0') {
 		p = strchr(p, dev_str[0]);
-		if(p == NULL) {
+		if (p == NULL) {
 			break;
 		} else {
-			if(strcmp(p, dev_str) == 0) {
+			if (strcmp(p, dev_str) == 0) {
 				s = p + strlen(dev_str);
 				break;
 			}
@@ -298,12 +296,12 @@ static char* skip_dev(char* s)
 
 		p++;
 	}
-	
+
 	return s;
 }
 
 /* 文字列の右側から [0-9]数字のみが連続する文字列を抜き出した、文字列の先頭アドレスを返す
- * 
+ *
  * ただし、最大で４文字まで。それ以上の長さの数字が連続した場合は、以降は切り捨てる
  *
  * 該当する数字が存在しない場合はNULLを返す
@@ -315,21 +313,21 @@ static char* skip_dev(char* s)
  * "/dev/tty12345"  => "2345"
  * "/dev/pty/12345" => "2345"
  */
-static char* suffix_num4(char* s)
+static uint8_t* suffix_num4(uint8_t* s)
 {
-	char* ret = NULL;
+	uint8_t* ret = NULL;
 
-	int count = 0;
-	int len = strlen(s);
-	while(len-->0) {
-		if(isdigit(s[len])) {
+	int32_t count = 0;
+	int32_t len = strlen(s);
+	while (len-->0) {
+		if (isdigit(s[len])) {
 			ret = &s[len];
 			count++;
 		} else {
 			break;
 		}
 
-		if(count >= 4) {
+		if (count >= 4) {
 			break;
 		}
 	}
@@ -337,16 +335,16 @@ static char* suffix_num4(char* s)
 	return ret;
 }
 
-static void tterm_set_utmp(struct TTerm* p)
+static void tterm_set_utmp(struct TTerm *p)
 {
 #ifdef DEBUG_TERM
 	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
 			skip_dev(p->name), suffix_num4(p->name));
 #endif
 	struct utmp utmp;
-	memset((char*)&utmp, 0, sizeof(utmp));
+	memset((uint8_t*)&utmp, 0, sizeof(utmp));
 
-	char* tnum = suffix_num4(p->name);
+	uint8_t *tnum = suffix_num4(p->name);
 	strncpy(utmp.ut_id, tnum, sizeof(utmp.ut_id));
 
 	utmp.ut_type = DEAD_PROCESS;
@@ -360,10 +358,10 @@ static void tterm_set_utmp(struct TTerm* p)
 
 	utmp.ut_pid = getpid();
 
-	char* tname = skip_dev(p->name);
+	uint8_t *tname = skip_dev(p->name);
 	strncpy(utmp.ut_line, tname, sizeof(utmp.ut_line));
 
-	struct passwd* pw = getpwuid(util_getuid());
+	struct passwd *pw = getpwuid(util_getuid());
 	strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user));
 
 	time(&(utmp.ut_time));
@@ -373,16 +371,16 @@ static void tterm_set_utmp(struct TTerm* p)
 	endutent();
 }
 
-static void tterm_reset_utmp(struct TTerm* p)
+static void tterm_reset_utmp(struct TTerm *p)
 {
 #ifdef DEBUG_TERM
 	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",
 			skip_dev(p->name), suffix_num4(p->name));
 #endif
 	struct utmp utmp;
-	memset((char*)&utmp, 0, sizeof(utmp));
+	memset((uint8_t*)&utmp, 0, sizeof(utmp));
 
-	char* tnum = suffix_num4(p->name);
+	uint8_t *tnum = suffix_num4(p->name);
 	strncpy(utmp.ut_id, tnum, sizeof(utmp.ut_id));
 
 	utmp.ut_type = USER_PROCESS;
@@ -390,7 +388,7 @@ static void tterm_reset_utmp(struct TTerm* p)
 	setutent();
 
 
-	struct utmp* utp = getutid(&utmp);
+	struct utmp *utp = getutid(&utmp);
 
 	utp->ut_type = DEAD_PROCESS;
 
