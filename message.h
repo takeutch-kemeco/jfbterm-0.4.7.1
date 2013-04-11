@@ -22,19 +22,19 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef INCLUDE_MESSAGE_H
 #define INCLUDE_MESSAGE_H
 
-void die(const char* format, ...);
-void die_file_eof(FILE* fp);
-void print_warn(const char* format, ...);
-void print_error(const char* format, ...);
-void print_message(const char* format, ...);
-void print_strerror(const char* msg);
-void print_strerror_and_exit(const char* message);
-void print_message_f(const char* format, ...);
+void die(const char *format, ...);
+void die_file_eof(FILE *fp);
+void print_warn(const char *format, ...);
+void print_error(const char *format, ...);
+void print_message(const char *format, ...);
+void print_strerror(const char *msg);
+void print_strerror_and_exit(const char *message);
+void print_message_f(const char *format, ...);
 
 #endif /* INCLUDE_MESSAGE_H */

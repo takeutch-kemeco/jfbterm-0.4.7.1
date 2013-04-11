@@ -25,20 +25,20 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 
-#include	<stdio.h>
-#include	<errno.h>
-#include	<stdarg.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<sys/types.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
 
-#include	"main.h"
-#include	"message.h"
+#include "main.h"
+#include "message.h"
 
-void die(const char* format, ...)
+void die(const char *format, ...)
 {
 	va_list args;
 
@@ -48,12 +48,12 @@ void die(const char* format, ...)
 	exit(EXIT_FAILURE);
 }
 
-void die_file_eof(FILE* fp)
+void die_file_eof(FILE *fp)
 {
 	die("Unexpectied EOF\n");
 }
 
-void print_warn(const char* format, ...)
+void print_warn(const char *format, ...)
 {
 	va_list args;
 
@@ -62,7 +62,7 @@ void print_warn(const char* format, ...)
 	va_end(args);
 }
 
-void print_error(const char* format, ...)
+void print_error(const char *format, ...)
 {
 	va_list args;
 
@@ -71,24 +71,24 @@ void print_error(const char* format, ...)
 	va_end(args);
 }
 
-void print_message(const char* format, ...)
+void print_message(const char *format, ...)
 {
 	va_list args;
 
-	if(gApp.gOptQuiet) {
+	if(gApp.gOptQuiet)
 	    return;
-	}
+
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
 }
 
-void print_strerror(const char* msg)
+void print_strerror(const char *msg)
 {
 	print_message("system error - %s: %s\r\n", msg, strerror(errno));
 }
 
-void print_strerror_and_exit(const char* message)
+void print_strerror_and_exit(const char *message)
 {
 	fprintf(stderr, "%s: %s\r\n", message, strerror(errno));
 	exit(EXIT_FAILURE);
@@ -98,11 +98,11 @@ void print_strerror_and_exit(const char* message)
  * 出力は画面ではなく、実行時カレントディレクトリーへ
  * ファイル "jfbterm.debug.log" として行う
  */
-void print_message_f(const char* format, ...)
+void print_message_f(const char *format, ...)
 {
-	const char* fn = "jfbterm.debug.log";
-	FILE* fp = fopen(fn, "at");
-	
+	const char *fn = "jfbterm.debug.log";
+	FILE *fp = fopen(fn, "at");
+
 	va_list args;
 
 	va_start(args, format);
