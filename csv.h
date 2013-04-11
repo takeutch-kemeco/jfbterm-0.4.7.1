@@ -29,14 +29,14 @@
 #define INCLUDE_CSV_H
 
 struct TCsv {
-	char* buffer;
-	int   count;
-	char* pnt;
-	char  cap;
+	char *buffer;
+	int  count;
+	char *pnt;
+	char cap;
 };
 
-void tcsv_init(struct TCsv* p, const char* s);
-void tcsv_final(struct TCsv* p);
-const char* tcsv_get_token(struct TCsv* p);
+void tcsv_init(struct TCsv *p, const char *s);
+void tcsv_final(struct TCsv *p);
+const char* tcsv_get_token(struct TCsv *p);
 
 #endif /* INCLUDE_CSV_H */

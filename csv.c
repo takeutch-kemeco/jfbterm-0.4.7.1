@@ -36,16 +36,15 @@
  * 例えば文字列が "aa,bb,cc" なら、"aa" \0 "bb" \0 "cc"となり、
  * 文字列の個数 3 が cap にセットされる。
  */
-void tcsv_init(struct TCsv* p, const char* s)
+void tcsv_init(struct TCsv *p, const char *s)
 {
 	p->buffer = strdup(s);
 	p->pnt = p->buffer;
 	p->cap = 0;
 	p->count = 0;
 
-	if (p->buffer == NULL) {
+	if (p->buffer == NULL)
 		return;
-	}
 
 	p->cap = 1;
 	char* cp = p->buffer;
@@ -65,7 +64,7 @@ void tcsv_init(struct TCsv* p, const char* s)
 }
 
 /* TCsv のメモリー解放 */
-void tcsv_final(struct TCsv* p)
+void tcsv_final(struct TCsv *p)
 {
 	util_free(p->buffer);
 }
@@ -77,17 +76,16 @@ void tcsv_final(struct TCsv* p)
  *
  * それ以上読み出すトークンが無い場合は NULL を返す
  */
-const char* tcsv_get_token(struct TCsv* p)
+const char* tcsv_get_token(struct TCsv *p)
 {
-	if (p->count >= p->cap) {
+	if (p->count >= p->cap)
 		return NULL;
-	}
 
-	char* ret = p->pnt;
-	
-	while(*(p->pnt) != '\0') {
+	char *ret = p->pnt;
+
+	while (*(p->pnt) != '\0')
 		p->pnt++;
-	}
+
 	p->pnt++;
 	p->count++;
 
