@@ -27,7 +27,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #define __USE_STRING_INLINES
@@ -107,7 +107,7 @@ static inline void blatch(void* head, int n)
 }
 
 /* blatch() と同様だが 4byte 単位で処理するので高速に見える
- * 
+ *
  * （ただし、バイト境界のアラインがどう影響するかがよくわからないので、速いとも限らない）
  */
 static inline void llatch(void *head, int n)
@@ -157,10 +157,10 @@ void tvterm_delete_n_chars(struct TVterm* p, int n)
 {
 	u_int addr = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 	u_int dx = p->xcap - p->pen.x - n;
-	
+
 	tvterm_move(p, addr, addr + n, dx); /* bmove */
 	blatch(p->flag + addr, dx);
-	
+
 	addr = tvterm_coord_to_index(p, p->xcap-n, p->pen.y);
 	tvterm_clear(p, addr, n);
 }
@@ -172,7 +172,7 @@ void tvterm_insert_n_chars(struct TVterm* p, int n)
 	u_int dx = p->xcap - p->pen.x - n;
 
 	tvterm_brmove(p, addr, addr - n, dx);
-	
+
 	addr = tvterm_coord_to_index(p, p->pen.x, p->pen.y);
 	blatch(p->flag + addr + n, dx);
 	tvterm_clear(p, addr, n);
@@ -205,7 +205,7 @@ static inline void tvterm_show_cursor_reverse_video(struct TVterm* p)
 	}
 
 	const u_int ly = p->cursor.height;
-	
+
 	u_int color;
 	if(gFramebuffer.cap.bitsPerPixel == 2) {
 		color = 0x00;
@@ -231,7 +231,7 @@ static inline void tvterm_show_cursor_normal(struct TVterm* p)
 	}
 
 	const u_int ly = p->cursor.height;
-	
+
 	const u_int color = 0x0F;
 
 	gFramebuffer.cap.reverse(&gFramebuffer, x, y, lx, ly, color);
@@ -263,7 +263,7 @@ static void __tvterm_refresh(void* __p)
 		p->busy = false;
 		return;
 	}
-	
+
 	tvterm_show_cursor(p, false);
 
 	if(p->textClear) {
@@ -483,7 +483,7 @@ void tvterm_text_clear_eol(struct TVterm* p, u_char mode)
 {
 	u_char len;
 	u_char x;
-	
+
 	switch(mode) {
 	case 1:
 		x = 0;
@@ -518,7 +518,7 @@ void tvterm_text_clear_eos(struct TVterm* p, u_char mode)
 {
 	u_int len;
 	u_int a;
-	
+
 	switch(mode) {
 	case 1:
 		tvterm_text_clean_band(p, 0, p->pen.y);
@@ -552,15 +552,11 @@ static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm)
 	}
 }
 
-/**
-**/
-void tvterm_text_scroll_down(struct TVterm* p, int line)
+static void __tvterm_text_scroll_down(struct TVterm *p, int line)
 {
-	tvterm_text_move_down(p, p->ymin, p->ymax, line);
-}
+        int top = p->ymin;
+        int btm = p->ymax;
 
-void tvterm_text_move_down(struct TVterm* p, int top, int btm, int line)
-{
 	if (btm <= top + line) {
 		tvterm_text_clean_band(p, top, btm);
 	} else {
@@ -575,15 +571,21 @@ void tvterm_text_move_down(struct TVterm* p, int top, int btm, int line)
 	}
 }
 
-/**
-**/
-void tvterm_text_scroll_up(struct TVterm* p, int line)
+void tvterm_text_scroll_down(struct TVterm* p, int line)
 {
-	tvterm_text_move_up(p, p->ymin, p->ymax, line);
+	__tvterm_text_scroll_down(p, line);
 }
 
-void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
+void tvterm_text_move_down(struct TVterm *p, int top, int btm, int line)
 {
+        __tvterm_text_scroll_down(p, line);
+}
+
+static void __tvterm_text_scroll_up(struct TVterm* p, int line)
+{
+        int top = p->ymin;
+        int btm = p->ymax;
+
 	if (btm <= top + line) {
 		tvterm_text_clean_band(p, top, btm);
 	} else {
@@ -596,4 +598,14 @@ void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
 		}
 		tvterm_text_clean_band(p, btm - line, btm);
 	}
+}
+
+void tvterm_text_scroll_up(struct TVterm* p, int line)
+{
+	__tvterm_text_scroll_up(p, line);
+}
+
+void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
+{
+        __tvterm_text_scroll_up(p, line);
 }
