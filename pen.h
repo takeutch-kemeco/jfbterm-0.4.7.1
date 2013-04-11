@@ -25,7 +25,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 
 #include <sys/types.h>
@@ -47,7 +47,7 @@
 #define LANG_CODE       0x0F
 
 struct TPen {
-	struct TPen* prev;
+	struct TPen *prev;
 	u_char x;
 	u_char y;
 	u_char bcol;
@@ -55,16 +55,16 @@ struct TPen {
 	u_char attr;
 };
 
-void tpen_init(struct TPen* p);
-void tpen_final(struct TPen* p);
-void tpen_copy(struct TPen* dst, struct TPen* src);
-inline void tpen_off_all_attribute(struct TPen* p);
-void tpen_higlight(struct TPen* p);
-void tpen_dehiglight(struct TPen* p);
-void tpen_underline(struct TPen* p);
-void tpen_no_underline(struct TPen* p);
-void tpen_reverse(struct TPen* p);
-void tpen_no_reverse(struct TPen* p);
-void tpen_set_color(struct TPen* p, const u_int col);
+void tpen_init(struct TPen *p);
+void tpen_final(struct TPen *p);
+void tpen_copy(struct TPen *dst, struct TPen *src);
+void tpen_off_all_attribute(struct TPen *p);
+void tpen_higlight(struct TPen *p);
+void tpen_dehiglight(struct TPen *p);
+void tpen_underline(struct TPen *p);
+void tpen_no_underline(struct TPen *p);
+void tpen_reverse(struct TPen *p);
+void tpen_no_reverse(struct TPen *p);
+void tpen_set_color(struct TPen *p, const u_int col);
 
 #endif /* INCLUDE_PEN_H */
