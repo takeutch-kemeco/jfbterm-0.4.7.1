@@ -66,9 +66,6 @@
 /* Supprt Dimmer (Screen blank) */
 #undef JFB_ENABLE_DIMMER
 
-/* Support reverse video */
-#undef JFB_REVERSEVIDEO
-
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 
