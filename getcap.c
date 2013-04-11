@@ -22,11 +22,11 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 /*
  * This code is based on the following :
- * 
+ *
  * KON2 - Kanji ON Console -
  * Copyright (C) 1992-1996 Takashi MANABE (manabe@papilio.tutics.tut.ac.jp)
  */
@@ -59,7 +59,7 @@ void tcapValue_init(struct TCapValue* p)
  */
 void tcapValue_final(struct TCapValue* p)
 {
-	util_free(p->value);
+	UTIL_FREE(p->value);
 }
 
 /* リストの最後の要素へのポインタを返す
@@ -122,7 +122,7 @@ void tcapability_del_value_all(struct TCapability* p)
 	while(cur != NULL) {
 		next = cur->next;
 		tcapValue_final(cur);
-		util_free(cur);
+		UTIL_FREE(cur);
 		cur = next;
 	}
 	p->values = NULL;
@@ -140,7 +140,7 @@ void tcapability_del_value_all(struct TCapability* p)
 void tcapability_final(struct TCapability* p)
 {
 	tcapability_del_value_all(p);
-	util_free(p->name);
+	UTIL_FREE(p->name);
 }
 
 /* tcapability に名前をセットする
@@ -148,7 +148,7 @@ void tcapability_final(struct TCapability* p)
  */
 void tcapability_set_name(struct TCapability* p, const char* name)
 {
-	util_free(p->name);
+	UTIL_FREE(p->name);
 	if(name != NULL) {
 		p->name = strdup(name);
 	}
@@ -166,7 +166,7 @@ void tcapability_add_value(struct TCapability* p, const char* value)
 }
 
 /* cap の開始要素である tcaps の初期設定
- * リストが空状態にセットする 
+ * リストが空状態にセットする
  */
 void tcaps_init(struct TCaps* p)
 {
@@ -182,7 +182,7 @@ void tcaps_final(struct TCaps* p)
 	while(cur != NULL) {
 		struct TCapability* next = cur->next;
 		tcapability_final(cur);
-		util_free(cur);
+		UTIL_FREE(cur);
 		cur = next;
 	}
 	p->head = NULL;
@@ -300,7 +300,7 @@ char* trim_left_right(char* cp)
 
 	char* q = cp + strlen(cp);
 	q--;
-	
+
 	while(cp <= q) {
 		if((*q != ' ') && (*q != '\t')) {
 			*(q + 1) = '\0';
@@ -333,7 +333,7 @@ bool tcaps_register(struct TCaps* p, const char* cp)
 	if(q == NULL) {
 		return false;
 	}
-	
+
 	*q = '\0';
 
 	char* n = trim_left_right(line);
@@ -342,7 +342,7 @@ bool tcaps_register(struct TCaps* p, const char* cp)
 	if(*n == '\0') {
 		return false;
 	}
-	
+
 	if(*n == '+') {
 		tcaps_register_nv(p, n+1, v, '+');
 	} else {

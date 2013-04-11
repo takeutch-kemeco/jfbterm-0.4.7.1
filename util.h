@@ -42,7 +42,7 @@ void util_privilege_drop();
 int util_search_string(const char* s, const char** array);
 void util_swap(u_int* a, u_int* b);
 
-#define util_free(p) {free(p); (p) = NULL;}
+#define UTIL_FREE(p) {free(p); (p) = NULL;}
 
 #define UTIL_SWAP(a, b) {			\
 	typeof(a) __UTIL_SWAP_TMP__ = (a);	\

@@ -66,7 +66,7 @@ void tcsv_init(struct TCsv *p, const char *s)
 /* TCsv のメモリー解放 */
 void tcsv_final(struct TCsv *p)
 {
-	util_free(p->buffer);
+	UTIL_FREE(p->buffer);
 }
 
 /* TCsv からトークンを１個取り出す

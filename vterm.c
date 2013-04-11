@@ -1,5 +1,5 @@
 /*
- * JFBTERM - 
+ * JFBTERM -
  * Copyright (C) 2003  Fumitoshi UKAI <ukai@debian.or.jp>
  * Copyright (C) 1999  Noritoshi MASUICHI (nmasu@ma3.justnet.ne.jp)
  *
@@ -26,7 +26,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 
 #include <stdio.h>
@@ -120,7 +120,7 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 /* エンコーディング設定の文字列からトークン切り分けする */
 int tvterm_parse_encoding(const char* en, int idx[6])
 {
-	static const char* table[] = {"G0", "G1", "G2", "G3", NULL}; 
+	static const char* table[] = {"G0", "G1", "G2", "G3", NULL};
 
 	struct TCsv farg;
 	tcsv_init(&farg, en);
@@ -143,11 +143,11 @@ int tvterm_parse_encoding(const char* en, int idx[6])
 			ig = tfont_ary_search_idx(g);
 			break;
 		}
-	
+
 		if(ig == -1) {
 			ig = i;
 		}
-		
+
 		idx[i] = ig;
 	}
 
@@ -183,7 +183,7 @@ static int tvterm_is_ISO2022(struct TVterm *p)
 static int tvterm_UTF8index(const char* en)
 {
 	int id = 0;
-	
+
 	struct TCsv farg;
 	tcsv_init(&farg, en);
 
@@ -233,7 +233,7 @@ static void tvterm_switch_to_UTF8(struct TVterm* p)
 }
 
 /* TVterm が UTF-8 モードかどうかを確認する */
-static int tvterm_is_UTF8(struct TVterm* p) 
+static int tvterm_is_UTF8(struct TVterm* p)
 {
 	if(p->utf8Idx != 0) {
 		return 1;
@@ -456,7 +456,7 @@ static inline void tvterm_set_default_encoding_iso2022(struct TVterm* p,
 		p->gDefaultR = idx[1];
 
 		/* G0 .. G3 */
-		int i;	
+		int i;
 		for(i = 0; i < 4; i++) {
 			p->gDefaultIdx[i] = idx[2+i];
 		}
@@ -556,9 +556,9 @@ void tvterm_final(struct TVterm* p)
 		p->savedPenSL = NULL;
 	}
 	p->textHead = 0;
-	util_free(p->text);
-	util_free(p->attr);
-	util_free(p->flag);
+	UTIL_FREE(p->text);
+	UTIL_FREE(p->attr);
+	UTIL_FREE(p->flag);
 }
 
 void tvterm_push_current_pen(struct TVterm* p, bool b)
@@ -592,7 +592,7 @@ void tvterm_pop_pen_and_set_currnt_pen(struct TVterm* p, bool b)
 	tpen_copy(&(p->pen), t);
 
 	LIMIT_INNER(p->pen.y, p->ymin, p->ymax - 1);
-	
+
 	*base = t->prev;
 	free(t);
 }
@@ -636,7 +636,7 @@ static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
 		p->wrap = true;
 		p->pen.x--;
 	}
-	
+
 	if(p->wrap) {
 		p->pen.x -= p->xmax -1;
 
@@ -650,7 +650,7 @@ static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
 
 		return -1;
 	}
-	
+
 	if(p->knj1) {
 		INSERT_N_CHARS_IF_NEEDED(p, 2);
 
@@ -667,7 +667,7 @@ static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
 		} else {
 			ch2 = ch & 0x7F;
 		}
-		
+
 		tvterm_wput(p, p->knj1idx, ch1, ch2);
 		p->pen.x += 2;
 		p->knj1 = 0;
@@ -1281,7 +1281,7 @@ static void tvterm_esc_report(struct TVterm* p, u_char mode, u_short arg)
 
 			int y = p->pen.y;
 			LIMIT_INNER(y, y, p->ymax - 1);
-			
+
 			sprintf(p->report, "\x1B[%d;%dR", y, x);
 		} else if(arg == 5) {
 			strcpy(p->report, "\x1B[0n\0");
@@ -1736,7 +1736,7 @@ void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 
 		fprintf(tf,
 			"\033%s%c%c",
-			(f1 ? "$" : ""), 
+			(f1 ? "$" : ""),
 			(f2 ? csr6[i] : csr4[i]),
 			c);
 	}

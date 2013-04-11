@@ -1,5 +1,5 @@
 /*
- * JFBTERM - 
+ * JFBTERM -
  * Copyright (c) 2003 Fumitoshi UKAI <ukai@debian.or.jp>
  * Copyright (c) 1999 Noritoshi Masuichi (nmasu@ma3.justnet.ne.jp)
  *
@@ -23,7 +23,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
 
 #include <stdio.h>
@@ -216,42 +216,42 @@ TFont gFont[] = {
 	{
 	    .conv = tfont_default_glyph,
 	    .name = "iso10646.1",  /* Unicode 2.0 */
-	    .width = 1, 
+	    .width = 1,
 	    .height = 1,
 	    .fsignature = TFONT_FT_OTHER,
-	    .fhalf = FH_UNI, 
-	    .aliasF = TFONT_ALIAS, 
-	    .glyph = NULL, 
+	    .fhalf = FH_UNI,
+	    .aliasF = TFONT_ALIAS,
+	    .glyph = NULL,
 	    .glyph_width = NULL,
-	    .dglyph = sgFontsDefaultDGlyph, 
+	    .dglyph = sgFontsDefaultDGlyph,
 	    .bitmap = NULL,
-	    .colf = 0xFF, 
-	    .coll = 0x00, 
-	    .rowf = 0xFF, 
-	    .rowl = 0x00, 
-	    .colspan = 0x00, 
-	    .bytew = 1, 
+	    .colf = 0xFF,
+	    .coll = 0x00,
+	    .rowf = 0xFF,
+	    .rowl = 0x00,
+	    .colspan = 0x00,
+	    .bytew = 1,
 	    .bytec = 1
 	},
 #endif
 	{
 	    .conv = tfont_default_glyph,
-	    .name = NULL, 
-	    .width = 1, 
+	    .name = NULL,
+	    .width = 1,
 	    .height = 1,
 	    .fsignature = 0x00000000,
-	    .fhalf = FH_LEFT, 
-	    .aliasF = TFONT_ALIAS, 
-	    .glyph = NULL, 
+	    .fhalf = FH_LEFT,
+	    .aliasF = TFONT_ALIAS,
+	    .glyph = NULL,
 	    .glyph_width = NULL,
-	    .dglyph = sgFontsDefaultDGlyph, 
+	    .dglyph = sgFontsDefaultDGlyph,
 	    .bitmap = NULL,
-	    .colf = 0xFF, 
-	    .coll = 0x00, 
-	    .rowf = 0xFF, 
-	    .rowl = 0x00, 
-	    .colspan = 0x00, 
-	    .bytew = 1, 
+	    .colf = 0xFF,
+	    .coll = 0x00,
+	    .rowf = 0xFF,
+	    .rowl = 0x00,
+	    .colspan = 0x00,
+	    .bytew = 1,
 	    .bytec = 1
 	},
 };
@@ -285,7 +285,7 @@ void tfont_ary_show_list(FILE* fp)
 		}
 		ce++;
 	}
-	
+
 }
 
 void tfont_ary_final(void)
@@ -307,7 +307,7 @@ int tfont_ary_search_idx(const char* na)
 		if (strncasecmp(p->name, na, strlen(p->name)) == 0) {
 			return i;
 		}
-	}	
+	}
 	return -1;
 }
 
@@ -318,15 +318,15 @@ TFont* tfont_ary_search(const char* na)
 		if (strncasecmp(p->name, na, strlen(p->name)) == 0) {
 			return p;
 		}
-	}	
+	}
 	return NULL;
 }
 
 void tfont_final(TFont* p)
 {
-	util_free(p->glyph);
-	util_free(p->dglyph);
-	util_free(p->bitmap);
+	UTIL_FREE(p->glyph);
+	UTIL_FREE(p->dglyph);
+	UTIL_FREE(p->bitmap);
 }
 
 const u_char* tfont_default_glyph(
@@ -380,7 +380,7 @@ const u_char* tfont_standard_glyph(
 
 	*width = p->width;
 	if (b1 < p->colf || p->coll < b1 || b2 < p->rowf || p->rowl < b2) {
-		return p->dglyph;	
+		return p->dglyph;
 	} else {
 		i = (b1 - p->colf) + (b2  - p->rowf) * p->colspan;
 		if (p->glyph_width)
@@ -467,7 +467,7 @@ static void tfont_alias(TFont* dst, TFont* src, FONTSET_HALF hf)
 	dst->glyph_width = src->glyph_width;
 	dst->dglyph = src->dglyph;
 	dst->bitmap = src->bitmap;
-	dst->colf = src->colf; 
+	dst->colf = src->colf;
 	dst->coll = src->coll;
 	dst->rowf = src->rowf;
 	dst->rowl = src->rowl;
@@ -520,8 +520,8 @@ int tfont_is_loaded(TFont *p)
 
 void tfont_setup_fontlist(struct TCapValue* vp)
 {
-	static const char* types[] = {"pcf", "alias", NULL}; 
-	static const char* sides[] = {"L", "R", "U", NULL}; 
+	static const char* types[] = {"pcf", "alias", NULL};
+	static const char* sides[] = {"L", "R", "U", NULL};
 
 	const char* srn;
 	const char* sty;
@@ -535,7 +535,7 @@ void tfont_setup_fontlist(struct TCapValue* vp)
 	TFont* src;
 
 	struct TCsv farg;
-	
+
 	for (; vp ; vp = vp->next) {
 		tcsv_init(&farg, vp->value);
 		if (farg.cap != 4) {
@@ -580,7 +580,7 @@ void tfont_setup_fontlist(struct TCapValue* vp)
 			break;
 		}
 
-	FINALIZE:	
+	FINALIZE:
 		tcsv_final(&farg);
 	}
 

@@ -99,7 +99,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 	},
 #endif
 #if (defined(JFB_16BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{	
+	{
 		16, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
 		tfbm_fill_rect_16bpp_packed,
 		tfbm_overlay_16bpp_packed,
@@ -108,7 +108,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 	},
 #endif
 #if (defined(JFB_16BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{	
+	{
 		16, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
 		tfbm_fill_rect_16bpp_packed,
 		tfbm_overlay_16bpp_packed,
@@ -117,7 +117,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 	},
 #endif
 #if (defined(JFB_24BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{	
+	{
 		24, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
 		tfbm_fill_rect_24bpp_packed,
 		tfbm_overlay_24bpp_packed,
@@ -126,7 +126,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 	},
 #endif
 #if (defined(JFB_24BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{	
+	{
 		24, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
 		tfbm_fill_rect_24bpp_packed,
 		tfbm_overlay_24bpp_packed,
@@ -135,7 +135,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 	},
 #endif
 #if (defined(JFB_32BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{	
+	{
 		32, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
 		tfbm_fill_rect_32bpp_packed,
 		tfbm_overlay_32bpp_packed,
@@ -144,7 +144,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 	},
 #endif
 #if (defined(JFB_32BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{	
+	{
 		32, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
 		tfbm_fill_rect_32bpp_packed,
 		tfbm_overlay_32bpp_packed,
@@ -170,7 +170,7 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 		NULL
 	},
 #endif
-	{	
+	{
 		0, FB_TYPE_PACKED_PIXELS, FB_VISUAL_PSEUDOCOLOR,
 		NULL,
 		NULL,
@@ -207,7 +207,7 @@ static u_short trueColor16Table[16];
 #define CL_B1 0xFFFF
 #define CL_F0 0x8888
 #define CL_F1 0xCCCC
- 
+
 static u_short red16[16]   = {0x1111, CL_B0, CL_B0, CL_B0,   CL_B1, CL_B1, CL_B1, CL_B1,   0x5555, CL_F0, CL_F0, CL_F0,   CL_F1, CL_F1, CL_F1, CL_F1, };
 static u_short green16[16] = {0x2222, CL_B0, CL_B1, CL_B1,   CL_B0, CL_B0, CL_B1, CL_B1,   0x6666, CL_F0, CL_F1, CL_F1,   CL_F0, CL_F0, CL_F1, CL_F1, };
 static u_short blue16[16]  = {0x3333, CL_B1, CL_B0, CL_B1,   CL_B0, CL_B1, CL_B0, CL_B1,   0x7777, CL_F1, CL_F0, CL_F1,   CL_F0, CL_F1, CL_F0, CL_F1, };
@@ -304,7 +304,7 @@ static void linear_palette(int bit)
 	int size = 256 >> (8 - bit);
 
 	for (i = 0 ; i < size ; i++) {
-		red[i] = green[i] = blue[i] = 
+		red[i] = green[i] = blue[i] =
 		(unsigned short)(65535.0 * pow(i/(size - 1.0), fbgamma));
 	}
 }
@@ -340,7 +340,7 @@ static void tfbm_initcolors(TFrameBufferMemory* p,
 	    fbfs->visual == FB_VISUAL_PSEUDOCOLOR) {
 		tfbm_get_cmap(p->fh, &ncmap);
 	}
-    
+
 	switch (fbvs->bits_per_pixel) {
 	case 1:
 		break;
@@ -389,7 +389,7 @@ static void tfbm_show_screeninfo(TFrameBufferMemory* p,
 {
 	u_int c;
 	const char* t;
-	const char* v; 
+	const char* v;
 
 	c = fbfs->type;
 	t = c == FB_TYPE_PACKED_PIXELS ?	"Packed Pixels" :
@@ -456,11 +456,11 @@ void tfbm_init(TFrameBufferMemory* p)
 		struct vt_stat vstat;
 
 		if (-1 == (p->ttyfd = util_privilege_open("/dev/tty0", O_RDWR))) {
-			util_free(fbdn);
+			UTIL_FREE(fbdn);
 			die("open /dev/tty0: %s\n", strerror(errno));
 		}
 		if (-1 == ioctl(p->ttyfd, VT_GETSTATE, &vstat)) {
-			util_free(fbdn);
+			UTIL_FREE(fbdn);
 			die("ioctl VT_GETSTATE");
 		}
 #ifdef JFB_ENABLE_DIMMER
@@ -469,7 +469,7 @@ void tfbm_init(TFrameBufferMemory* p)
 		c2m.console = vstat.v_active;
 #endif
 		if (-1 == (fd = util_privilege_open("/dev/fb0", O_RDWR))) {
-			util_free(fbdn);
+			UTIL_FREE(fbdn);
 			die("open /dev/fb0: %s\n", strerror(errno));
 		}
 		if (-1 == ioctl(fd, FBIOGET_CON2FBMAP, &c2m)) {
@@ -520,9 +520,9 @@ void tfbm_open(TFrameBufferMemory* p)
 	case TFBM_SCR_ROT_FLAG_CW:
 	case TFBM_SCR_ROT_FLAG_CCW:
 		UTIL_SWAP(fb_var.xres,         fb_var.yres);
-		UTIL_SWAP(fb_var.xres_virtual, fb_var.yres_virtual);		
+		UTIL_SWAP(fb_var.xres_virtual, fb_var.yres_virtual);
 		UTIL_SWAP(fb_var.xoffset,      fb_var.yoffset);
-		UTIL_SWAP(fb_var.height,       fb_var.width);	
+		UTIL_SWAP(fb_var.height,       fb_var.width);
 		break;
 
 	default:
@@ -606,7 +606,7 @@ void tfbm_open(TFrameBufferMemory* p)
 	p->mmio = (u_char*)mmap(NULL, p->mlen, PROT_READ|PROT_WRITE,
 				MAP_SHARED, p->fh, p->slen);
 	if ((int)p->mmio == -1) {
-#ifdef JFB_MMIO_CHECK 
+#ifdef JFB_MMIO_CHECK
 		die("cannot mmap(mmio)");
 #else
 		print_message("cannot mmap(mmio) : %s\n", strerror(errno));

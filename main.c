@@ -88,7 +88,7 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 	int c;
 	int ix;
 	int i;
-	
+
 	while (1) {
 		c = getopt_long(argc, argv, "c:f:e:hqr::RL", optList, &ix);
 		if (c == EOF) {
@@ -149,7 +149,7 @@ void tapp_change_to_original_console(TApplication* p)
 
 	util_privilege_on();
 	cfd = open("/dev/console", O_WRONLY);
-	if (cfd < 0 && 
+	if (cfd < 0 &&
 	    (cfd = open("/dev/console", O_RDONLY)) < 0) {
 		util_privilege_off();
                 print_strerror("/dev/console");
@@ -168,7 +168,7 @@ void tapp_final(TApplication* p)
 	if (p->gCapsQ) {
 		tcaps_final(&(p->gCaps));
 	}
-	util_free(p->gExecShellArgv);
+	UTIL_FREE(p->gExecShellArgv);
 }
 
 TApplication gApp;
@@ -181,7 +181,7 @@ void tapp_final_at_exit(void)
 void tapp_init(TApplication* p)
 {
 	static char shell[128];
-	
+
 	p->gOrigVirtualConsole	= -1;
 	tcaps_init(&(p->gCaps));
 	p->gCapsQ = true;
@@ -212,7 +212,7 @@ void tapp_change_to_new_console(TApplication* p)
         int mode;
 
         cfd = util_privilege_open("/dev/console", O_WRONLY);
-        if (cfd < 0 && 
+        if (cfd < 0 &&
 	    (cfd = util_privilege_open("/dev/console", O_RDONLY)) < 0) {
                 die("can't open /dev/console");
         }
@@ -345,7 +345,7 @@ char *
 tapp_setup_encoding(char *en)
 {
 	/* if quoted, remove it */
-	if (en && ((en[0] == '"' && en[strlen(en)-1] == '"') 
+	if (en && ((en[0] == '"' && en[strlen(en)-1] == '"')
 		   || (en[0] == '\'' && en[strlen(en)-1] == '\''))) {
 		en = en + 1;
 		en[strlen(en)-1] = '\0';
@@ -435,7 +435,7 @@ int main(int argc, char *argv[])
 	}
 	en = tapp_setup_encoding(en);
 
-	fcap = tcaps_find(&(gApp.gCaps), "fontset"); 
+	fcap = tcaps_find(&(gApp.gCaps), "fontset");
 	if (!fcap || !(fcap->values)) {
 		print_error("no font specified.\n");
 		exit(EXIT_FAILURE);
