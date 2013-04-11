@@ -1,5 +1,5 @@
 /*
- * JFBTERM - 
+ * JFBTERM -
  * Copyright (c) 2003 Fumitoshi UKAI <ukai@debian.or.jp>
  * Copyright (c) 1999 Noritoshi Masuichi (nmasu@ma3.justnet.ne.jp)
  *
@@ -23,26 +23,26 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  */
-
-#ifndef INCLUDE_FONT_H
-#define INCLUDE_FONT_H
 
 #include <sys/types.h>
 
 #include "getcap.h"
 
-#define TAPP_ERR_FLDD	1		/* »ØÄê¤Î¥Õ¥©¥ó¥È¥»¥Ã¥È¤ÏÀßÄêºÑ¤ß */
+#ifndef INCLUDE_FONT_H
+#define INCLUDE_FONT_H
 
-#define TFONT_FT_SINGLE		0x00000000	/* 1 byte character set */
-#define TFONT_FT_DOUBLE		0x01000000	/* 2 byte character set */
-#define TFONT_FT_94CHAR		0x00000000	/* 94 or 94^n */
-#define TFONT_FT_96CHAR		0x02000000	/* 96 or 96^n */
-#define TFONT_FT_OTHER		0x10000000	/* other coding system */
+#define TAPP_ERR_FLDD	1		/* æŒ‡å®šã®ãƒ•ã‚©ãƒ³ãƒˆã‚»ãƒƒãƒˆã¯è¨­å®šæ¸ˆã¿ */
 
-#define TFONT_OWNER		0x00	/* ¤³¤Î¹½Â¤ÂÎ¤¬glyph¤ò»ÙÇÛ */
-#define TFONT_ALIAS		0x01	/* ÊÌ¤Î¹½Â¤ÂÎ¤Îglyph¤ò»²¾È */
+#define TFONT_FT_SINGLE 0x00000000	/* 1 byte character set */
+#define TFONT_FT_DOUBLE	0x01000000	/* 2 byte character set */
+#define TFONT_FT_94CHAR	0x00000000	/* 94 or 94^n */
+#define TFONT_FT_96CHAR	0x02000000	/* 96 or 96^n */
+#define TFONT_FT_OTHER	0x10000000	/* other coding system */
+
+#define TFONT_OWNER	0x00	        /* ã“ã®æ§‹é€ ä½“ãŒglyphã‚’æ”¯é… */
+#define TFONT_ALIAS	0x01	        /* åˆ¥ã®æ§‹é€ ä½“ã®glyphã‚’å‚ç…§ */
 
 typedef enum {
 	FH_LEFT,
@@ -51,42 +51,42 @@ typedef enum {
 } FONTSET_HALF;
 
 typedef struct Raw_TFont {
-	const u_char* (*conv)(struct Raw_TFont* p, u_int c, u_int* width);
+	const u_char* (*conv)(struct Raw_TFont *p, u_int c, u_int *width);
 	/* --- */
-	const char* name;
-	u_int width;		/* °ìÊ¸»ú¤¢¤¿¤ê¤Î¿åÊ¿¥É¥Ã¥È¿ô */
-	u_int height;		/* °ìÊ¸»ú¤¢¤¿¤ê¤Î¿âÄ¾¥É¥Ã¥È¿ô */
+	const char *name;
+	u_int width;		/* ä¸€æ–‡å­—ã‚ãŸã‚Šã®æ°´å¹³ãƒ‰ãƒƒãƒˆæ•° */
+	u_int height;		/* ä¸€æ–‡å­—ã‚ãŸã‚Šã®å‚ç›´ãƒ‰ãƒƒãƒˆæ•° */
 	/* */
 	u_int fsignature;
 	FONTSET_HALF fhalf;
 	u_char aliasF;
 	/* */
-	u_char** glyph;		/* ¥Ó¥Ã¥È¥Ş¥Ã¥×Ãæ¤Î³Æglyph ¤ÎÀèÆ¬ */
-	u_int* glyph_width;
-	u_char* dglyph;		/* ÂĞ±ş¤¹¤ëglyph¤¬Â¸ºß¤·¤Ê¤¤»ş¤Îglyph */
-	u_char* bitmap;		/* ¥Ó¥Ã¥È¥Ş¥Ã¥× */
-	u_int colf; 
+	u_char **glyph;		/* ãƒ“ãƒƒãƒˆãƒãƒƒãƒ—ä¸­ã®å„glyph ã®å…ˆé ­ */
+	u_int *glyph_width;
+	u_char *dglyph;		/* å¯¾å¿œã™ã‚‹glyphãŒå­˜åœ¨ã—ãªã„æ™‚ã®glyph */
+	u_char *bitmap;		/* ãƒ“ãƒƒãƒˆãƒãƒƒãƒ— */
+	u_int colf;
 	u_int coll;
 	u_int rowf;
 	u_int rowl;
 	u_int colspan;		/* = coll-colf+1; */
-	u_int bytew;		/* °ìÊ¸»ú¤Î¿åÊ¿£±¥é¥¤¥ó¤Î¥Ğ¥¤¥È¿ô */
-	u_int bytec;		/* °ìÊ¸»ú¤¢¤¿¤ê¤Î¥Ğ¥¤¥È¿ô */
+	u_int bytew;		/* ä¸€æ–‡å­—ã®æ°´å¹³ï¼‘ãƒ©ã‚¤ãƒ³ã®ãƒã‚¤ãƒˆæ•° */
+	u_int bytec;		/* ä¸€æ–‡å­—ã‚ãŸã‚Šã®ãƒã‚¤ãƒˆæ•° */
 } TFont;
 
 
-const u_char* tfont_default_glyph(TFont* p, u_int c, u_int *width);
-const u_char* tfont_standard_glyph(TFont* p, u_int c, u_int *width);
-void tfont_final(TFont* p);
+const u_char* tfont_default_glyph(TFont *p, u_int c, u_int *width);
+const u_char* tfont_standard_glyph(TFont *p, u_int c, u_int *width);
+void tfont_final(TFont *p);
 void tfont_ary_final(void);
-void tfont_init(TFont* p);
+void tfont_init(TFont *p);
 
-void tfont_setup_fontlist(struct TCapValue* values);
-int tfont_is_valid(TFont* p);
+void tfont_setup_fontlist(struct TCapValue *values);
+int tfont_is_valid(TFont *p);
 int tfont_is_loaded(TFont *p);
 
-int tfont_ary_search_idx(const char* na);
-void tfont_ary_show_list(FILE* fp);
+int tfont_ary_search_idx(const char *na);
+void tfont_ary_show_list(FILE *fp);
 
 extern TFont gFont[];
 extern u_int gFontsWidth;

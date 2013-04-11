@@ -79,7 +79,7 @@ void util_privilege_off(void)
 }
 
 /* ファイルをeffectiveユーザー権限で開く */
-int util_privilege_open(char* pathname, int flags)
+int util_privilege_open(char *pathname, int flags)
 {
 	util_privilege_on();
 	int fd = open(pathname, flags);
@@ -123,13 +123,39 @@ void util_privilege_drop()
 	setreuid(real_uid, real_uid);
 }
 
-int util_search_string(const char* s, const char** array)
+/* 複数の文字列による配列 array の各文字列と、文字列 s を比較し、
+ * 一致したインデックスを返す。
+ *
+ * array 配列の最後は Null ポインターを格納してなければならない。
+ *
+ * 一致しなかった場合は -1 を返す。
+ */
+int util_search_string(const char *s, const char **array)
 {
 	int i;
-	for (i = 0 ; array[i] ; i++) {
-		if (strcmp(array[i], s) == 0) {
+	for (i = 0; array[i]; i++)
+		if (strcmp(array[i], s) == 0)
 			return i;
-		}
+
+	return -1;
+}
+
+/* 文字列 s が " または ' で前後を囲まれてた場合、それを取り除く。
+ *
+ * "ABC" -> ABC
+ * or
+ * 'ABC' -> ABC
+ */
+char* remove_quote(char* s)
+{
+        if (s == NULL)
+                return s;
+
+        const size_t last = strlen(s) - 1;
+        if ((s[0] == '"'  && s[last] == '"') || (s[0] == '\'' && s[last] == '\'')) {
+                s[last] = '\0';
+                s++;
 	}
-	return -1;	
+
+        return s;
 }

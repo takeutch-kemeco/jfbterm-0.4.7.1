@@ -69,7 +69,7 @@
 
 TFrameBufferMemory gFramebuffer;
 
-static void tapp_get_options(TApplication* p, int argc, char *argv[])
+static void tapp_get_options(TApplication *p, int argc, char *argv[])
 {
 	static struct option optList[] = {
 		{"shell",	1, NULL, 'e'},
@@ -130,44 +130,43 @@ static void tapp_get_options(TApplication* p, int argc, char *argv[])
 		}
 	}
      end:
-	p->gExecShellArgv = (char**)calloc(argc + 2 - optind, sizeof(char*));
+	p->gExecShellArgv = calloc(argc + 2 - optind, sizeof(char*));
 	p->gExecShellArgv[0] = p->gExecShell;
-	for (i = 0 ; i < argc+1 - optind ; i++) {
-		p->gExecShellArgv[i+1] = argv[i + optind];
-	}
+	for (i = 0; i < argc + 1 - optind; i++)
+		p->gExecShellArgv[i + 1] = argv[i + optind];
 }
 
-void tapp_change_to_original_console(TApplication* p)
+void tapp_change_to_original_console(TApplication *p)
 {
-        int cfd;
-	int n = p->gOrigVirtualConsole;
-
 /*
         signal(SIGUSR1, SIG_DFL);
         signal(SIGUSR2, SIG_DFL);
 */
 
 	util_privilege_on();
-	cfd = open("/dev/console", O_WRONLY);
-	if (cfd < 0 &&
-	    (cfd = open("/dev/console", O_RDONLY)) < 0) {
+
+	int cfd = open("/dev/console", O_WRONLY);
+	if (cfd < 0 && (cfd = open("/dev/console", O_RDONLY)) < 0) {
 		util_privilege_off();
                 print_strerror("/dev/console");
 		return;
 	}
+
+	int n = p->gOrigVirtualConsole;
 	if (ioctl(cfd, VT_ACTIVATE, n) != 0) {
 		util_privilege_off();
 		print_warn("can't activate VC(%d)", n);
 	}
+
 	util_privilege_off();
 	close(cfd);
 }
 
-void tapp_final(TApplication* p)
+void tapp_final(TApplication *p)
 {
-	if (p->gCapsQ) {
+	if (p->gCapsQ)
 		tcaps_final(&(p->gCaps));
-	}
+
 	UTIL_FREE(p->gExecShellArgv);
 }
 
@@ -178,9 +177,9 @@ void tapp_final_at_exit(void)
 	tapp_final(&gApp);
 }
 
-void tapp_init(TApplication* p)
+void tapp_init(TApplication *p)
 {
-	static char shell[128];
+	static char shell[0xFFFF];
 
 	p->gOrigVirtualConsole	= -1;
 	tcaps_init(&(p->gCaps));
@@ -201,60 +200,66 @@ void tapp_init(TApplication* p)
 	atexit(tapp_final_at_exit);
 }
 
-void tapp_change_to_new_console(TApplication* p)
+void tapp_change_to_new_console(TApplication *p)
 {
-        struct vt_stat vts;
-        int cfd;
-        int vfd;
-        int vtNum;
-        int child;
-        char vtty[128];
-        int mode;
-
-        cfd = util_privilege_open("/dev/console", O_WRONLY);
+        int cfd = util_privilege_open("/dev/console", O_WRONLY);
         if (cfd < 0 &&
-	    (cfd = util_privilege_open("/dev/console", O_RDONLY)) < 0) {
+            (cfd = util_privilege_open("/dev/console", O_RDONLY)) < 0) {
                 die("can't open /dev/console");
         }
+
 #if 1
+        int mode;
         ioctl(cfd, KDGETMODE, &mode);
         if (mode == KD_TEXT) {
                 close(cfd);
                 return;
         }
 #endif
+        struct vt_stat vts;
         ioctl(cfd, VT_GETSTATE, &vts);
 	p->gOrigVirtualConsole	= vts.v_active;
 
+        int vtNum;
         ioctl(cfd, VT_OPENQRY, &vtNum);
-        if (vtNum < 0) {
+        if (vtNum < 0)
                 die("can't get free VC");
-        }
+
 	fflush(stdout);
 	fflush(stderr);
-        if ((child = fork()) == -1) {
+
+        int child;
+        if ((child = fork()) == -1)
                 print_strerror_and_exit("fork");
-        }
+
         if (child) {
 		/* parent - waiting child process, and reset VC */
                 print_message("\r\nJFBTERM> switched to new VC\r\n");
-	        if (waitpid(child, NULL, 0) < 0) {
+	        if (waitpid(child, NULL, 0) < 0)
 			print_strerror("waitpid");
-		}
+
 		tapp_change_to_original_console(p);
                 exit(EXIT_SUCCESS);
         }
+
         setsid();
+
+        char vtty[0xFFFF];
         sprintf(vtty, "/dev/tty%d", vtNum);
+
 	util_privilege_on();
+
+        int vfd;
         if ((vfd = open(vtty, O_RDWR)) < 0) {
 		util_privilege_off();
                 die("can't open %s", vtty);
         }
+
         if (ioctl(cfd, VT_ACTIVATE, vtNum) != 0) {
 		util_privilege_off();
                 die("can't activate VC(%d)", vtNum);
         }
+
 	util_privilege_off();
         close(cfd);
         dup2(vfd, 0);
@@ -341,20 +346,16 @@ void ShowCaps(void)
 
 }
 
-char *
-tapp_setup_encoding(char *en)
+char* tapp_setup_encoding(char *en)
 {
-	/* if quoted, remove it */
-	if (en && ((en[0] == '"' && en[strlen(en)-1] == '"')
-		   || (en[0] == '\'' && en[strlen(en)-1] == '\''))) {
-		en = en + 1;
-		en[strlen(en)-1] = '\0';
-	}
+        en = remove_quote(en);
+
 	if (en == NULL || strcmp(en, "locale") == 0) {
 		setlocale(LC_ALL, "");
 		en = nl_langinfo(CODESET);
 		print_message("ENCODING: locale = %s\n", en);
 	}
+
 	if (en && (strchr(en, ',') == NULL)) {
 		char *encname = en;
 		en = tcaps_find_entry(&(gApp.gCaps), "encoding.", encname);
@@ -363,28 +364,27 @@ tapp_setup_encoding(char *en)
 			iconv_t cd = iconv_open("UCS-2BE", encname);
 			if (cd != (iconv_t)(-1)) {
 				iconv_close(cd);
-				en = (char *)malloc(strlen("other,iconv,UTF-8")+1+strlen(encname));
+
+				en = malloc(sizeof(char) *
+                                            (strlen("other,iconv,UTF-8") + 1 + strlen(encname)));
 				if (en == NULL)
 					die("not enough memory: encode");
+
 				sprintf(en, "other,%s,iconv,UTF-8", encname);
 			} else {
 				print_error("%s not found, fallback to default\n", encname);
 			}
 		}
 	}
-	if (!en) {
-		en = "G0,G1,ansix3.4-1968,ansix3.4-1968,iso8859.1-1987,ansix3.4-1968";
-	}
+
+	if (!en)
+                en = "G0,G1,ansix3.4-1968,ansix3.4-1968,iso8859.1-1987,ansix3.4-1968";
+
 	return en;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
-	struct TCapability* fcap;
-	char* cp;
-	const char* tn;
-	char* en;
-
 	util_privilege_init();
 	tapp_init(&gApp);
 	tapp_get_options(&gApp, argc, argv);
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
 
 	tcaps_read(&(gApp.gCaps), gApp.gConfFile);
 	if (gApp.gOptReset) {
-		en = tapp_setup_encoding(gApp.gOptReset);
+		char *en = tapp_setup_encoding(gApp.gOptReset);
 		FILE *tf = fopen("/dev/tty", "w");
 		if (tf == NULL)
 			tf = stderr; /* XXX */
@@ -415,53 +415,51 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	if(gApp.gOptCW) {
-		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CW;
-	} else if (gApp.gOptCCW) {
-		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CCW;
-	} else {
-		tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
-	}
+        if(gApp.gOptCW)
+                tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CW;
+	else if (gApp.gOptCCW)
+                tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CCW;
+	else
+                tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
 
-	if(gApp.gOptLegacy) {
-		sage_use = false;
-	} else {
-		sage_use = true;
-	}
+	if(gApp.gOptLegacy)
+                sage_use = false;
+	else
+                sage_use = true;
 
-	en = tcaps_find_first(&(gApp.gCaps), "encoding");
-	if (gApp.gConfEncoding) {
+	char *en = tcaps_find_first(&(gApp.gCaps), "encoding");
+	if (gApp.gConfEncoding)
 		en = gApp.gConfEncoding;
-	}
+
 	en = tapp_setup_encoding(en);
 
-	fcap = tcaps_find(&(gApp.gCaps), "fontset");
+	struct TCapability *fcap = tcaps_find(&(gApp.gCaps), "fontset");
 	if (!fcap || !(fcap->values)) {
 		print_error("no font specified.\n");
 		exit(EXIT_FAILURE);
 	}
 
-	if ((cp = tcaps_find_first(&(gApp.gCaps), "color.gamma")) != NULL) {
+        char* cp;
+	if ((cp = tcaps_find_first(&(gApp.gCaps), "color.gamma")) != NULL)
 		fbgamma = (float)atof(cp);
-	}
+
 	tfont_setup_fontlist(fcap->values);
 	print_message("encoding : %s\n", en);
 	print_message("exec : %s ", gApp.gExecShell);
-	{
-		int i;
-		for (i = 1; gApp.gExecShellArgv[i]; i++)
-			print_message("%s ", gApp.gExecShellArgv[i]);
-	}
+
+	int i;
+	for (i = 1; gApp.gExecShellArgv[i]; i++)
+		print_message("%s ", gApp.gExecShellArgv[i]);
 
 	tapp_change_to_new_console(&gApp);
 	tfbm_init(&gFramebuffer);
 	tfbm_open(&gFramebuffer);
 
 	util_privilege_drop();
-	tn = tcaps_find_first(&(gApp.gCaps), "term");
-	if (!tn) {
+	const char *tn = tcaps_find_first(&(gApp.gCaps), "term");
+	if (!tn)
 		tn = "jfbterm";
-	}
+
 	tterm_start(tn, en);
 
 	tfbm_close(&gFramebuffer);

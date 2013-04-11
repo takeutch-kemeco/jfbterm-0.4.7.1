@@ -34,19 +34,19 @@
 #define INCLUDE_MAIN_H
 
 typedef struct Raw_TApplication {
-	int    gOrigVirtualConsole;
-	bool   gCapsQ;
+	int gOrigVirtualConsole;
+	bool gCapsQ;
 	struct TCaps gCaps;
-	bool   gOptShowHelpQ;
-	bool   gOptQuiet;
-	char*  gOptReset;
-	char*  gExecShell;
-	char** gExecShellArgv;
-    	char*  gConfFile;
-	char*  gConfEncoding;
-	bool   gOptCCW;
-	bool   gOptCW;
-	bool   gOptLegacy;
+	bool gOptShowHelpQ;
+	bool gOptQuiet;
+	char *gOptReset;
+	char *gExecShell;
+	char **gExecShellArgv;
+    	char *gConfFile;
+	char *gConfEncoding;
+	bool gOptCCW;
+	bool gOptCW;
+	bool gOptLegacy;
 } TApplication;
 
 extern TApplication gApp;
