@@ -30,7 +30,6 @@
 
 #include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/io.h>
@@ -80,10 +79,10 @@ void util_privilege_off(void)
 }
 
 /* ファイルをeffectiveユーザー権限で開く */
-int32_t util_privilege_open(uint8_t* pathname, int32_t flags)
+int util_privilege_open(char* pathname, int flags)
 {
 	util_privilege_on();
-	int32_t fd = open(pathname, flags);
+	int fd = open(pathname, flags);
 	util_privilege_off();
 
 	return fd;
@@ -91,16 +90,16 @@ int32_t util_privilege_open(uint8_t* pathname, int32_t flags)
 
 #ifdef HAVE_IOPERM
 /* ポートの入出力許可をeffectiveユーザー権限で得る */
-int32_t util_privilege_ioperm(uint32_t from, uint32_t num, int32_t turn_on)
+int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 {
 	util_privilege_on();
-	int32_t r = ioperm(from, num, turn_on);
+	int r = ioperm(from, num, turn_on);
 	util_privilege_off();
 
 	return r;
 }
 #else
-inline int32_t util_privilege_ioperm(uint32_t from, uint32_t num, int32_t turn_on)
+inline int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 {
 	return -1
 }
@@ -124,13 +123,13 @@ void util_privilege_drop()
 	setreuid(real_uid, real_uid);
 }
 
-int32_t util_search_string(const uint8_t *s, const uint8_t **array)
+int util_search_string(const char* s, const char** array)
 {
-	int32_t i;
+	int i;
 	for (i = 0 ; array[i] ; i++) {
-		if (strcmp(array[i], s) == 0)
+		if (strcmp(array[i], s) == 0) {
 			return i;
+		}
 	}
-
-	return -1;
+	return -1;	
 }

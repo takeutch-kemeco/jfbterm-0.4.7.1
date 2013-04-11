@@ -26,7 +26,6 @@
  */
 
 #include <string.h>
-#include <stdint.h>
 #include "csv.h"
 #include "util.h"
 
@@ -37,21 +36,22 @@
  * 例えば文字列が "aa,bb,cc" なら、"aa" \0 "bb" \0 "cc"となり、
  * 文字列の個数 3 が cap にセットされる。
  */
-void tcsv_init(struct TCsv *p, const uint8_t *s)
+void tcsv_init(struct TCsv* p, const char* s)
 {
 	p->buffer = strdup(s);
 	p->pnt = p->buffer;
 	p->cap = 0;
 	p->count = 0;
 
-	if (p->buffer == NULL)
+	if (p->buffer == NULL) {
 		return;
+	}
 
 	p->cap = 1;
-	uint8_t *cp = p->buffer;
-	uint8_t *cq = p->buffer;
-	while (*cp != '\0') {
-		if (*cp == ',') {
+	char* cp = p->buffer;
+	char* cq = p->buffer;
+	while(*cp != '\0') {
+		if(*cp == ',') {
 			*cq = '\0';
 			p->cap++;
 		} else {
@@ -61,12 +61,11 @@ void tcsv_init(struct TCsv *p, const uint8_t *s)
 		cp++;
 		cq++;
 	}
-
 	*cq = '\0';
 }
 
 /* TCsv のメモリー解放 */
-void tcsv_final(struct TCsv *p)
+void tcsv_final(struct TCsv* p)
 {
 	util_free(p->buffer);
 }
@@ -78,14 +77,15 @@ void tcsv_final(struct TCsv *p)
  *
  * それ以上読み出すトークンが無い場合は NULL を返す
  */
-const uint8_t* tcsv_get_token(struct TCsv *p)
+const char* tcsv_get_token(struct TCsv* p)
 {
-	if (p->count >= p->cap)
+	if (p->count >= p->cap) {
 		return NULL;
+	}
 
-	uint8_t *ret = p->pnt;
-
-	while (*(p->pnt) != '\0') {
+	char* ret = p->pnt;
+	
+	while(*(p->pnt) != '\0') {
 		p->pnt++;
 	}
 	p->pnt++;

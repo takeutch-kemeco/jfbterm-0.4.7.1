@@ -1,5 +1,5 @@
 /*
- * JFBTERM -
+ * JFBTERM - 
  * Copyright (c) 2000 Noritoshi Masuichi (nmasu@ma3.justnet.ne.jp)
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,13 +22,12 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
+ * 
  */
 
-#include <stdint.h>
 #include "picofont.h"
 
-uint8_t gPicoFontLeft[] = {
+u_char gPicoFontLeft[] = {
 	/* 0 */
 	0x30,		/* ..OO.... */
 	0x30,		/* ..OO.... */

@@ -25,7 +25,6 @@
  *
  */
 
-#include <stdint.h>
 #include <termios.h>
 #include "vterm.h"
 
@@ -35,13 +34,13 @@
 #define SUCCESS (0)
 
 struct TTerm {
-	int32_t ptyfd;
-	int32_t ttyfd;
-	uint8_t name[0x1000];
+	int ptyfd;
+	int ttyfd;
+	char name[0x1000];
 	struct termios ttysave;
 	struct TVterm vterm;
 };
 
-void tterm_start(const uint8_t *tn, const uint8_t *en);
+void tterm_start(const char* tn, const char* en);
 
 #endif /* INCLUDE_TERM_H */

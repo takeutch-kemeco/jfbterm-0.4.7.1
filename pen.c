@@ -25,17 +25,16 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
+ * 
  */
 
 #include <stdlib.h>
-#include <stdint.h>
 #include <sys/types.h>
 
 #include "pen.h"
 
 /* pen（リストの１要素）を初期設定 */
-void tpen_init(struct TPen *p)
+void tpen_init(struct TPen* p)
 {
 	p->prev = NULL;
 	p->x = p->y = 0;
@@ -45,11 +44,11 @@ void tpen_init(struct TPen *p)
 }
 
 /* prev のメモリを解放し、リンクを切る */
-void tpen_final(struct TPen *p)
+void tpen_final(struct TPen* p)
 {
-	struct TPen *q = p->prev;
+	struct TPen* q = p->prev;
 	p->prev = NULL;
-	if (q != NULL) {
+	if(q != NULL) {
 		tpen_final(q);
 		free(q);
 	}
@@ -60,14 +59,14 @@ void tpen_final(struct TPen *p)
  * コピーはリストの１要素のみ。
  * コピー先は１要素のみとなる。（リスト全体の再帰的なコピーは行われない）
  */
-void tpen_copy(struct TPen *dst, struct TPen *src)
+void tpen_copy(struct TPen* dst, struct TPen* src)
 {
 	*dst = *src;
 	dst->prev = NULL;
 }
 
 /* pen の描画属性を初期状態（off）にする */
-inline void tpen_off_all_attribute(struct TPen *p)
+inline void tpen_off_all_attribute(struct TPen* p)
 {
 	p->bcol = 0;
 	p->fcol = 7;
@@ -75,29 +74,30 @@ inline void tpen_off_all_attribute(struct TPen *p)
 }
 
 /* pen の描画属性にハイライト属性（明るく描画）をセットする */
-void tpen_higlight(struct TPen *p)
+void tpen_higlight(struct TPen* p)
 {
 	p->attr |= ATTR_HIGH;
-	if (p->fcol != 0)
+	if(p->fcol != 0) {
 		p->fcol |= 8;
+	}
 }
 
 /* pen の描画属性のハイライト属性を無効にする */
-void tpen_dehiglight(struct TPen *p)
+void tpen_dehiglight(struct TPen* p)
 {
 	p->attr &= ~ATTR_HIGH;
 	p->fcol &= ~8;
 }
 
 /* アンダーライン属性セット */
-void tpen_underline(struct TPen *p)
+void tpen_underline(struct TPen* p)
 {
 	p->attr |= ATTR_ULINE;
 	p->bcol |= 8;
 }
 
 /* アンダーライン属性無効 */
-void tpen_no_underline(struct TPen *p)
+void tpen_no_underline(struct TPen* p)
 {
 	p->attr &= ~ATTR_ULINE;
 	p->bcol &= ~8;
@@ -114,17 +114,18 @@ void tpen_no_underline(struct TPen *p)
  * 0x08 = ２進数で 1000
  * つまり、これらはマスク
  */
-void tpen_reverse(struct TPen *p)
+void tpen_reverse(struct TPen* p)
 {
-	uint8_t swp;
+	u_char swp;
 
-	if ((p->attr & ATTR_REVERSE) == 0) {
+	if((p->attr & ATTR_REVERSE) == 0) {
 		p->attr |= ATTR_REVERSE;
 
 		swp = p->fcol & 0x07;
 
-		if(p->attr & ATTR_ULINE)
+		if(p->attr & ATTR_ULINE) {
 			swp |= 0x08;
+		}
 
 		p->fcol = p->bcol & 0x07;
 
@@ -142,17 +143,18 @@ void tpen_reverse(struct TPen *p)
  *
  * 備考：ループはしない。どの場合でも、反転を無効にするだけ。
  */
-void tpen_no_reverse(struct TPen *p)
+void tpen_no_reverse(struct TPen* p)
 {
-	uint8_t swp;
+	u_char swp;
 
-	if (p->attr & ATTR_REVERSE) {
+	if(p->attr & ATTR_REVERSE) {
 		p->attr &= ~ATTR_REVERSE;
 
 		swp = p->fcol & 0x07;
 
-		if(p->attr & ATTR_ULINE)
+		if(p->attr & ATTR_ULINE) {
 			swp |= 0x08;
+		}
 
 		p->fcol = p->bcol & 0x07;
 
@@ -161,13 +163,13 @@ void tpen_no_reverse(struct TPen *p)
 				p->fcol |= 0x08;
 			}
 		}
-
+		
 		p->bcol = swp;
 	}
 }
 
 /* コントロール番号に対応した、それに対応する色番号 */
-static const uint8_t gsTPenReversTable[48] = {
+static const u_char gsTPenReversTable[48] = {
 	[30] = 0, [31] = 4, [32] = 2, [33] = 6,
 	[34] = 1, [35] = 5, [36] = 3, [37] = 7,
 	[40] = 0, [41] = 4, [42] = 2, [43] = 6,
@@ -175,39 +177,41 @@ static const uint8_t gsTPenReversTable[48] = {
 };
 
 /* pen に色をセットする */
-void tpen_set_color(struct TPen *p, const uint32_t col)
+void tpen_set_color(struct TPen* p, const u_int col)
 {
-	uint8_t t = gsTPenReversTable[col];
+	u_char t = gsTPenReversTable[col];
 
-	switch (col) {
+	switch(col) {
 	case 30 ... 37:
-		if (p->attr & ATTR_REVERSE) {
-			if (p->attr & ATTR_ULINE)
+		if(p->attr & ATTR_REVERSE) {
+			if(p->attr & ATTR_ULINE) {
 				t |= 0x08;
+			}
 
 			p->bcol = t;
 		} else {
-			if (p->attr & ATTR_HIGH)
+			if(p->attr & ATTR_HIGH) {
 				t |= 0x08;
+			}
 
 			p->fcol = t;
 		}
-
 		break;
 
 	case 40 ... 47:
 		if (p->attr & ATTR_REVERSE) {
-			if (p->attr & ATTR_HIGH)
+			if(p->attr & ATTR_HIGH) {
 				t |= 0x08;
+			}
 
 			p->fcol = t;
 		} else {
-			if(p->attr & ATTR_ULINE)
+			if(p->attr & ATTR_ULINE) {
 				t |= 8;
+			}
 
 			p->bcol = t;
 		}
-
 		break;
 	}
 }

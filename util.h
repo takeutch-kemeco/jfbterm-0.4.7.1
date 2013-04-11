@@ -28,7 +28,6 @@
 
 #include <sys/types.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #ifndef INCLUDE_UTIL_H
 #define INCLUDE_UTIL_H
@@ -36,12 +35,12 @@
 void util_privilege_init(void);
 void util_privilege_on(void);
 void util_privilege_off(void);
-int32_t util_privilege_open(uint8_t *pathname, int32_t flags);
-int32_t util_privilege_ioperm(uint32_t from, uint32_t num, int32_t turn_on);
+int util_privilege_open(char *pathname, int flags);
+int util_privilege_ioperm(u_int from, u_int num, int turn_on);
 uid_t util_getuid();
 void util_privilege_drop();
-int32_t util_search_string(const uint8_t *s, const uint8_t **array);
-void util_swap(uint32_t *a, uint32_t *b);
+int util_search_string(const char* s, const char** array);
+void util_swap(u_int* a, u_int* b);
 
 #define util_free(p) {free(p); (p) = NULL;}
 
@@ -52,7 +51,7 @@ void util_swap(uint32_t *a, uint32_t *b);
 }
 
 #define LIMIT_INNER(a, min, max) {		\
-	if ((a) < (min)) {			\
+	if((a) < (min)) {			\
 		(a) = (min);			\
 	} else if((a) > (max)) {		\
 		(a) = (max);			\

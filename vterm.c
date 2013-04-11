@@ -1,5 +1,5 @@
 /*
- * JFBTERM -
+ * JFBTERM - 
  * Copyright (C) 2003  Fumitoshi UKAI <ukai@debian.or.jp>
  * Copyright (C) 1999  Noritoshi MASUICHI (nmasu@ma3.justnet.ne.jp)
  *
@@ -26,14 +26,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
+ * 
  */
 
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <termios.h>
 #include <malloc.h>
 #include <sys/types.h>
@@ -54,34 +53,34 @@
 
 #define	LEN_REPORT 9
 
-static void tvterm_set_default_encoding(struct TVterm *p, const uint8_t *en);
-static void tvterm_esc_start(struct TVterm *p, uint8_t ch);
-static void tvterm_esc_bracket(struct TVterm*, uint8_t);
+static void tvterm_set_default_encoding(struct TVterm* p, const char* en);
+static void tvterm_esc_start(struct TVterm* p, u_char ch);
+static void tvterm_esc_bracket(struct TVterm*, u_char);
 #ifdef JFB_OTHER_CODING_SYSTEM
-static void tvterm_esc_rbracket(struct TVterm*, uint8_t);
+static void tvterm_esc_rbracket(struct TVterm*, u_char);
 #endif
-static void tvterm_esc_traditional_multibyte_fix(struct TVterm *p, uint8_t ch);
-static int32_t tvterm_find_font_index(int32_t fsig);
-static void tvterm_esc_designate_font(struct TVterm *p, uint8_t ch);
-static void tvterm_esc_designate_otherCS(struct TVterm *p, uint8_t ch);
-static void tvterm_invoke_gx(struct TVterm *p, struct TFontSpec *fs, uint32_t n);
-static void tvterm_re_invoke_gx(struct TVterm *p, struct TFontSpec *fs);
-static void tvterm_set_window_size(struct TVterm *p);
+static void tvterm_esc_traditional_multibyte_fix(struct TVterm* p, u_char ch);
+static int tvterm_find_font_index(int fsig);
+static void tvterm_esc_designate_font(struct TVterm* p, u_char ch);
+static void tvterm_esc_designate_otherCS(struct TVterm* p, u_char ch);
+static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n);
+static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs);
+static void tvterm_set_window_size(struct TVterm* p);
 
 static void tvterm_switch_to_ISO2022(struct TVterm *p);
-static int32_t tvterm_is_ISO2022(struct TVterm *p);
+static int tvterm_is_ISO2022(struct TVterm *p);
 
 static void tvterm_switch_to_UTF8(struct TVterm *p);
-static int32_t tvterm_is_UTF8(struct TVterm *p);
+static int tvterm_is_UTF8(struct TVterm *p);
 
 static void tvterm_finish_otherCS(struct TVterm *p);
 static void tvterm_switch_to_otherCS(struct TVterm *p,
 				     struct TCodingSystem *other);
-static int32_t tvterm_is_otherCS(struct TVterm *p);
+static int tvterm_is_otherCS(struct TVterm *p);
 
 /* TVterm の各種パラメーターの初期化 */
-void tvterm_init(struct TVterm *p, struct TTerm *pt, uint32_t hw, uint32_t hh,
-                 struct TCaps *caps, const uint8_t *en)
+void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
+                 struct TCaps* caps, const char* en)
 {
 	p->term = pt;
 	p->xcap = hw;
@@ -119,22 +118,22 @@ void tvterm_init(struct TVterm *p, struct TTerm *pt, uint32_t hw, uint32_t hh,
 }
 
 /* エンコーディング設定の文字列からトークン切り分けする */
-int32_t tvterm_parse_encoding(const uint8_t *en, int32_t idx[6])
+int tvterm_parse_encoding(const char* en, int idx[6])
 {
-	static const uint8_t *table[] = {"G0", "G1", "G2", "G3", NULL};
+	static const char* table[] = {"G0", "G1", "G2", "G3", NULL}; 
 
 	struct TCsv farg;
 	tcsv_init(&farg, en);
-	if (farg.cap != 6) {
+	if(farg.cap != 6) {
 		tcsv_final(&farg);
 		return 0;
 	}
 
 	int i;
-	for (i = 0; i < 6; i++) {
-		const uint8_t *g = tcsv_get_token(&farg);
+	for(i = 0; i < 6; i++) {
+		const char* g = tcsv_get_token(&farg);
 
-		int32_t ig;
+		int ig;
 		switch(i) {
 		case 0 ... 1:
 			ig = util_search_string(g, table);
@@ -144,10 +143,11 @@ int32_t tvterm_parse_encoding(const uint8_t *en, int32_t idx[6])
 			ig = tfont_ary_search_idx(g);
 			break;
 		}
-
-		if (ig == -1)
+	
+		if(ig == -1) {
 			ig = i;
-
+		}
+		
 		idx[i] = ig;
 	}
 
@@ -167,36 +167,40 @@ static void tvterm_switch_to_ISO2022(struct TVterm *p)
 }
 
 /* TVterm が ISO2022 モードかどうかの確認 */
-static int32_t tvterm_is_ISO2022(struct TVterm *p)
+static int tvterm_is_ISO2022(struct TVterm *p)
 {
-	if (tvterm_is_otherCS(p))
+	if(tvterm_is_otherCS(p)) {
 		return 0;
+	}
 
-	if (tvterm_is_UTF8(p))
+	if(tvterm_is_UTF8(p)) {
 		return 0;
+	}
 
 	return 1;
 }
 
-static int32_t tvterm_UTF8index(const uint8_t* en)
+static int tvterm_UTF8index(const char* en)
 {
-	int32_t id = 0;
-
+	int id = 0;
+	
 	struct TCsv farg;
 	tcsv_init(&farg, en);
 
-	const uint8_t *g = tcsv_get_token(&farg);
+	const char *g = tcsv_get_token(&farg);
 
-	if(strcmp(g, "UTF-8") != 0)
+	if(strcmp(g, "UTF-8") != 0) {
 		goto FINALIZE;
+	}
 
-	if(farg.cap != 2)
+	if(farg.cap != 2) {
 		goto FINALIZE;
+	}
 
 	g = tcsv_get_token(&farg);
-	int32_t i;
-	for (i = 0; gFont[i].name != NULL; i++) {
-		if (strcmp(gFont[i].name, g) == 0) {
+	int i;
+	for(i = 0; gFont[i].name != NULL; i++) {
+		if(strcmp(gFont[i].name, g) == 0) {
 			if(tfont_is_loaded(&gFont[i])) {
 				id = i;
 				goto FINALIZE;
@@ -211,15 +215,17 @@ FINALIZE:
 }
 
 /* TVterm を UTF-8 モードへ変更する */
-static void tvterm_switch_to_UTF8(struct TVterm *p)
+static void tvterm_switch_to_UTF8(struct TVterm* p)
 {
 	tvterm_finish_otherCS(p);
 
-	if (p->utf8DefaultIdx == 0) {
-		const uint8_t *en = tcaps_find_entry(p->caps,
-						     "encoding.", "UTF-8");
-		if (en != NULL)
+	if(p->utf8DefaultIdx == 0) {
+		const char *en = tcaps_find_entry(p->caps,
+						  "encoding.",
+						  "UTF-8");
+		if(en != NULL) {
 			p->utf8DefaultIdx = tvterm_UTF8index(en);
+		}
 	}
 	p->utf8Idx = p->utf8DefaultIdx;
 	p->utf8remain = 0;
@@ -227,15 +233,16 @@ static void tvterm_switch_to_UTF8(struct TVterm *p)
 }
 
 /* TVterm が UTF-8 モードかどうかを確認する */
-static int32_t tvterm_is_UTF8(struct TVterm *p)
+static int tvterm_is_UTF8(struct TVterm* p) 
 {
-	if (p->utf8Idx != 0)
+	if(p->utf8Idx != 0) {
 		return 1;
-
-	return 0;
+	} else {
+		return 0;
+	}
 }
 
-int32_t tvterm_parse_otherCS(const uint8_t *en, struct TCodingSystem *otherCS)
+int tvterm_parse_otherCS(const char* en, struct TCodingSystem* otherCS)
 {
 	memset(otherCS, 0, sizeof(*otherCS));
 
@@ -247,7 +254,7 @@ int32_t tvterm_parse_otherCS(const uint8_t *en, struct TCodingSystem *otherCS)
 		return 0;
 	}
 
-	const uint8_t *g;
+	const char *g;
 	g = tcsv_get_token(&farg); /* g == "other" */
 
 	g = tcsv_get_token(&farg);
@@ -263,15 +270,15 @@ int32_t tvterm_parse_otherCS(const uint8_t *en, struct TCodingSystem *otherCS)
 	return 1;
 }
 
-static void tvterm_finish_otherCS(struct TVterm *p)
+static void tvterm_finish_otherCS(struct TVterm* p)
 {
 	/* XXX restore ISO-2022 state? */
 	if(p->otherCS) {
-		struct TCodingSystem *o = p->otherCS;
+		struct TCodingSystem* o = p->otherCS;
 
 		/* restore designate/invoke state */
-		int32_t i;
-		for (i = 0; i < 4; i++) {
+		int i;
+		for(i = 0; i < 4; i++) {
 			p->gIdx[i] = o->gSavedIdx[i];
 		}
 
@@ -284,51 +291,52 @@ static void tvterm_finish_otherCS(struct TVterm *p)
 		p->utf8remain = 0;
 		p->ucs2ch = 0;
 
-		if (o->cd != (iconv_t)(-1))
+		if(o->cd != (iconv_t)(-1)) {
 			iconv_close(o->cd);
-
+		}
 		o->cd = (iconv_t)(-1);
 
-		if (o->fromcode)
+		if(o->fromcode) {
 			free(o->fromcode);
-
+		}
 		o->fromcode = NULL;
 
-		if (o->tocode)
+		if(o->tocode) {
 			free(o->tocode);
-
+		}
 		o->tocode = NULL;
 	}
 	p->otherCS = NULL;
 }
 
-static void __tvterm_switch_to_otherCS(struct TVterm *p,
-				       struct TCodingSystem *ocs,
-				       uint8_t *tocode)
+static void __tvterm_switch_to_otherCS(struct TVterm* p,
+				       struct TCodingSystem* ocs,
+				       char* tocode)
 {
-	if (strcmp(ocs->tocode, "UTF-8") == 0) {
+	if(strcmp(ocs->tocode, "UTF-8") == 0) {
 		tvterm_switch_to_UTF8(p);
 		tocode = "UCS-2BE"; /* XXX */
 	} else {
-		int32_t idx[6];
+		int idx[6];
 
-		uint8_t *en = tcaps_find_entry(p->caps,
-					       "encoding.", ocs->tocode);
-		if (en == NULL) {
+		char *en = tcaps_find_entry(p->caps,
+					    "encoding.",
+					    ocs->tocode);
+		if(en == NULL) {
 			free(ocs->tocode);
 			ocs->tocode = strdup("UTF-8");
 			__tvterm_switch_to_otherCS(p, ocs, tocode);
 			return;
 		}
 
-		if (tvterm_parse_encoding(en, idx) == 0) {
+		if(tvterm_parse_encoding(en, idx) == 0) {
 			free(ocs->tocode);
 			ocs->tocode = strdup("UTF-8");
 			__tvterm_switch_to_otherCS(p, ocs, tocode);
 			return;
 		}
 
-		int32_t i;
+		int i;
 		for(i = 0; i < 4; i++) {
 			p->gIdx[i] = idx[2+i];
 		}
@@ -340,8 +348,8 @@ static void __tvterm_switch_to_otherCS(struct TVterm *p,
 	}
 
 	ocs->cd = iconv_open(tocode, ocs->fromcode);
-	if (ocs->cd == (iconv_t)(-1)) {
-		if (strcmp(ocs->tocode, "UTF-8") == 0) {
+	if(ocs->cd == (iconv_t)(-1)) {
+		if(strcmp(ocs->tocode, "UTF-8") == 0) {
 			free(ocs->tocode);
 			ocs->tocode = strdup("UTF-8");
 			__tvterm_switch_to_otherCS(p, ocs, tocode);
@@ -368,42 +376,44 @@ FINALIZE:
 	return;
 }
 
-static void tvterm_switch_to_otherCS(struct TVterm *p,
-				     struct TCodingSystem *ocs)
+static void tvterm_switch_to_otherCS(struct TVterm* p,
+				     struct TCodingSystem* ocs)
 {
 	tvterm_finish_otherCS(p);
 	/* save current designate/invoke */
 	ocs->gSavedL = p->gl.invokedGn;
 	ocs->gSavedR = p->gr.invokedGn;
 
-	int32_t i;
-	for (i = 0; i < 4; i++) {
+	int i;
+	for(i = 0; i < 4; i++) {
 		ocs->gSavedIdx[i] = p->gIdx[i];
 	}
 	ocs->utf8SavedIdx = p->utf8Idx;
 
-	uint8_t *tocode = ocs->tocode;
+	char* tocode = ocs->tocode;
 	__tvterm_switch_to_otherCS(p, ocs, tocode);
 }
 
-static int32_t tvterm_is_otherCS(struct TVterm *p)
+static int
+tvterm_is_otherCS(struct TVterm* p)
 {
-	if (p->otherCS != NULL)
+	if(p->otherCS != NULL) {
 		return 1;
-
-	return 0;
+	} else {
+		return 0;
+	}
 }
 
 /* other,<coding-system>,iconv,<std-coding-system> */
-static inline void tvterm_set_default_encoding_other(struct TVterm *p,
-						     const uint8_t *en)
+static inline void tvterm_set_default_encoding_other(struct TVterm* p,
+						     const char* en)
 {
 #ifdef JFB_OTHER_CODING_SYSTEM
 	struct TCsv farg;
 	tcsv_init(&farg, en);
 
-	const uint8_t *g = tcsv_get_token(&farg);
-	if (strcmp(g, "other") == 0) {
+	const char* g = tcsv_get_token(&farg);
+	if(strcmp(g, "other") == 0) {
 		static struct TCodingSystem otherCS;
 		if (tvterm_parse_otherCS(en, &otherCS)) {
 			tvterm_switch_to_otherCS(p, &otherCS);
@@ -415,15 +425,15 @@ static inline void tvterm_set_default_encoding_other(struct TVterm *p,
 }
 
 /* UTF-8,<fontsetname> */
-static inline void tvterm_set_default_encoding_utf8(struct TVterm *p,
-						    const uint8_t *en)
+static inline void tvterm_set_default_encoding_utf8(struct TVterm* p,
+						    const char* en)
 {
 #ifdef JFB_UTF8
 	struct TCsv farg;
 	tcsv_init(&farg, en);
 
-	const uint8_t *g = tcsv_get_token(&farg);
-	if (strcmp(g, "UTF-8") == 0) {
+	const char* g = tcsv_get_token(&farg);
+	if(strcmp(g, "UTF-8") == 0) {
 		/* UTF-8,<fontsetname> */
 		p->utf8DefaultIdx = tvterm_UTF8index(en);
 		tvterm_switch_to_UTF8(p);
@@ -434,11 +444,11 @@ static inline void tvterm_set_default_encoding_utf8(struct TVterm *p,
 }
 
 /* ISO-2022 */
-static inline void tvterm_set_default_encoding_iso2022(struct TVterm *p,
-						       const uint8_t *en)
+static inline void tvterm_set_default_encoding_iso2022(struct TVterm* p,
+						       const char* en)
 {
-	int32_t idx[6];
-	if (tvterm_parse_encoding(en, idx)) {
+	int idx[6];
+	if(tvterm_parse_encoding(en, idx)) {
 		/* GL */
 		p->gDefaultL = idx[0];
 
@@ -446,21 +456,21 @@ static inline void tvterm_set_default_encoding_iso2022(struct TVterm *p,
 		p->gDefaultR = idx[1];
 
 		/* G0 .. G3 */
-		int32_t i;
+		int i;	
 		for(i = 0; i < 4; i++) {
 			p->gDefaultIdx[i] = idx[2+i];
 		}
 	}
 }
 
-void tvterm_set_default_encoding(struct TVterm* p, const uint8_t *en)
+void tvterm_set_default_encoding(struct TVterm* p, const char* en)
 {
 	tvterm_set_default_encoding_other(p, en);
 	tvterm_set_default_encoding_utf8(p, en);
 	tvterm_set_default_encoding_iso2022(p, en);
 }
 
-void tvterm_set_default_invoke_and_designate(struct TVterm *p)
+void tvterm_set_default_invoke_and_designate(struct TVterm* p)
 {
 	p->gIdx[0] = p->gDefaultIdx[0];		/* G0 <== ASCII */
 	p->gIdx[1] = p->gDefaultIdx[1];		/* G1 <== JIS X 0208 */
@@ -479,7 +489,7 @@ void tvterm_set_default_invoke_and_designate(struct TVterm *p)
 	p->altCs = false;
 }
 
-void tvterm_start(struct TVterm *p)
+void tvterm_start(struct TVterm* p)
 {
 	p->pen.x = 0;
 	p->pen.y = 0;
@@ -510,9 +520,9 @@ void tvterm_start(struct TVterm *p)
 	p->cursor.height = gFontsHeight;
 
 	p->tsize = p->xcap4 * p->ycap;
-	p->text = (uint32_t*)calloc(p->xcap4, p->ycap * sizeof(uint32_t));
-	p->attr = (uint8_t*)calloc(p->xcap4, p->ycap);
-	p->flag = (uint8_t*)calloc(p->xcap4, p->ycap);
+	p->text = (u_int*)calloc(p->xcap4, p->ycap * sizeof(u_int));
+	p->attr = (u_char*)calloc(p->xcap4, p->ycap);
+	p->flag = (u_char*)calloc(p->xcap4, p->ycap);
 
 	ioctl(0, KDSETMODE, KD_GRAPHICS);
 	/*
@@ -529,18 +539,18 @@ void tvterm_start(struct TVterm *p)
 	sage_init();
 }
 
-void tvterm_final(struct TVterm *p)
+void tvterm_final(struct TVterm* p)
 {
 	sage_close();
 
 	ioctl(0, KDSETMODE, KD_TEXT);
 	tpen_final(&(p->pen));
-	if (p->savedPen) {
+	if(p->savedPen) {
 		tpen_final(p->savedPen);
 		free(p->savedPen);
 		p->savedPen = NULL;
 	}
-	if (p->savedPenSL) {
+	if(p->savedPenSL) {
 		tpen_final(p->savedPenSL);
 		free(p->savedPenSL);
 		p->savedPenSL = NULL;
@@ -551,15 +561,16 @@ void tvterm_final(struct TVterm *p)
 	util_free(p->flag);
 }
 
-void tvterm_push_current_pen(struct TVterm *p, bool b)
+void tvterm_push_current_pen(struct TVterm* p, bool b)
 {
-	struct TPen *t;
-	struct TPen **base;
+	struct TPen* t;
+	struct TPen** base;
 	base = b ? &(p->savedPen) : &(p->savedPenSL);
 	t = (struct TPen*)malloc(sizeof(*t));
 
-	if (!t)
+	if(!t) {
 		return;
+	}
 
 	tpen_init(t);
 	tpen_copy(t, &(p->pen));
@@ -567,95 +578,103 @@ void tvterm_push_current_pen(struct TVterm *p, bool b)
 	*base = t;
 }
 
-void tvterm_pop_pen_and_set_currnt_pen(struct TVterm *p, bool b)
+void tvterm_pop_pen_and_set_currnt_pen(struct TVterm* p, bool b)
 {
-	struct TPen *t;
-	struct TPen **base;
+	struct TPen* t;
+	struct TPen** base;
 	base = b ? &(p->savedPen) : &(p->savedPenSL);
 	t = *base;
 
-	if (!t)
+	if(!t) {
 		return;
+	}
 
 	tpen_copy(&(p->pen), t);
 
 	LIMIT_INNER(p->pen.y, p->ymin, p->ymax - 1);
-
+	
 	*base = t->prev;
 	free(t);
 }
 
-static inline int32_t IS_GL_AREA(struct TVterm *p, uint8_t ch)
+static inline int IS_GL_AREA(struct TVterm* p, u_char ch)
 {
-	if (p->tgl.type & TFONT_FT_96CHAR)
+	if(p->tgl.type & TFONT_FT_96CHAR) {
 		return (0x1F < ch && ch < 0x80);
-
-	return (0x20 < ch && ch < 0x7F);
+	} else {
+		return (0x20 < ch && ch < 0x7F);
+	}
 }
 
-static inline int32_t IS_GR_AREA(struct TVterm *p, uint8_t ch)
+static inline int IS_GR_AREA(struct TVterm* p, u_char ch)
 {
-	if (p->tgr.type & TFONT_FT_96CHAR)
+	if(p->tgr.type & TFONT_FT_96CHAR) {
 		return (0x9F < ch);
-
-	return (0xA0 < ch && ch < 0xFF);
+	} else {
+		return (0xA0 < ch && ch < 0xFF);
+	}
 }
 
-static inline void INSERT_N_CHARS_IF_NEEDED(struct TVterm *p, int32_t n)
+static inline void INSERT_N_CHARS_IF_NEEDED(struct TVterm* p, int n)
 {
-	if (p->ins)
+	if (p->ins) {
 		tvterm_insert_n_chars(p, n);
+	}
 }
 
-static inline void SET_WARP_FLAG_IF_NEEDED(struct TVterm *p)
+static inline void SET_WARP_FLAG_IF_NEEDED(struct TVterm* p)
 {
-	if (p->pen.x == p->xmax-1)
+	if (p->pen.x == p->xmax-1) {
 		p->wrap = true;
+	}
 }
 
 
-static int32_t tvterm_put_normal_char(struct TVterm *p, uint8_t ch)
+static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
 {
-	if (p->pen.x == p->xmax) {
+	if(p->pen.x == p->xmax) {
 		p->wrap = true;
 		p->pen.x--;
 	}
-
-	if (p->wrap) {
+	
+	if(p->wrap) {
 		p->pen.x -= p->xmax -1;
 
-		if(p->pen.y == p->ymax - 1)
+		if(p->pen.y == p->ymax - 1) {
 			p->scroll++;
-		else
+		} else {
 			p->pen.y++;
+		}
 
 		p->wrap = false;
 
 		return -1;
 	}
-
-	if (p->knj1) {
+	
+	if(p->knj1) {
 		INSERT_N_CHARS_IF_NEEDED(p, 2);
 
-		uint8_t ch1;
-		if (p->knj1h == FH_RIGHT)
+		u_char ch1;
+		if(p->knj1h == FH_RIGHT) {
 			ch1 = p->knj1 | 0x80;
-		else
+		} else {
 			ch1 = p->knj1 & 0x7F;
+		}
 
-		uint8_t ch2;
-		if(p->knj1h == FH_RIGHT)
+		u_char ch2;
+		if(p->knj1h == FH_RIGHT) {
 			ch2 = ch | 0x80;
-		else
+		} else {
 			ch2 = ch & 0x7F;
-
+		}
+		
 		tvterm_wput(p, p->knj1idx, ch1, ch2);
 		p->pen.x += 2;
 		p->knj1 = 0;
 		p->tgr = p->gr;
 		p->tgl = p->gl;
-	} else if (IS_GL_AREA(p, ch)) {
-		if (p->tgl.type & TFONT_FT_DOUBLE) {
+	} else if(IS_GL_AREA(p, ch)) {
+		if(p->tgl.type & TFONT_FT_DOUBLE) {
 			SET_WARP_FLAG_IF_NEEDED(p);
 			p->knj1 = ch;
 			p->knj1h = p->tgl.half;
@@ -663,20 +682,20 @@ static int32_t tvterm_put_normal_char(struct TVterm *p, uint8_t ch)
 		} else {
 			INSERT_N_CHARS_IF_NEEDED(p, 1);
 
-			uint8_t tmp;
-			if (p->tgl.half == FH_RIGHT)
+			u_char tmp;
+			if(p->tgl.half == FH_RIGHT) {
 				tmp = ch | 0x80;
-			else
+			} else {
 				tmp = ch;
-
+			}
 			tvterm_sput(p, p->tgl.idx, tmp);
 
 			p->pen.x++;
 			p->tgr = p->gr;
 			p->tgl = p->gl;
 		}
-	} else if (IS_GR_AREA(p, ch)) {
-		if (p->tgr.type & TFONT_FT_DOUBLE) {
+	} else if(IS_GR_AREA(p, ch)) {
+		if(p->tgr.type & TFONT_FT_DOUBLE) {
 			SET_WARP_FLAG_IF_NEEDED(p);
 			p->knj1 = ch;
 			p->knj1h = p->tgr.half;
@@ -684,19 +703,19 @@ static int32_t tvterm_put_normal_char(struct TVterm *p, uint8_t ch)
 		} else {
 			INSERT_N_CHARS_IF_NEEDED(p, 1);
 
-			uint8_t tmp;
-			if(p->tgr.half == FH_LEFT)
+			u_char tmp;
+			if(p->tgr.half == FH_LEFT) {
 				tmp = ch & ~0x80;
-			else
+			} else {
 				tmp = ch;
-
+			}
 			tvterm_sput(p, p->tgr.idx, tmp);
 
 			p->pen.x++;
 			p->tgr = p->gr;
 			p->tgl = p->gl;
 		}
-	} else if (ch == 0x20) {
+	} else if(ch == 0x20) {
 		INSERT_N_CHARS_IF_NEEDED(p, 1);
 		tvterm_sput(p, 0, 0x20);
 
@@ -708,10 +727,10 @@ static int32_t tvterm_put_normal_char(struct TVterm *p, uint8_t ch)
 	return 0;
 }
 
-static int32_t tvterm_put_uchar(struct TVterm *p, uint32_t ch)
+static int tvterm_put_uchar(struct TVterm* p, u_int ch)
 {
 	TFont *pf = &gFont[p->utf8Idx];
-	uint32_t w;
+	u_int w;
 	if(p->pen.x == p->xmax) {
 		p->wrap = true;
 		p->pen.x--;
@@ -749,12 +768,13 @@ static int32_t tvterm_put_uchar(struct TVterm *p, uint32_t ch)
 	return 0;
 }
 
-int32_t tvterm_iso_C0_set(struct TVterm *p, uint8_t ch)
+int tvterm_iso_C0_set(struct TVterm* p, u_char ch)
 {
 	switch(ch) {
 	case ISO_BS:
-		if(p->pen.x)
+		if(p->pen.x) {
 			p->pen.x--;
+		}
 
 		p->wrap = false;
 		break;
@@ -762,26 +782,27 @@ int32_t tvterm_iso_C0_set(struct TVterm *p, uint8_t ch)
 	case ISO_HT:
 		p->pen.x += p->tab - (p->pen.x % p->tab);
 		p->wrap = false;
-		if (p->pen.x < p->xmax)
+		if(p->pen.x < p->xmax) {
 			break;
+		}
 
 		p->pen.x -= p->xmax;
 		/* fail into next case */
 
 	case ISO_VT:
 	case ISO_FF:
-		if (!tvterm_is_otherCS(p))
+		if(!tvterm_is_otherCS(p)) {
 			tvterm_set_default_invoke_and_designate(p);
-
+		}
 		/* fail into next case */
 
 	case ISO_LF:
 		p->wrap = false;
-		if (p->pen.y == p->ymax - 1)
+		if(p->pen.y == p->ymax - 1) {
 			p->scroll++;
-		else
+		} else  {
 			p->pen.y++;
-
+		}
 		break;
 
 	case ISO_CR:
@@ -796,16 +817,18 @@ int32_t tvterm_iso_C0_set(struct TVterm *p, uint8_t ch)
 		return 1;
 
 	case ISO_LS1:
-		if (!tvterm_is_ISO2022(p))
+		if(!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gl), 1); /* GL <== G1 */
 		p->tgl = p->gl;
 		return 1;
 
 	case ISO_LS0:
-		if (!tvterm_is_ISO2022(p))
+		if (!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gl), 0); /* GL <== G0 */
 		p->tgl = p->gl;
@@ -818,7 +841,7 @@ int32_t tvterm_iso_C0_set(struct TVterm *p, uint8_t ch)
 	return 0;
 }
 
-int32_t tvterm_iso_C1_set(struct TVterm *p, uint8_t ch)
+int tvterm_iso_C1_set(struct TVterm* p, u_char ch)
 {
 	switch(ch) {
 	case ISO_SS2:	/* single shift 2 */
@@ -837,19 +860,19 @@ int32_t tvterm_iso_C1_set(struct TVterm *p, uint8_t ch)
 }
 
 #define UTF8_CHECK_START(p) {		\
-	if ((p)->utf8remain != 0) {	\
+	if((p)->utf8remain != 0) {	\
 		(p)->ucs2ch = 0;	\
 		(p)->utf8remain = 0;	\
 	}				\
 }
 
-int32_t tvterm_put_utf8_char(struct TVterm *p, uint8_t ch)
+int tvterm_put_utf8_char(struct TVterm *p, u_char ch)
 {
-	if (ch < 0x7F) {
+	if(ch < 0x7F) {
 		UTF8_CHECK_START(p);
 		p->ucs2ch = ch;
-	} else if ((ch & 0xC0) == 0x80) {
-		if (p->utf8remain == 0) {
+	} else if((ch & 0xC0) == 0x80) {
+		if(p->utf8remain == 0) {
 			/* illegal UTF-8 sequence? */
 			p->ucs2ch = ch;
 		} else {
@@ -860,12 +883,12 @@ int32_t tvterm_put_utf8_char(struct TVterm *p, uint8_t ch)
 				return p->utf8remain;
 			}
 		}
-	} else if ((ch & 0xE0) == 0xC0) {
+	} else if((ch & 0xE0) == 0xC0) {
 		UTF8_CHECK_START(p);
 		p->utf8remain = 1;
 		p->ucs2ch = (ch & 0x1F);
 		return p->utf8remain;
-	} else if ((ch & 0xF0) == 0xE0) {
+	} else if((ch & 0xF0) == 0xE0) {
 		UTF8_CHECK_START(p);
 		p->utf8remain = 2;
 		p->ucs2ch = (ch & 0x0F);
@@ -874,43 +897,43 @@ int32_t tvterm_put_utf8_char(struct TVterm *p, uint8_t ch)
 		/* XXX: support UCS2 only */
 	}
 
-	int32_t rev;
-	if (p->altCs &&
-	    (p->ucs2ch < 127) &&
-	    (IS_GL_AREA(p, (uint8_t)(p->ucs2ch & 0x0ff)))) {
+	int rev;
+	if(p->altCs &&
+	   (p->ucs2ch < 127) &&
+	   (IS_GL_AREA(p, (u_char)(p->ucs2ch & 0x0ff)))) {
 		rev = tvterm_put_normal_char(p, (p->ucs2ch & 0x0ff));
 	} else {
 		rev = tvterm_put_uchar(p, p->ucs2ch);
 	}
 
-	if (rev < 0) {
+	if(rev < 0) {
 		p->ucs2ch >>= 6;
-		if (p->ucs2ch)
+		if(p->ucs2ch) {
 			p->utf8remain++;
+		}
 	}
 
 	return rev;
 }
 
-int32_t tvterm_put_otherCS_char(struct TVterm *p, uint8_t ch)
+int tvterm_put_otherCS_char(struct TVterm* p, u_char ch)
 {
-	if (p->otherCS->inbuflen >= sizeof(p->otherCS->inbuf) - 1)
+	if(p->otherCS->inbuflen >= sizeof(p->otherCS->inbuf) - 1) {
 		/* XXX: too long? */
 		p->otherCS->inbuflen = 0;
-
+	}
 	p->otherCS->inbuf[p->otherCS->inbuflen] = ch;
 	p->otherCS->inbuflen++;
 
-	uint8_t* inbuf = p->otherCS->inbuf;
+	char* inbuf = p->otherCS->inbuf;
 	size_t inbuflen = p->otherCS->inbuflen;
 
-	uint8_t* outbuf = p->otherCS->outbuf;
+	char* outbuf = p->otherCS->outbuf;
 	size_t outbuflen = sizeof(p->otherCS->outbuf);
 
 	size_t s = iconv(p->otherCS->cd,
-                         &inbuf, &inbuflen, &outbuf, &outbuflen);
-
-	if (s == (size_t)(-1)) {
+			 &inbuf, &inbuflen, &outbuf, &outbuflen);
+	if(s == (size_t)(-1)) {
 		switch (errno) {
 		case E2BIG:
 			p->otherCS->inbuflen = 0;
@@ -928,18 +951,18 @@ int32_t tvterm_put_otherCS_char(struct TVterm *p, uint8_t ch)
 	/* output bytes */
 	s = sizeof(p->otherCS->outbuf) - outbuflen;
 
-	if (strcmp(p->otherCS->tocode, "UTF-8") == 0 &&
-	    p->altCs == false) {
+	if(strcmp(p->otherCS->tocode, "UTF-8") == 0 &&
+	   p->altCs == false) {
 		p->ucs2ch = 0;
 
-		int32_t i;
-		for (i = 0; i < s; i++) {
+		int i;
+		for(i = 0; i < s; i++) {
 			p->ucs2ch <<= 8;
 			p->ucs2ch |= (p->otherCS->outbuf[i] & 0x0ff);
 		}
 
-		int32_t rev = tvterm_put_uchar(p, p->ucs2ch);
-		if (rev < 0) {
+		int rev = tvterm_put_uchar(p, p->ucs2ch);
+		if(rev < 0) {
 			p->otherCS->inbuflen--;
 			return rev;
 		}
@@ -947,9 +970,9 @@ int32_t tvterm_put_otherCS_char(struct TVterm *p, uint8_t ch)
 
 		return rev;
 	} else {
-		int32_t i;
+		int i;
 		for (i = 0; i < s; i++) {
-			uint8_t c = p->otherCS->outbuf[i];
+			u_char c = p->otherCS->outbuf[i];
 			int rev = tvterm_put_normal_char(p, c);
 			if(rev < 0) {
 				p->otherCS->inbuflen--;
@@ -962,45 +985,45 @@ int32_t tvterm_put_otherCS_char(struct TVterm *p, uint8_t ch)
 	}
 }
 
-void tvterm_emulate(struct TVterm *p, const uint8_t *buff, int32_t nchars)
+void tvterm_emulate(struct TVterm* p, const char* buff, int nchars)
 {
-	while (nchars-- > 0) {
-		uint8_t ch = *(buff++);
-		if (!ch) {
+	while(nchars-- > 0) {
+		u_char ch = *(buff++);
+		if(!ch) {
 			continue;
-		} else if (p->esc) {
+		} else if(p->esc) {
 			p->esc(p, ch);
-		} else if (ch < 0x20) {
-			int32_t cn = tvterm_iso_C0_set(p, ch);
-			if (cn)
+		} else if(ch < 0x20) {
+			int cn = tvterm_iso_C0_set(p, ch);
+			if(cn) {
 				continue;
-
-		} else if (tvterm_is_otherCS(p)) {
-			int32_t rev = tvterm_put_otherCS_char(p, ch);
-			if (rev >= 0) {
+			}
+		} else if(tvterm_is_otherCS(p)) {
+			int rev = tvterm_put_otherCS_char(p, ch);
+			if(rev >= 0) {
 				continue;
-			} else if (rev < 0) {
+			} else if(rev < 0) {
 				nchars -= rev;
 				buff += rev;
 			}
-		} else if (tvterm_is_UTF8(p)) {
-			int32_t rev = tvterm_put_utf8_char(p, ch);
-			if (rev >= 0) {
+		} else if(tvterm_is_UTF8(p)) {
+			int rev = tvterm_put_utf8_char(p, ch);
+			if(rev >= 0) {
 				continue;
-			} else if (rev < 0) {
+			} else if(rev < 0) {
 				nchars -= rev;
 				buff += rev;
 			}
-		} else if ((0x7F < ch) && (ch < 0xA0)) {
-			int32_t cn = tvterm_iso_C1_set(p, ch);
-			if (cn)
+		} else if((0x7F < ch) && (ch < 0xA0)) {
+			int cn = tvterm_iso_C1_set(p, ch);
+			if(cn) {
 				continue;
-
-		} else if (ch == ISO_DEL) {
+			}
+		} else if(ch == ISO_DEL) {
 			/* nothing to do. */
 		} else {
-			int32_t rev = tvterm_put_normal_char(p, ch);
-			if (rev == 0) {
+			int rev = tvterm_put_normal_char(p, ch);
+			if(rev == 0) {
 				continue;
 			} else if(rev < 0) {
 				nchars -= rev;
@@ -1008,28 +1031,28 @@ void tvterm_emulate(struct TVterm *p, const uint8_t *buff, int32_t nchars)
 			}
 		}
 
-		if (p->scroll > 0) {
+		if(p->scroll > 0) {
 			tvterm_text_scroll_up(p, p->scroll);
-		} else if (p->scroll < 0) {
+		} else if(p->scroll < 0) {
 			tvterm_text_scroll_down(p, -(p->scroll));
 		}
 		p->scroll = 0;
 	}
 }
 
-#define ESC_ISO_GnDx(n, x) {			\
-	p->escSignature |= (x);			\
-	p->escGn = (n);				\
-	p->esc = tvterm_esc_designate_font;	\
+#define ESC_ISO_GnDx(n, x) {				\
+		p->escSignature |= (x);			\
+		p->escGn = (n);				\
+		p->esc = tvterm_esc_designate_font;	\
 }
 
 #define Fe(x) ((x)-0x40)
 
-static void tvterm_esc_start(struct TVterm *p, uint8_t ch)
+static void tvterm_esc_start(struct TVterm* p, u_char ch)
 {
 	p->esc = NULL;
 
-	switch (ch) {
+	switch(ch) {
 	case Fe(ISO_CSI):	/* 5/11 [ */
 		p->esc = tvterm_esc_bracket;
 		break;
@@ -1084,19 +1107,19 @@ static void tvterm_esc_start(struct TVterm *p, uint8_t ch)
 		p->wrap = false;
 
 	case Fe(TERM_IND): 	/* 4/4 D */
-		if (p->pen.y == p->ymax - 1)
+		if(p->pen.y == p->ymax - 1) {
 			p->scroll++;
-		else
+		} else {
 			p->pen.y++;
-
+		}
 		break;
 
 	case Fe(ISO_RI):	/* 4/13 M */
-		if (p->pen.y == p->ymin)
+		if(p->pen.y == p->ymin) {
 			p->scroll--;
-		else
+		} else {
 			p->pen.y--;
-
+		}
 		break;
 
 	case Fe(ISO_SS2):	/* 4/14 N *//* 7bit single shift 2 */
@@ -1131,40 +1154,45 @@ static void tvterm_esc_start(struct TVterm *p, uint8_t ch)
 		break;
 
 	case ISO_LS2:		/* 6/14 n */
-		if (!tvterm_is_ISO2022(p))
+		if (!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gl), 2); /* GL <= G2 */
 		p->tgl = p->gl;
 		break;
 
 	case ISO_LS3:		/* 6/15 o */
-		if(!tvterm_is_ISO2022(p))
+		if(!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gl), 3); /* GL <= G3 */
 		p->tgl = p->gl;
 		break;
 
 	case ISO_LS3R:		/* 7/12 | */
-		if (!tvterm_is_ISO2022(p))
+		if (!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gr), 3); /* GR <= G3 */
 		p->tgr = p->gr;
 		break;
 
 	case ISO_LS2R:		/* 7/13 } */
-		if (!tvterm_is_ISO2022(p))
+		if (!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gr), 2); /* GR <= G2 */
 		p->tgr = p->gr;
 		break;
 
 	case ISO_LS1R:		/* 7/14 ~ */
-		if (!tvterm_is_ISO2022(p))
+		if (!tvterm_is_ISO2022(p)) {
 			break;
+		}
 
 		tvterm_invoke_gx(p, &(p->gr), 1); /* GR <= G1 */
 		p->tgr = p->gr;
@@ -1172,11 +1200,11 @@ static void tvterm_esc_start(struct TVterm *p, uint8_t ch)
 	}
 }
 
-void tvterm_esc_set_attr(struct TVterm *p, int32_t col)
+void tvterm_esc_set_attr(struct TVterm* p, int col)
 {
-	static int32_t acsIdx = 0;
+	static int acsIdx = 0;
 
-	switch (col) {
+	switch(col) {
 	case 0: tpen_off_all_attribute(&(p->pen));
 		break;
 
@@ -1208,10 +1236,11 @@ void tvterm_esc_set_attr(struct TVterm *p, int32_t col)
 		break;
 
 	case 11:	/* smacs, smpch */
-		if (acsIdx == 0)
+		if(acsIdx == 0) {
 			acsIdx = tvterm_find_font_index(0x30|TFONT_FT_94CHAR);
+		}
 
-		if (acsIdx > 0) {
+		if(acsIdx > 0) {
 			p->gIdx[0] = acsIdx;
 			tvterm_re_invoke_gx(p, &(p->gl));
 			tvterm_re_invoke_gx(p, &(p->gr));
@@ -1227,7 +1256,7 @@ void tvterm_esc_set_attr(struct TVterm *p, int32_t col)
 	}
 }
 
-static void tvterm_set_mode(struct TVterm *p, uint8_t mode, bool sw)
+static void tvterm_set_mode(struct TVterm* p, u_char mode, bool sw)
 {
 	switch(mode) {
 	case 4:
@@ -1240,59 +1269,62 @@ static void tvterm_set_mode(struct TVterm *p, uint8_t mode, bool sw)
 	}
 }
 
-static void tvterm_esc_report(struct TVterm *p, uint8_t mode, uint16_t arg)
+static void tvterm_esc_report(struct TVterm* p, u_char mode, u_short arg)
 {
 	p->report[0] = '\0';
 
-	switch (mode) {
+	switch(mode) {
 	case 'n':
 		if(arg == 6) {
-			int32_t x = p->pen.x;
+			int x = p->pen.x;
 			LIMIT_INNER(x, x, p->xmax - 1);
 
-			int32_t y = p->pen.y;
+			int y = p->pen.y;
 			LIMIT_INNER(y, y, p->ymax - 1);
-
+			
 			sprintf(p->report, "\x1B[%d;%dR", y, x);
-		} else if (arg == 5) {
+		} else if(arg == 5) {
 			strcpy(p->report, "\x1B[0n\0");
 		}
 		break;
 
 	case 'c':
-		if (arg == 0)
+		if(arg == 0) {
 			strcpy(p->report, "\x1B[?6c\0");
-
+		}
 		break;
 	}
 
 	write(p->term->ptyfd, p->report, strlen(p->report));
 }
 
-static void tvterm_set_region(struct TVterm *p, int32_t ymin, int32_t ymax)
+static void tvterm_set_region(struct TVterm* p, int ymin, int ymax)
 {
 	/* FIX ME ! : 1999/10/30 */
 	/* XXX: ESC[?1001r is used for mouse control by w3m. ukai 1999/10/27*/
-	if (ymin < 0 || ymin >= p->ycap || ymin > ymax || ymax > p->ycap)
+	if(ymin < 0 || ymin >= p->ycap || ymin > ymax || ymax > p->ycap) {
 	        /* ignore */
 		return;
+	}
 
 	p->ymin = ymin;
 	p->ymax = ymax;
 	p->pen.x = 0;
 
-	if(p->pen.y < p->ymin || p->pen.y > p->ymax-1)
+	if(p->pen.y < p->ymin || p->pen.y > p->ymax-1) {
 		p->pen.y = p->ymin - 1;
+	}
 
 	p->wrap = false;
 
-	if(p->ymin || p->ymax != p->ycap)
+	if(p->ymin || p->ymax != p->ycap) {
 		p->soft = true;
-	else
+	} else {
 		p->soft = false;
+	}
 }
 
-void tvterm_set_window_size(struct TVterm *p)
+void tvterm_set_window_size(struct TVterm* p)
 {
 	struct winsize win;
 
@@ -1304,48 +1336,48 @@ void tvterm_set_window_size(struct TVterm *p)
 }
 
 
-static void tvterm_esc_status_line(struct TVterm *p, uint8_t mode)
+static void tvterm_esc_status_line(struct TVterm* p, u_char mode)
 {
-	switch (mode) {
+	switch(mode) {
 	case 'T':	/* To */
-		if (p->sl == SL_ENTER)
+		if(p->sl == SL_ENTER) {
 			break;
+		}
 
-		if (!p->savedPenSL)
+		if(!p->savedPenSL) {
 			tvterm_push_current_pen(p, false);
-
+		}
 		/* fail into next case */
 
 	case 'S':	/* Show */
-		if (p->sl == SL_NONE) {
+		if(p->sl == SL_NONE) {
 			p->ymax = p->ycap - 1;
 			tvterm_set_window_size(p);
 		}
 
-		if (mode == 'T') {
+		if(mode == 'T') {
 			p->sl = SL_ENTER;
 			tvterm_set_region(p, p->ycap-1, p->ycap);
 		}
-
 		break;
 
 	case 'F':	/* From */
-		if (p->sl == SL_ENTER) {
+		if(p->sl == SL_ENTER) {
 			p->sl = SL_LEAVE;
 			tvterm_set_region(p, 0, p->ycap -1);
 
-			if (p->savedPenSL)
+			if(p->savedPenSL) {
 				tvterm_pop_pen_and_set_currnt_pen(p, false);
-
+			}
 			p->savedPenSL = NULL;
 		}
-
 		break;
 
 	case 'H':	/* Hide */
 	case 'E':	/* Erase */
-		if (p->sl == SL_NONE)
+		if(p->sl == SL_NONE) {
 			break;
+		}
 
 		tvterm_set_region(p, 0, p->ycap);
 		tvterm_set_window_size(p);
@@ -1364,15 +1396,15 @@ static void tvterm_esc_status_line(struct TVterm *p, uint8_t mode)
 
 #define	MAX_NARG 8
 
-static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
+static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 {
-	uint8_t	n;
-	static uint16_t varg[MAX_NARG], narg, question;
+	u_char	n;
+	static u_short varg[MAX_NARG], narg, question;
 
-	if (ch >= '0' && ch <= '9') {
+	if(ch >= '0' && ch <= '9') {
 		varg[narg] = (varg[narg] * 10) + (ch - '0');
-	} else if (ch == ';') {
-		if (narg < MAX_NARG) {
+	} else if(ch == ';') {
+		if(narg < MAX_NARG) {
 			narg++;
 			varg[narg] = 0;
 		} else {
@@ -1380,7 +1412,7 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
 		}
 	} else {
 		p->esc = NULL;
-		switch (ch) {
+		switch(ch) {
 		case 'K':
 			tvterm_text_clear_eol(p, varg[0]);
 			break;
@@ -1391,7 +1423,7 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
 
 		case ISO_CS_NO_CUU:
 			p->pen.y -= varg[0] ? varg[0]: 1;
-			if (p->pen.y < p->ymin) {
+			if(p->pen.y < p->ymin) {
 				p->scroll -= p->pen.y - p->ymin;
 				p->pen.y = p->ymin;
 			}
@@ -1399,7 +1431,7 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
 
 		case ISO_CS_NO_CUD:
 			p->pen.y += varg[0] ? varg[0]: 1;
-			if (p->pen.y >= p->ymax) {
+			if(p->pen.y >= p->ymax) {
 				p->scroll += p->pen.y - p->ymin;
 				p->pen.y = p->ymax-1;
 			}
@@ -1440,14 +1472,12 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
 
 		case 'H':
 		case 'f':
-			if (varg[1])
+			if(varg[1]) {
 				p->pen.x = varg[1] - 1;
-			else
+			} else {
 				p->pen.x = 0;
-
+			}
 			p->wrap = false;
-
-                        /* fail into next case */
 
 		case 'd':
 			p->pen.y = varg[0] ? varg[0] - 1: 0;
@@ -1455,31 +1485,34 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
 			break;
 
 		case 'm':
-			for (n = 0; n <= narg; n++) {
+			for(n = 0; n <= narg; n++) {
 				tvterm_esc_set_attr(p, varg[n]);
-                        }
-
+			}
 			break;
 
 		case 'r':
 			n = varg[1];
-			if (n == 0)
+			if (n == 0) {
 			    n = p->ycap;
+			}
 
-			if ((p->sl != SL_NONE) && (n == p->ycap))
-                                n--;
+			if(p->sl != SL_NONE) {
+				if(n == p->ycap) {
+					 n--;
+				}
+			}
 
 			tvterm_set_region(p, varg[0] ? (varg[0] - 1): 0, n);
 			break;
 
 		case 'l':
-			for (n = 0; n <= narg; n++) {
+			for(n = 0; n <= narg; n++) {
 				tvterm_set_mode(p, varg[n], false);
 			}
 			break;
 
 		case 'h':
-			for (n = 0; n <= narg; n++) {
+			for(n = 0; n <= narg; n++) {
 				tvterm_set_mode(p, varg[n], true);
 			}
 			break;
@@ -1498,17 +1531,18 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
 
 		case 'n':
 		case 'c':
-			if (question != true)
+			if(question != true) {
 				tvterm_esc_report(p, ch, varg[0]);
-
+			}
 			break;
 
 		case 'R':
 			break;
 		}
 
-		if (p->esc == NULL)
+		if(p->esc == NULL) {
 			question = narg = varg[0] = varg[1] = 0;
+		}
 	}
 }
 
@@ -1523,34 +1557,37 @@ static void tvterm_esc_bracket(struct TVterm *p, uint8_t ch)
  *
  */
 #define MAX_ARGLEN 48
-static void tvterm_esc_rbracket(struct TVterm *p, uint8_t ch)
+static void tvterm_esc_rbracket(struct TVterm* p, u_char ch)
 {
-	static uint8_t arg[MAX_ARGLEN + 1];
-	static uint8_t enbuf[MAX_ARGLEN + 32];
-	static int32_t argidx;
+	static u_char arg[MAX_ARGLEN + 1];
+	static u_char enbuf[MAX_ARGLEN + 32];
+	static int argidx;
 
-	if (ch >= 0x20 && ch <= 0x7e) {
-		if (argidx < MAX_ARGLEN-1)
+	if(ch >= 0x20 && ch <= 0x7e) {
+		if(argidx < MAX_ARGLEN-1) {
 			arg[argidx++] = ch;
+		}
 
 		arg[argidx] = '\0';
 	} else {
-		const uint8_t *en;
+		const char* en;
 		struct TCodingSystem otherCS;
 
 		p->esc = NULL;
-		switch (ch) {
+		switch(ch) {
 		case 0x05:	/* 0/5 designate private coding system */
 			en = tcaps_find_entry(p->caps, "encoding.", arg);
-			if (en == NULL) {
-				sprintf(enbuf, "other,%s,iconv,UTF-8", arg);
+			if(en == NULL) {
+				sprintf(enbuf,
+					"other,%s,iconv,UTF-8",
+					arg);
 
 				en = enbuf;
 			}
 
-			if (tvterm_parse_otherCS(en, &otherCS))
+			if(tvterm_parse_otherCS(en, &otherCS)) {
 				tvterm_switch_to_otherCS(p, &otherCS);
-
+			}
 			break;
 		}
 
@@ -1566,7 +1603,7 @@ static void tvterm_esc_rbracket(struct TVterm *p, uint8_t ch)
 * ESC ISO_94_TO_G1 0  ==> GRAPHIC FONT SET
 */
 
-static void tvterm_invoke_gx(struct TVterm *p, struct TFontSpec *fs, uint32_t n)
+static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n)
 {
 	fs->invokedGn = n;
 	fs->idx = p->gIdx[fs->invokedGn];
@@ -1574,33 +1611,34 @@ static void tvterm_invoke_gx(struct TVterm *p, struct TFontSpec *fs, uint32_t n)
 	fs->half = gFont[fs->idx].fhalf;
 }
 
-static void tvterm_re_invoke_gx(struct TVterm *p, struct TFontSpec *fs)
+static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs)
 {
 	fs->idx = p->gIdx[fs->invokedGn];
 	fs->type = gFont[fs->idx].fsignature;
 	fs->half = gFont[fs->idx].fhalf;
 }
 
-static int32_t tvterm_find_font_index(int32_t fsig)
+static int tvterm_find_font_index(int fsig)
 {
-	int32_t i;
-	for (i = 0; gFont[i].fsignature; i++) {
-		if(gFont[i].fsignature == fsig)
+	int i;
+	for(i = 0; gFont[i].fsignature; i++) {
+		if(gFont[i].fsignature == fsig) {
 			return i;
+		}
 	}
 
 	return -1;
 }
 
-static void tvterm_esc_designate_font(struct TVterm *p, uint8_t ch)
+static void tvterm_esc_designate_font(struct TVterm* p, u_char ch)
 {
 	if(!tvterm_is_ISO2022(p)) {
 		p->esc = NULL;
 		return;
 	}
 
-	const int32_t i = tvterm_find_font_index(ch | p->escSignature);
-	if (i >= 0) {
+	const int i = tvterm_find_font_index(ch | p->escSignature);
+	if(i >= 0) {
 		p->gIdx[p->escGn] = i;
 		tvterm_re_invoke_gx(p, &(p->gl));
 		tvterm_re_invoke_gx(p, &(p->gr));
@@ -1611,7 +1649,7 @@ static void tvterm_esc_designate_font(struct TVterm *p, uint8_t ch)
 	p->esc = NULL;
 }
 
-static void tvterm_esc_designate_otherCS(struct TVterm *p, uint8_t ch)
+static void tvterm_esc_designate_otherCS(struct TVterm* p, u_char ch)
 {
 	switch(ch) {
 	case 0x40:
@@ -1627,7 +1665,7 @@ static void tvterm_esc_designate_otherCS(struct TVterm *p, uint8_t ch)
 	p->esc = NULL;
 }
 
-static void tvterm_esc_traditional_multibyte_fix(struct TVterm *p, uint8_t ch)
+static void tvterm_esc_traditional_multibyte_fix(struct TVterm* p, u_char ch)
 {
 	switch(ch) {
 	case 0x40 ... 0x42:
@@ -1641,13 +1679,13 @@ static void tvterm_esc_traditional_multibyte_fix(struct TVterm *p, uint8_t ch)
 }
 
 
-void tvterm_show_sequence(FILE *tf, struct TCaps *cap, const uint8_t *en)
+void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 {
 	struct TCsv farg;
 	tcsv_init(&farg, en);
-	const uint8_t *g = tcsv_get_token(&farg);
+	const char *g = tcsv_get_token(&farg);
 
-	if (strcmp(g, "other") == 0) {
+	if(strcmp(g, "other") == 0) {
 		struct TCodingSystem otherCS;
 		if(tvterm_parse_otherCS(en, &otherCS)) {
 			fprintf(tf, "%s%s\005", "\033]", otherCS.fromcode);
@@ -1662,42 +1700,45 @@ void tvterm_show_sequence(FILE *tf, struct TCaps *cap, const uint8_t *en)
 		goto FINALIZE;
 	}
 
-	int32_t idx[6];
+	int idx[6];
 
 	/* ISO-2022 */
 	fprintf(tf, "%s", "\033%@");
-	if (tvterm_parse_encoding(en, idx) == 0) {
+	if(tvterm_parse_encoding(en, idx) == 0) {
 		print_warn("ENCODING : BAD FORMAT : %s\n", en);
 		goto FINALIZE;
 	}
 
 	/* GL */
-	static const uint8_t *invokeL[] = {"\017", "\016", "\033n", "\033o"};
+	static const char *invokeL[] = {"\017", "\016", "\033n", "\033o"};
 	fprintf(tf, "%s", invokeL[idx[0]]);
 
 	/* GR */
-	static const uint8_t *invokeR[] = {"", "\033~", "\033}", "\033|"};
+	static const char *invokeR[] = {"", "\033~", "\033}", "\033|"};
 	fprintf(tf, "%s", invokeR[idx[1]]);
 
 	/* G0 .. G3 */
-	int32_t i;
-	for (i = 0; i < 4; i++) {
+	int i;
+	for(i = 0; i < 4; i++) {
 		TFont* f = &gFont[idx[2+i]];
-		uint32_t n = f->fsignature;
-		uint8_t c = n & 255;
-		uint32_t f1 = n & TFONT_FT_DOUBLE;
-		uint32_t f2 = n & TFONT_FT_96CHAR;
+		u_int n = f->fsignature;
+		char c = n & 255;
+		u_int f1 = n & TFONT_FT_DOUBLE;
+		u_int f2 = n & TFONT_FT_96CHAR;
 
-		static const uint8_t csr4[] = {
+		static const char csr4[] = {
 			ISO_GZD4, ISO_G1D4, ISO_G2D4, ISO_G3D4
 		};
 
-		static const uint8_t csr6[] = {
+		static const char csr6[] = {
 			MULE__GZD6, ISO_G1D6, ISO_G2D6, ISO_G3D6
 		};
 
-		fprintf(tf, "\033%s%c%c",
-			(f1 ? "$" : ""), (f2 ? csr6[i] : csr4[i]), c);
+		fprintf(tf,
+			"\033%s%c%c",
+			(f1 ? "$" : ""), 
+			(f2 ? csr6[i] : csr4[i]),
+			c);
 	}
 
 FINALIZE:
