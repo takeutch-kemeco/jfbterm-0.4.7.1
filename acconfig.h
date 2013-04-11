@@ -61,7 +61,3 @@
 
 /* Color gamma effect */
 #undef JFB_COLOR_GAMMA
-
-/* Supprt Dimmer (Screen blank) */
-#undef JFB_ENABLE_DIMMER
-

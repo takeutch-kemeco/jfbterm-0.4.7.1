@@ -63,9 +63,6 @@
 /* Color gamma effect */
 #undef JFB_COLOR_GAMMA
 
-/* Supprt Dimmer (Screen blank) */
-#undef JFB_ENABLE_DIMMER
-
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 

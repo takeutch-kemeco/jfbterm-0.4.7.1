@@ -100,11 +100,11 @@ static void tterm_init(struct TTerm* p, const char* en)
 	tcgetattr(0, &(p->ttysave));
 	tvterm_init(&(p->vterm), p,
 		    gFramebuffer.width / gFontsWidth,
-		    gFramebuffer.height / gFontsHeight, 
+		    gFramebuffer.height / gFontsHeight,
 		    &(gApp.gCaps), en);
 }
 
-/* 
+/*
  */
 static void tterm_final(struct TTerm* p)
 {
@@ -148,26 +148,19 @@ static int tterm_open(struct TTerm* p)
 }
 
 #define BUF_SIZE 1024
-void tterm_start(const char* tn, const char* en)
+void tterm_start(const char *tn, const char *en)
 {
-	struct TTerm* p = &gTerm;
+	struct TTerm *p = &gTerm;
 
 	struct termios ntio;
 
 	int ret;
 	struct timeval tv;
 	u_char buf[BUF_SIZE+1];
-#ifdef JFB_ENABLE_DIMMER
-	u_int idle_time = 0;
-	u_int blank = 0;
-	int tfbm_set_blank(int, int);
-#  define DIMMER_TIMEOUT (3 * 60 * 10)        /* 3 min */
-#endif
 
 	tterm_init(p, en);
-	if (!tterm_open(p)) {
+	if (!tterm_open(p))
 		die("Cannot get free pty-tty.\n");
-	}
 
 	ntio = p->ttysave;
 	ntio.c_lflag &= ~(ECHO|ISIG|ICANON|XCASE);
@@ -178,9 +171,6 @@ void tterm_start(const char* tn, const char* en)
 	ntio.c_cflag |= CS8;
         ntio.c_line = 0;
 	tcsetattr(0, TCSAFLUSH, &ntio);
-/*
-	write(1, "\x1B[?25l", 6);
-*/
 
 	tvterm_start(&(p->vterm));
 	fflush(stdout);
@@ -213,39 +203,23 @@ void tterm_start(const char* tn, const char* en)
 		if (p->ptyfd > max) {
 			max = p->ptyfd;
 		}
-		
-		ret = select(max+1, &fds, NULL, NULL, &tv);
-		if (ret == 0 || (ret < 0 && errno == EINTR)) {
-#ifdef JFB_ENABLE_DIMMER
-			if (!blank && ++idle_time > DIMMER_TIMEOUT) {
-				// Goto blank
-				idle_time = 0;
-				if (tfbm_set_blank(gFramebuffer.fh, 1))
-					blank = 1;
-			}
-#endif
-			continue;
-		}
 
-		if (ret < 0) {
+		ret = select(max+1, &fds, NULL, NULL, &tv);
+		if (ret == 0 || (ret < 0 && errno == EINTR))
+			continue;
+
+		if (ret < 0)
 			print_strerror_and_exit("select");
-		}
 
 		if (FD_ISSET(0, &fds)) {
 			ret = read(0, buf, BUF_SIZE);
-#ifdef JFB_ENABLE_DIMMER
-			idle_time = 0;
-			if (blank) {
-				// Wakeup console
-				blank = 0;
-				tfbm_set_blank(gFramebuffer.fh, 0);
-			}
-#endif
-			if (ret > 0) {
+
+			if (ret > 0)
 				write(p->ptyfd, buf, ret);
-			}
+
 		} else if (FD_ISSET(p->ptyfd,&fds)) {
 			ret = read(p->ptyfd, buf, BUF_SIZE);
+
 			if (ret > 0) {
 				/* write(1, buf, ret); */
 				tvterm_emulate(&(p->vterm), buf, ret);
@@ -298,12 +272,12 @@ static char* skip_dev(char* s)
 
 		p++;
 	}
-	
+
 	return s;
 }
 
 /* 文字列の右側から [0-9]数字のみが連続する文字列を抜き出した、文字列の先頭アドレスを返す
- * 
+ *
  * ただし、最大で４文字まで。それ以上の長さの数字が連続した場合は、以降は切り捨てる
  *
  * 該当する数字が存在しない場合はNULLを返す

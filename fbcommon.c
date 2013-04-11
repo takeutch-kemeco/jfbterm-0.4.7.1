@@ -271,23 +271,6 @@ static void tfbm_pan_display(int fh, struct fb_var_screeninfo *var)
 	}
 }
 
-#if defined(JFB_ENABLE_DIMMER) && defined(FBIOBLANK)
-int tfbm_set_blank(int fh, int blank)
-{
-      struct vt_stat vstat;
-      if (-1 == ioctl(gFramebuffer.ttyfd, VT_GETSTATE, &vstat)) {
-              die("ioctl VT_GETSTATE");
-      }
-      if (vstat.v_active != gFramebuffer.my_vt)
-              return(0);         /* Not foreground console */
-
-      if (ioctl(fh, FBIOBLANK, blank)) {
-              print_strerror_and_exit("ioctl FBIOBLANK");
-      }
-      return (1);     // Did it.
-}
-#endif
-
 #if defined(JFB_2BPP)
 static void simple_2bpp_palette(void)
 {
@@ -438,14 +421,9 @@ void tfbm_init(TFrameBufferMemory* p)
 	char *env_fbdn;
 	p->fh = -1;
 
-/*
-	if (!sFBCapabilityList[tvisual].fill) {
-		die("No framebuffer supported.");
-	}
-*/
-	if((fbdn = (char*)malloc(16)) == NULL) {
+	if((fbdn = (char*)malloc(16)) == NULL)
 		die("malloc: %s\n", strerror(errno));
-	}
+
 	memset(fbdn, 0, 16);
 
 	if (NULL != (env_fbdn = getenv("FRAMEBUFFER"))) {
@@ -459,23 +437,24 @@ void tfbm_init(TFrameBufferMemory* p)
 			UTIL_FREE(fbdn);
 			die("open /dev/tty0: %s\n", strerror(errno));
 		}
+
 		if (-1 == ioctl(p->ttyfd, VT_GETSTATE, &vstat)) {
 			UTIL_FREE(fbdn);
 			die("ioctl VT_GETSTATE");
 		}
-#ifdef JFB_ENABLE_DIMMER
-		p->my_vt = c2m.console = vstat.v_active;
-#else
+
 		c2m.console = vstat.v_active;
-#endif
+
 		if (-1 == (fd = util_privilege_open("/dev/fb0", O_RDWR))) {
 			UTIL_FREE(fbdn);
 			die("open /dev/fb0: %s\n", strerror(errno));
 		}
+
 		if (-1 == ioctl(fd, FBIOGET_CON2FBMAP, &c2m)) {
 			perror("ioctl FBIOGET_CON2FBMAP");
 			c2m.framebuffer = 0;
 		}
+
 		close(fd);
 		snprintf(fbdn, 15, "/dev/fb%d", c2m.framebuffer);
 	}

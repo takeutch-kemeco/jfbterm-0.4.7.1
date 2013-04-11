@@ -218,15 +218,6 @@ else
 	AC_MSG_RESULT(no)
 fi
 
-AC_ARG_ENABLE(dimmer, [ --enable-dimmer          Enable auto dimmer (condole blank) [default no]],,enable_dimmer=no)
-AC_MSG_CHECKING(whether to enable dimmer)
-if test x$enable_dimmer = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_ENABLE_DIMMER)
-else
-	AC_MSG_RESULT(no)
-fi
-
 if test x$sysconfdir = 'x${prefix}/etc'; then
 	if test x$prefix = xNONE; then
 		AC_DEFINE_UNQUOTED(SYSCONFDIR, "/usr/local/etc")
