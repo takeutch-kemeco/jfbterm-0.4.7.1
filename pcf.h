@@ -26,12 +26,11 @@
  *
  */
 
+#include <sys/types.h>
+#include <font.h>
 
 #ifndef INCLUDE_PCF_H
 #define INCLUDE_PCF_H
-
-#include <sys/types.h>
-#include <font.h>
 
 typedef struct Raw_TPcfFormat {
 	u_int id;
@@ -57,9 +56,9 @@ typedef struct Raw_TPcfProp {
 typedef struct Raw_TPcfProps {
 	int e;
 	int nProp;
-	TPcfProp* props; 
+	TPcfProp *props;
 	int nSlen;
-	char* strings;
+	char *strings;
 } TPcfProps;
 
 typedef struct Raw_TPcfMetric {
@@ -86,8 +85,8 @@ typedef struct Raw_TPcfBitmap {
 	u_int aline;
 	u_int galine;
 	u_int mapsize[4];
-	u_int* offsets;
-	u_char* bitmap;
+	u_int *offsets;
+	u_char *bitmap;
 } TPcfBitmap;
 
 typedef struct Raw_TPcfEncode {
@@ -101,7 +100,7 @@ typedef struct Raw_TPcfEncode {
 
 typedef struct Raw_TPcf {
 	u_int nIdx;
-	TPcfIndex* idxs; 
+	TPcfIndex *idxs;
 	TPcfProps props;
 	TPcfMetrics metrics;
 	TPcfAccel accel;
@@ -109,10 +108,10 @@ typedef struct Raw_TPcf {
 	TPcfEncode encode;
 } TPcf;
 
-void tpcf_init(TPcf* p);
-void tpcf_final(TPcf* p);
-void tpcf_load(TPcf* p, FILE* fp);
-void tpcf_as_tfont(TPcf* p, TFont* q);
-const char* tpcf_get_string_prop(TPcf* p, const char* key);
-	
+void tpcf_init(TPcf *p);
+void tpcf_final(TPcf *p);
+void tpcf_load(TPcf *p, FILE *fp);
+void tpcf_as_tfont(TPcf *p, TFont *q);
+const char* tpcf_get_string_prop(TPcf *p, const char *key);
+
 #endif /* INCLUDE_PCF_H */
