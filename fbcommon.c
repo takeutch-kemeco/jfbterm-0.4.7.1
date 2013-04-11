@@ -57,9 +57,9 @@
 
 enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
 
-static int tfbm_select_visual(  TFrameBufferMemory* p,
-				struct fb_var_screeninfo* fbvs,
-				struct fb_fix_screeninfo* fbfs);
+static int tfbm_select_visual(  TFrameBufferMemory *p,
+				struct fb_var_screeninfo *fbvs,
+				struct fb_fix_screeninfo *fbfs);
 
 static TFrameBufferCapability sFBCapabilityList[] = {
 #if (defined(JFB_2BPP) && defined(JFB_PACKED) && defined(JFB_PSEUDOCOLOR))
@@ -203,19 +203,19 @@ static bool modified_var_screen_info = false;
 static u_int trueColor32Table[16];
 static u_short trueColor16Table[16];
 
-#define CL_B0 0xBBBB
+#define CL_B0 0x80FF
 #define CL_B1 0xFFFF
-#define CL_F0 0x8888
-#define CL_F1 0xCCCC
+#define CL_F0 0x80FF
+#define CL_F1 0xFFFF
 
-static u_short red16[16]   = {0x1111, CL_B0, CL_B0, CL_B0,   CL_B1, CL_B1, CL_B1, CL_B1,   0x5555, CL_F0, CL_F0, CL_F0,   CL_F1, CL_F1, CL_F1, CL_F1, };
-static u_short green16[16] = {0x2222, CL_B0, CL_B1, CL_B1,   CL_B0, CL_B0, CL_B1, CL_B1,   0x6666, CL_F0, CL_F1, CL_F1,   CL_F0, CL_F0, CL_F1, CL_F1, };
-static u_short blue16[16]  = {0x3333, CL_B1, CL_B0, CL_B1,   CL_B0, CL_B1, CL_B0, CL_B1,   0x7777, CL_F1, CL_F0, CL_F1,   CL_F0, CL_F1, CL_F0, CL_F1, };
+static u_short red16[16]   = {0x0000, CL_B0, CL_B0, CL_B0,   CL_B1, CL_B1, CL_B1, CL_B1,   CL_F0, CL_F0, CL_F0, CL_F0,   CL_F1, CL_F1, CL_F1, CL_F1, };
+static u_short green16[16] = {0x0000, CL_B0, CL_B1, CL_B1,   CL_B0, CL_B0, CL_B1, CL_B1,   CL_F0, CL_F0, CL_F1, CL_F1,   CL_F0, CL_F0, CL_F1, CL_F1, };
+static u_short blue16[16]  = {0x0000, CL_B1, CL_B0, CL_B1,   CL_B0, CL_B1, CL_B0, CL_B1,   CL_F0, CL_F1, CL_F0, CL_F1,   CL_F0, CL_F1, CL_F0, CL_F1, };
 
 static void tfbm_setup_color_table(struct fb_var_screeninfo *var)
 {
 	int i;
-	for (i = 0 ; i < 16 ; i++) {
+	for (i = 0; i < 16; i++) {
 		trueColor32Table[i] =
 			 (((u_int)(red16[i]) >> (16 - var->red.length))
 					 << var->red.offset) |

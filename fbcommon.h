@@ -36,12 +36,13 @@ typedef struct Raw_TFrameBufferCapability {
 	u_int bitsPerPixel;
 	u_int fbType;
 	u_int fbVisual;
-	void (*fill)(struct Raw_TFrameBufferMemory* p, u_int x, u_int y,
-			u_int lx, u_int ly, u_int color);
-	void (*overlay)(struct Raw_TFrameBufferMemory* p, u_int xd, u_int yd,
-			const u_char* ps, u_int lx, u_int ly, u_int gap, u_int color);
-	void (*clear_all)(struct Raw_TFrameBufferMemory* p, u_int color);
-	void (*reverse)(struct Raw_TFrameBufferMemory* p, u_int x, u_int y,
+	void (*fill)(struct Raw_TFrameBufferMemory *p, u_int x, u_int y,
+	             u_int lx, u_int ly, u_int color);
+	void (*overlay)(struct Raw_TFrameBufferMemory *p, u_int xd, u_int yd,
+			const u_char *ps, u_int lx, u_int ly,
+                        u_int gap, u_int color);
+	void (*clear_all)(struct Raw_TFrameBufferMemory *p, u_int color);
+	void (*reverse)(struct Raw_TFrameBufferMemory *p, u_int x, u_int y,
 			u_int lx, u_int ly, u_int color);
 } TFrameBufferCapability;
 
@@ -57,8 +58,8 @@ typedef struct Raw_TFrameBufferMemory {
 	u_int mstart;
 	u_int moff;
 	u_int mlen;
-	u_char* smem;
-	u_char* mmio;
+	u_char *smem;
+	u_char *mmio;
 	/* function hooks */
 	TFrameBufferCapability cap;
 	int ttyfd;
@@ -72,7 +73,7 @@ typedef struct Raw_TFrameBufferMemory {
 	/* カーソル c のアドレスを (x,y) に設定 */
 	(*set_address)(u_int i),
 	/* 文字書き込みアドレスを i 文字目に設定 */
-	(*cursor)(struct cursorInfo *),	/* カーソルをトグル */
+	(*cursor)(struct cursorInfo*),	/* カーソルをトグル */
 	(*screen_saver)(bool),	 /* スクリーンブランク/アンブランク */
 	(*detatch)(void),	 /* ドライバ解放 */
 #endif
@@ -86,9 +87,9 @@ enum TFBM_SCR_ROT_FLAG {
 
 extern TFrameBufferMemory gFramebuffer;
 
-void tfbm_init(TFrameBufferMemory* p);
-void tfbm_open(TFrameBufferMemory* p);
-void tfbm_close(TFrameBufferMemory* p);
+void tfbm_init(TFrameBufferMemory *p);
+void tfbm_open(TFrameBufferMemory *p);
+void tfbm_close(TFrameBufferMemory *p);
 
 u_int tfbm_select_32_color(u_int);
 u_short tfbm_select_16_color(u_int);
