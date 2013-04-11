@@ -65,5 +65,3 @@
 /* Supprt Dimmer (Screen blank) */
 #undef JFB_ENABLE_DIMMER
 
-/* Support reverse video */
-#undef JFB_REVERSEVIDEO
