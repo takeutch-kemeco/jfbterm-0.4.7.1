@@ -183,73 +183,31 @@ void tvterm_set_cursor_wide(struct TVterm* p, bool b)
 	p->cursor.wide = b;
 }
 
-/* -- kei --
- *	On this implementation, JFB_REVERSEVIDEO is effective on
- *	only 2bpp machine.
- *	On reverse video mode, cursor should be 0x00.
- *	On non reverse video mode, cursor should be 0xf.
- *	Yes, I know following is little bit dirty code, but
- *	temporal fix...
- */
-static inline void tvterm_show_cursor_reverse_video(struct TVterm* p)
-{
-#ifdef JFB_REVERSEVIDEO
-	const u_int x = gFontsWidth  * p->cursor.x;
-	const u_int y = gFontsHeight * p->cursor.y;
-
-	u_int lx;
-	if(p->cursor.wide) {
-		lx = p->cursor.width * 2;
-	} else {
-		lx = p->cursor.width;
-	}
-
-	const u_int ly = p->cursor.height;
-
-	u_int color;
-	if(gFramebuffer.cap.bitsPerPixel == 2) {
-		color = 0x00;
-	} else {
-		color = 0x0F;
-	}
-
-	gFramebuffer.cap.reverse(&gFramebuffer, x, y, lx, ly, color);
-#endif
-}
-
 static inline void tvterm_show_cursor_normal(struct TVterm* p)
 {
-#ifndef JFB_REVERSEVIDEO
 	const u_int x = gFontsWidth  * p->cursor.x;
 	const u_int y = gFontsHeight * p->cursor.y;
 
 	u_int lx;
-	if(p->cursor.wide) {
+	if (p->cursor.wide)
 		lx = p->cursor.width * 2;
-	} else {
+	else
 		lx = p->cursor.width;
-	}
 
 	const u_int ly = p->cursor.height;
 
 	const u_int color = 0x0F;
 
 	gFramebuffer.cap.reverse(&gFramebuffer, x, y, lx, ly, color);
-#endif
 }
 
 void tvterm_show_cursor(struct TVterm* p, bool b)
 {
-	if(!p->cursor.on) {
+	if (!p->cursor.on)
 		return;
-	}
 
-	if(p->cursor.shown != b) {
-#ifdef JFB_REVERSEVIDEO
-		tvterm_show_cursor_reverse_video(p);
-#else
+	if (p->cursor.shown != b) {
 		tvterm_show_cursor_normal(p);
-#endif
 		p->cursor.shown = b;
 	}
 }
@@ -561,7 +519,7 @@ static void __tvterm_text_scroll_down(struct TVterm *p, int line)
 		tvterm_text_clean_band(p, top, btm);
 	} else {
 		u_int n;
-		for (n = btm-1; n >= top + line; n --) {
+		for (n = btm - 1; n >= top + line; n--) {
 			u_int dst = tvterm_coord_to_index(p, 0, n);
 			u_int src = tvterm_coord_to_index(p, 0, n - line);
 			tvterm_move(p, dst, src, p->xcap4); /* lmove */
@@ -590,9 +548,9 @@ static void __tvterm_text_scroll_up(struct TVterm* p, int line)
 		tvterm_text_clean_band(p, top, btm);
 	} else {
 		u_int n;
-		for (n = top; n < btm - line; n ++) {
+		for (n = top; n < btm - line; n++) {
 			u_int dst = tvterm_coord_to_index(p, 0, n);
-			u_int src = tvterm_coord_to_index(p, 0, n+line);
+			u_int src = tvterm_coord_to_index(p, 0, n + line);
 			tvterm_move(p, dst, src, p->xcap4); /* lmove */
 			llatch(p->flag + dst, p->xcap4);
 		}

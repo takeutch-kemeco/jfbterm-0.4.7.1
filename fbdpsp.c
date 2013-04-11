@@ -53,7 +53,7 @@ void set_most_left(__u32 bpp, struct fb_bitfield red){
 	if(red.length != bpp) return;
 	/*
 		This probing mechanism is known to work on:
-		NEC MobileGear(DOS model), NEC MobileGear-II, 
+		NEC MobileGear(DOS model), NEC MobileGear-II,
 		Psion s5. (but not work on Psion 5mx...)
 		Call for more precise way...
 	*/
@@ -73,11 +73,7 @@ static u_char color_map_2bpp[] = {
 
 static inline u_char tfbm_select_2_color(u_int color)
 {
-#ifdef JFB_REVERSEVIDEO
-	return (~ color_map_2bpp[color & 0xf]);
-#else
 	return (color_map_2bpp[color & 0xf]);
-#endif
 }
 
 static inline void set_pixel_2bpp_packed(
@@ -617,7 +613,7 @@ void tfbm_fill_rect_24bpp_packed(
 	t = 0xff & (icol >> 16); m = 0xff & (icol >> 8); b = 0xff & icol;
 #else
 #	error FIXME : No endianness ?
-#endif 
+#endif
 
 	for (y = sy ; y < sy+ly ; y++) {
 		d=p->smem + y * p->bytePerLine + sx * 3;
@@ -644,7 +640,7 @@ void tfbm_clear_all_24bpp_packed(
 	t = 0xff & (icol >> 16); m = 0xff & (icol >> 8); b = 0xff & icol;
 #else
 #	error FIXME : No endianness ?
-#endif 
+#endif
 
 	for(lp=0;lp<((p->slen)-2);lp+=3){
 		p->smem[lp]   = t;
@@ -671,7 +667,7 @@ void tfbm_overlay_24bpp_packed(
 	t = 0xff & (icol >> 16); m = 0xff & (icol >> 8); b = 0xff & icol;
 #else
 #	error FIXME : No endianness ?
-#endif 
+#endif
 
 	for (y = yd ; y < yd+ly ; y++) {
 		tps = ps;
@@ -719,7 +715,7 @@ void tfbm_reverse_24bpp_packed(
 	t = 0xff & (icol >> 16); m = 0xff & (icol >> 8); b = 0xff & icol;
 #else
 #	error FIXME : No endianness ?
-#endif 
+#endif
 
 	for (y = sy ; y < sy+ly ; y++) {
 		for (x = 0 ; x < (lx*3) ; x+=3) {
@@ -741,7 +737,7 @@ void tfbm_reverse_24bpp_packed(
 static void tfbm_rot_xy_32bpp_packed(u_int* real_x, u_int* real_y,
 				     const u_int x, const u_int y,
 			             const u_int w, const u_int h)
-{	
+{
 	switch(tfbm_scr_rot_flag) {
 	case TFBM_SCR_ROT_FLAG_CCW:
 		*real_x = y;
@@ -861,7 +857,7 @@ void tfbm_overlay_32bpp_packed(TFrameBufferMemory* p,
 			tps++;
 			x += 8;
 		}
-		
+
 		if(i) {
 			tfbm_byte_to_xpix_32bpp_packed(p, x, y, *tps, icol, i);
 		}
@@ -1072,7 +1068,7 @@ void tfbm_reverse_vga16(
 	setsr(0xf);
 	setcolor(color);
 	selectmask();
-  
+
 	for (y = sy ; y < sy+ly ; y++) {
 		wp = p->smem + y*p->bytePerLine + sx/8;
 		mask = 0xff >> sofs;
