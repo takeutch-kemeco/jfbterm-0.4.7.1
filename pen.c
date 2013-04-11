@@ -105,9 +105,6 @@ void tpen_no_underline(struct TPen *p)
 static void tpen_swp_attr(struct TPen *p)
 {
 	u_char swp;
-
-	p->attr &= ~ATTR_REVERSE;
-
 	swp = p->fcol & 0x07;
 
 	if (p->attr & ATTR_ULINE)
@@ -134,8 +131,10 @@ static void tpen_swp_attr(struct TPen *p)
  */
 void tpen_reverse(struct TPen *p)
 {
-	if ((p->attr & ATTR_REVERSE) == 0)
+	if ((p->attr & ATTR_REVERSE) == 0) {
+                p->attr |= ATTR_REVERSE;
                 tpen_swp_attr(p);
+        }
 }
 
 /* pen の描画属性の色の反転を無効
@@ -144,8 +143,10 @@ void tpen_reverse(struct TPen *p)
  */
 void tpen_no_reverse(struct TPen *p)
 {
-	if (p->attr & ATTR_REVERSE)
+	if (p->attr & ATTR_REVERSE) {
+                p->attr &= ~ATTR_REVERSE;
                 tpen_swp_attr(p);
+        }
 }
 
 /* コントロール番号に対応した、それに対応する色番号 */
