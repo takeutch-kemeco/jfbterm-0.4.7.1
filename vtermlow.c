@@ -510,11 +510,8 @@ static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm)
 	}
 }
 
-static void __tvterm_text_scroll_down(struct TVterm *p, int line)
+static void __tvterm_text_scroll_down(struct TVterm *p, int top, int btm, int line)
 {
-        int top = p->ymin;
-        int btm = p->ymax;
-
 	if (btm <= top + line) {
 		tvterm_text_clean_band(p, top, btm);
 	} else {
@@ -531,19 +528,16 @@ static void __tvterm_text_scroll_down(struct TVterm *p, int line)
 
 void tvterm_text_scroll_down(struct TVterm* p, int line)
 {
-	__tvterm_text_scroll_down(p, line);
+	__tvterm_text_scroll_down(p, p->ymin, p->ymax, line);
 }
 
 void tvterm_text_move_down(struct TVterm *p, int top, int btm, int line)
 {
-        __tvterm_text_scroll_down(p, line);
+        __tvterm_text_scroll_down(p, top, btm, line);
 }
 
-static void __tvterm_text_scroll_up(struct TVterm* p, int line)
+static void __tvterm_text_scroll_up(struct TVterm* p, int top, int btm, int line)
 {
-        int top = p->ymin;
-        int btm = p->ymax;
-
 	if (btm <= top + line) {
 		tvterm_text_clean_band(p, top, btm);
 	} else {
@@ -560,10 +554,10 @@ static void __tvterm_text_scroll_up(struct TVterm* p, int line)
 
 void tvterm_text_scroll_up(struct TVterm* p, int line)
 {
-	__tvterm_text_scroll_up(p, line);
+	__tvterm_text_scroll_up(p, p->ymin, p->ymax, line);
 }
 
 void tvterm_text_move_up(struct TVterm* p, int top, int btm, int line)
 {
-        __tvterm_text_scroll_up(p, line);
+        __tvterm_text_scroll_up(p, top, btm, line);
 }
