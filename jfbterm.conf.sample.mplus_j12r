@@ -1,0 +1,9 @@
+term: jfbterm
+
+fontset: iso646-1973irv,pcf,L,/usr/share/fonts/misc/mplus_f12r.pcf.gz
++fontset: jisc6226-1978,pcf,L,/usr/share/fonts/misc/mplus_j12r.pcf.gz
+
+encoding: UTF-8
+encoding.EUC-JP: G0,G1,ansix3.4-1968,jisx0208-1983,jisc6220-1969kana,jisx0212-1990
+encoding.UTF-8: other,UTF-8,iconv,EUC-JP
+
