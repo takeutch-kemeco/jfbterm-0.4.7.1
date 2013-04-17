@@ -1,13 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(fbcommon.c)
+AC_INIT([jfbterm], [0.4.7.8], [takeutchkemeco@gmail.com])
+AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(jfbterm, 0.4.7.7)
 
 dnl Checks for programs.
 AC_PROG_CC
+
 if test x$CC = xgcc; then
-        CFLAGS="$CFLAGS -Wimplicit -Wreturn-type -Wunused -Wswitch -Wcomment -Wtrigraphs -Wformat -Wchar-subscripts -Wuninitialized -Wparentheses -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align"
+	CFLAGS="$CFLAGS -Wimplicit -Wreturn-type -Wunused -Wswitch -Wcomment -Wtrigraphs -Wformat -Wchar-subscripts -Wuninitialized -Wparentheses -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align"
 fi
+
 AC_PROG_INSTALL
 
 dnl Checks for libraries.
