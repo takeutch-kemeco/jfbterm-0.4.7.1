@@ -27,7 +27,7 @@
  */
 
 #include <sys/types.h>
-#include <font.h>
+#include "font.h"
 
 #ifndef INCLUDE_PCF_H
 #define INCLUDE_PCF_H
