@@ -5,12 +5,24 @@ import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
 import Data.Char (ord)
+import System.Posix.User (setUserID, setEffectiveUserID, getRealUserID)
 
 foreign export ccall
   util_search_string :: CString -> Ptr CString -> IO CInt
 
 foreign export ccall
   remove_quote :: CString -> IO CString
+
+foreign export ccall
+  util_privilege_drop :: CInt -> IO ()
+
+-- | real, effectiveどちらのユーザーIDも、realユーザーIDを用いる状態に設定する
+privilegeDrop :: IO ()
+privilegeDrop = getRealUserID >>= (\ruid -> setUserID ruid >> setEffectiveUserID ruid)
+
+-- | privilegeDrop c interface
+util_privilege_drop :: CInt -> IO ()
+util_privilege_drop _ = return ()
 
 -- | (void** p) -> [CString]
 -- | p の最後は Null であること

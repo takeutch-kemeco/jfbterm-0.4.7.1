@@ -1,4 +1,6 @@
-LINK = ghc -no-hs-main -o $@
+HS = ghc
+LINK = $(HS) -no-hs-main -o $@
+HS_LIBDIR = ${HOME}/.cabal/lib/x86_64-linux-ghc-7.6.3
 
 bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
@@ -18,7 +20,8 @@ jfbterm_SOURCES = 				\
 		vterm.c vtermlow.c vterm.h	\
 		skipagent.c skipagent.h
 
-jfbterm_LDADD = -lutil -lpthread
+jfbterm_LDADD = -lutil -lpthread \
+	$(HS_LIBDIR)/unix-2.7.0.0/libHSunix-2.7.0.0.a
 
 JFBTERM_CONFIG_SAMPLE            = jfbterm.conf.sample
 JFBTERM_CONFIG_SAMPLE_JA         = $(JFBTERM_CONFIG_SAMPLE).ja
@@ -28,7 +31,7 @@ JFBTERM_CONFIG_SAMPLE_UNIFONT    = $(JFBTERM_CONFIG_SAMPLE).unifont
 JFBTERM_CONFIG_FILE = jfbterm.conf
 
 .hs.o:
-	ghc -c $< -o $@
+	$(HS) -c $< -o $@
 
 install-exec-hook:
 	chown root:utmp $(DESTDIR)$(bindir)/jfbterm

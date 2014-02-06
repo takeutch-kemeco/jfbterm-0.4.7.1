@@ -115,11 +115,3 @@ uid_t util_getuid(void)
 	return real_uid;
 }
 
-/* real, effectiveどちらのユーザーIDも、
- * realユーザーIDを用いる状態に設定する
- */
-void util_privilege_drop()
-{
-	setreuid(real_uid, real_uid);
-}
-
