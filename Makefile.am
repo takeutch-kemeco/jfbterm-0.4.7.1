@@ -1,3 +1,5 @@
+LINK = ghc -no-hs-main -o $@
+
 bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
 		main.c main.h 			\
@@ -24,6 +26,9 @@ JFBTERM_CONFIG_SAMPLE_MPLUS_J12R = $(JFBTERM_CONFIG_SAMPLE).mplus_j12r
 JFBTERM_CONFIG_SAMPLE_UNIFONT    = $(JFBTERM_CONFIG_SAMPLE).unifont
 
 JFBTERM_CONFIG_FILE = jfbterm.conf
+
+.hs.o:
+	ghc -c $< -o $@
 
 install-exec-hook:
 	chown root:utmp $(DESTDIR)$(bindir)/jfbterm
