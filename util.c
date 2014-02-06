@@ -139,23 +139,3 @@ int util_search_string(const char *s, const char **array)
 
 	return -1;
 }
-
-/* 文字列 s が " または ' で前後を囲まれてた場合、それを取り除く。
- *
- * "ABC" -> ABC
- * or
- * 'ABC' -> ABC
- */
-char* remove_quote(char* s)
-{
-        if (s == NULL)
-                return s;
-
-        const size_t last = strlen(s) - 1;
-        if ((s[0] == '"'  && s[last] == '"') || (s[0] == '\'' && s[last] == '\'')) {
-                s[last] = '\0';
-                s++;
-	}
-
-        return s;
-}

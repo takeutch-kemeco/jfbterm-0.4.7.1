@@ -383,8 +383,13 @@ char* tapp_setup_encoding(char *en)
 	return en;
 }
 
+void hs_init(int* argc, char** argv);
+void hs_close(void);
+
 int main(int argc, char **argv)
 {
+	hs_init(&argc, &argv);
+
 	util_privilege_init();
 	tapp_init(&gApp);
 	tapp_get_options(&gApp, argc, argv);
@@ -464,5 +469,8 @@ int main(int argc, char **argv)
 
 	tfbm_close(&gFramebuffer);
 	tfont_ary_final();
+
+        hs_exit();
+
 	exit(EXIT_SUCCESS);
 }

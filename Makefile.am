@@ -13,7 +13,7 @@ jfbterm_SOURCES = 				\
 		pcf.c pcf.h 			\
 		pen.c pen.h 			\
 		term.c term.h 			\
-		util.c util.h 			\
+		util.c util.h util-h.hs		\
 		csv.c csv.h 			\
 		vterm.c vtermlow.c vterm.h	\
 		skipagent.c skipagent.h
