@@ -7,9 +7,42 @@ import Foreign.C.String
 import Data.Char (ord)
 
 foreign export ccall
+  util_search_string :: CString -> Ptr CString -> IO CInt
+
+foreign export ccall
   remove_quote :: CString -> IO CString
 
--- | 文字列が " または ' で前後を囲まれてた場合、それを取り除く。
+-- | (void** p) -> [CString]
+-- | p の最後は Null であること
+convertPtrListToCStringList :: Ptr (Ptr a) -> IO [CString]
+convertPtrListToCStringList p = peekArray0 nullPtr p >>= (return . castCStringList)
+  where
+    castCString s = (castPtr s) :: CString 
+    castCStringList = map castCString
+
+-- | (void** p) -> IO [String]
+-- | p の最後は Nullであること
+convertPtrListToStringList :: Ptr (Ptr a) -> IO [String]
+convertPtrListToStringList p = convertPtrListToCStringList p >>= mapM peekCString
+
+-- | 文字列を要素とする配列 s の各要素と文字列 t を比較し、一致したインデックスを返す
+-- | 一致しなかった場合は -1 を返す
+searchString :: String -> [String] -> Integer
+searchString t s = searchString' 0 s
+  where
+    searchString' _ [] = -1
+    searchString' n (x:xs)
+      | x == t = n
+      | otherwise = searchString' (n + 1) xs
+
+-- | util_search_string c interface
+util_search_string :: CString -> Ptr CString -> IO CInt
+util_search_string t p = do
+  s <- convertPtrListToStringList p
+  t' <- peekCString t
+  let i = searchString t' s in return ((fromInteger i) :: CInt)
+
+-- | 文字列が " または ' で前後を囲まれてた場合、それを取り除く
 -- | "ABC" -> ABC
 -- | 'ABC' -> ABC
 removeQuote :: String -> String

@@ -123,19 +123,3 @@ void util_privilege_drop()
 	setreuid(real_uid, real_uid);
 }
 
-/* 複数の文字列による配列 array の各文字列と、文字列 s を比較し、
- * 一致したインデックスを返す。
- *
- * array 配列の最後は Null ポインターを格納してなければならない。
- *
- * 一致しなかった場合は -1 を返す。
- */
-int util_search_string(const char *s, const char **array)
-{
-	int i;
-	for (i = 0; array[i]; i++)
-		if (strcmp(array[i], s) == 0)
-			return i;
-
-	return -1;
-}
