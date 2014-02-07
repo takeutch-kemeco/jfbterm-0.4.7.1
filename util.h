@@ -56,12 +56,5 @@ char* remove_quote(char* s);
 	(b) = __UTIL_SWAP_TMP__;		\
 }
 
-#define LIMIT_INNER(a, min, max) {		\
-	if((a) < (min)) {			\
-		(a) = (min);			\
-	} else if((a) > (max)) {		\
-		(a) = (max);			\
-	}					\
-}
-
 #endif /* INCLUDE_UTIL_H */
+

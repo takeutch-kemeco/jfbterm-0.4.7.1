@@ -591,7 +591,7 @@ void tvterm_pop_pen_and_set_currnt_pen(struct TVterm* p, bool b)
 
 	tpen_copy(&(p->pen), t);
 
-	LIMIT_INNER(p->pen.y, p->ymin, p->ymax - 1);
+	p->pen.y = limit_inner(p->pen.y, p->ymin, p->ymax - 1);
 
 	*base = t->prev;
 	free(t);
@@ -1277,10 +1277,10 @@ static void tvterm_esc_report(struct TVterm* p, u_char mode, u_short arg)
 	case 'n':
 		if(arg == 6) {
 			int x = p->pen.x;
-			LIMIT_INNER(x, x, p->xmax - 1);
+			x = limit_inner(x, x, p->xmax - 1);
 
 			int y = p->pen.y;
-			LIMIT_INNER(y, y, p->ymax - 1);
+			y = limit_inner(y, y, p->ymax - 1);
 
 			sprintf(p->report, "\x1B[%d;%dR", y, x);
 		} else if(arg == 5) {

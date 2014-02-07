@@ -80,6 +80,9 @@ foreign export ccall
 foreign export ccall
   remove_quote :: CString -> IO CString
 
+foreign export ccall
+  limit_inner :: CInt -> CInt -> CInt -> IO CInt
+
 -- | システム本来の{Real,Effective}UIDを得る
 -- |
 -- | TIPS:
@@ -193,3 +196,15 @@ removeQuote (x:xs)
 remove_quote :: CString -> IO CString
 remove_quote s = peekCString s >>= (return . removeQuote) >>= newCString
 
+-- | 数値を範囲a,b内に丸める
+limitInner :: Integral a => a -> a -> a -> a
+limitInner a min max
+  | a < min = min
+  | a > max = max
+  | otherwise = a
+
+-- | limitInner c interface
+limit_inner :: CInt -> CInt -> CInt -> IO CInt
+limit_inner a min max = return ((fromIntegral a') :: CInt)
+  where
+    a' = limitInner a min max
