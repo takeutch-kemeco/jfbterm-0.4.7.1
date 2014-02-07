@@ -42,7 +42,7 @@ extern struct VirtualUID vuid;
 void util_privilege_init(struct VirtualUID* p);
 void util_privilege_on(struct VirtualUID* p);
 void util_privilege_off(struct VirtualUID* p);
-int util_privilege_open(char *pathname, int flags);
+int util_privilege_open(struct VirtualUID* p, char* pathname, int flags);
 uid_t util_getuid(struct VirtualUID* p);
 void util_privilege_drop(struct VirtualUID* p);
 int util_search_string(const char* s, const char** array);

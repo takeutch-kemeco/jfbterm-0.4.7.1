@@ -433,7 +433,7 @@ void tfbm_init(TFrameBufferMemory* p)
 		struct fb_con2fbmap c2m;
 		struct vt_stat vstat;
 
-		if (-1 == (p->ttyfd = util_privilege_open("/dev/tty0", O_RDWR))) {
+		if (-1 == (p->ttyfd = util_privilege_open(&vuid, "/dev/tty0", O_RDWR))) {
 			UTIL_FREE(fbdn);
 			die("open /dev/tty0: %s\n", strerror(errno));
 		}
@@ -445,7 +445,7 @@ void tfbm_init(TFrameBufferMemory* p)
 
 		c2m.console = vstat.v_active;
 
-		if (-1 == (fd = util_privilege_open("/dev/fb0", O_RDWR))) {
+		if (-1 == (fd = util_privilege_open(&vuid, "/dev/fb0", O_RDWR))) {
 			UTIL_FREE(fbdn);
 			die("open /dev/fb0: %s\n", strerror(errno));
 		}
@@ -466,7 +466,7 @@ void tfbm_open(TFrameBufferMemory* p)
 	struct fb_var_screeninfo fb_var;
 	struct fb_fix_screeninfo fb_fix;
 
-	if ((p->fh = util_privilege_open(fbdn, O_RDWR)) == -1) {
+	if ((p->fh = util_privilege_open(&vuid, fbdn, O_RDWR)) == -1) {
 		die("open %s: %s\n", fbdn, strerror(errno));
 	}
 

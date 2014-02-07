@@ -26,26 +26,7 @@
  *
  */
 
-#include "config.h"
-
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/io.h>
-#include <fcntl.h>
-
 #include "util.h"
 
 struct VirtualUID vuid;
-
-/* ファイルをeffectiveユーザー権限で開く */
-int util_privilege_open(char *pathname, int flags)
-{
-	util_privilege_on(&vuid);
-	int fd = open(pathname, flags);
-	util_privilege_off(&vuid);
-
-	return fd;
-}
 

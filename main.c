@@ -202,9 +202,9 @@ void tapp_init(TApplication *p)
 
 void tapp_change_to_new_console(TApplication *p)
 {
-        int cfd = util_privilege_open("/dev/console", O_WRONLY);
+        int cfd = util_privilege_open(&vuid, "/dev/console", O_WRONLY);
         if (cfd < 0 &&
-            (cfd = util_privilege_open("/dev/console", O_RDONLY)) < 0) {
+            (cfd = util_privilege_open(&vuid, "/dev/console", O_RDONLY)) < 0) {
                 die("can't open /dev/console");
         }
 

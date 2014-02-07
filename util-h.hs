@@ -8,7 +8,8 @@ import Foreign.C.Types
 import Foreign.C.String
 import Data.Char (ord)
 import System.Posix.User (setUserID, setEffectiveUserID, getRealUserID, getEffectiveUserID)
-import System.Posix.Types (CUid)
+import System.Posix.Types (CUid, Fd)
+import System.Posix.IO (openFd, defaultFileFlags, OpenMode(..))
 
 data VirtualUID = VirtualUID {
   virtualRealUID :: CUid,
@@ -37,6 +38,9 @@ foreign export ccall
 
 foreign export ccall
   util_privilege_off :: Ptr VirtualUID -> IO ()
+
+foreign export ccall
+  util_privilege_open :: Ptr VirtualUID -> CString -> CInt -> IO CInt
 
 foreign export ccall
   util_getuid :: Ptr VirtualUID -> IO CInt
@@ -86,6 +90,23 @@ privilegeOff (VirtualUID ruid euid) = setreuid ((fromIntegral euid) :: Int) ((fr
 
 util_privilege_off :: Ptr VirtualUID -> IO ()
 util_privilege_off p = (peek p) >>= privilegeOff
+
+-- | ファイルをeffectiveユーザー権限で開く
+privilegeOpen :: VirtualUID -> FilePath -> OpenMode -> IO Fd
+privilegeOpen p filepath flags = do
+  privilegeOn p
+  fd <- openFd filepath flags Nothing defaultFileFlags
+  privilegeOff p
+  return fd
+
+-- | privilegeOpen c interface
+util_privilege_open :: Ptr VirtualUID -> CString -> CInt -> IO CInt
+util_privilege_open p filepath flags = do
+  p' <- peek p
+  filepath' <- (peekCString filepath) :: IO FilePath
+  let flags' = case flags of {0 -> ReadOnly; 1 -> WriteOnly; 2 -> ReadWrite}
+  i <- privilegeOpen p' filepath' flags'
+  return ((fromIntegral i) :: CInt)
 
 -- | システムが現在、本来のrealユーザーIDとして考えてるIDを返す
 getUID :: VirtualUID -> IO CUid
