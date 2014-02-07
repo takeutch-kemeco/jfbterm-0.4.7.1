@@ -27,6 +27,12 @@ foreign import ccall safe "setreuid"
   setreuid :: Int -> Int -> IO ()
 
 foreign export ccall
+  util_privilege_on :: Ptr VirtualUID -> IO ()
+
+foreign export ccall
+  util_privilege_off :: Ptr VirtualUID -> IO ()
+
+foreign export ccall
   util_getuid :: Ptr VirtualUID -> IO CInt
 
 foreign export ccall
@@ -37,6 +43,20 @@ foreign export ccall
 
 foreign export ccall
   remove_quote :: CString -> IO CString
+
+-- | realユーザーIDと、effectiveユーザーIDを、本来の元の状態に設定する
+privilegeOn :: VirtualUID -> IO ()
+privilegeOn (VirtualUID ruid euid) = setreuid ((fromIntegral ruid) :: Int) ((fromIntegral euid) :: Int)
+
+util_privilege_on :: Ptr VirtualUID -> IO ()
+util_privilege_on p = (peek p) >>= privilegeOn
+
+-- | realユーザーIDと、effectiveユーザーIDを、逆転した状態に設定する
+privilegeOff :: VirtualUID -> IO ()
+privilegeOff (VirtualUID ruid euid) = setreuid ((fromIntegral euid) :: Int) ((fromIntegral ruid) :: Int)
+
+util_privilege_off :: Ptr VirtualUID -> IO ()
+util_privilege_off p = (peek p) >>= privilegeOff
 
 -- | システムが現在、本来のrealユーザーIDとして考えてるIDを返す
 getUID :: VirtualUID -> IO CUid

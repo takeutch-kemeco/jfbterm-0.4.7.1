@@ -62,27 +62,15 @@ void util_privilege_init(void)
 	vuid.real_uid = getuid();
 	vuid.effective_uid = geteuid();
 
-	util_privilege_off();
-}
-
-/* realユーザーIDと、effectiveユーザーIDを、本来の元の状態に設定する */
-void util_privilege_on(void)
-{
-	setreuid(vuid.real_uid, vuid.effective_uid);
-}
-
-/* realユーザーIDと、effectiveユーザーIDを、逆転した状態に設定する */
-void util_privilege_off(void)
-{
-	setreuid(vuid.effective_uid, vuid.real_uid);
+	util_privilege_off(&vuid);
 }
 
 /* ファイルをeffectiveユーザー権限で開く */
 int util_privilege_open(char *pathname, int flags)
 {
-	util_privilege_on();
+	util_privilege_on(&vuid);
 	int fd = open(pathname, flags);
-	util_privilege_off();
+	util_privilege_off(&vuid);
 
 	return fd;
 }
@@ -91,9 +79,9 @@ int util_privilege_open(char *pathname, int flags)
 /* ポートの入出力許可をeffectiveユーザー権限で得る */
 int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 {
-	util_privilege_on();
+	util_privilege_on(&vuid);
 	int r = ioperm(from, num, turn_on);
-	util_privilege_off();
+	util_privilege_off(&vuid);
 
 	return r;
 }
@@ -101,18 +89,6 @@ int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 inline int util_privilege_ioperm(u_int from, u_int num, int turn_on)
 {
 	return -1
-}
-#endif
-
-/* 現在の setreuid() された設定状態に関わらず、
- * システムが現在、本来のrealユーザーIDとして考えてるIDを返す。
- *
- * 本来のrealユーザーID = util_privilege_on() した場合のrealユーザーID
- */
-#if 0
-uid_t util_getuid(struct VirtualUID* p)
-{
-	return vuid.real_uid;
 }
 #endif
 

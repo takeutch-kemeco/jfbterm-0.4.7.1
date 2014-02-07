@@ -143,22 +143,22 @@ void tapp_change_to_original_console(TApplication *p)
         signal(SIGUSR2, SIG_DFL);
 */
 
-	util_privilege_on();
+	util_privilege_on(&vuid);
 
 	int cfd = open("/dev/console", O_WRONLY);
 	if (cfd < 0 && (cfd = open("/dev/console", O_RDONLY)) < 0) {
-		util_privilege_off();
+		util_privilege_off(&vuid);
                 print_strerror("/dev/console");
 		return;
 	}
 
 	int n = p->gOrigVirtualConsole;
 	if (ioctl(cfd, VT_ACTIVATE, n) != 0) {
-		util_privilege_off();
+		util_privilege_off(&vuid);
 		print_warn("can't activate VC(%d)", n);
 	}
 
-	util_privilege_off();
+	util_privilege_off(&vuid);
 	close(cfd);
 }
 
@@ -247,20 +247,20 @@ void tapp_change_to_new_console(TApplication *p)
         char vtty[0xFFFF];
         sprintf(vtty, "/dev/tty%d", vtNum);
 
-	util_privilege_on();
+	util_privilege_on(&vuid);
 
         int vfd;
         if ((vfd = open(vtty, O_RDWR)) < 0) {
-		util_privilege_off();
+		util_privilege_off(&vuid);
                 die("can't open %s", vtty);
         }
 
         if (ioctl(cfd, VT_ACTIVATE, vtNum) != 0) {
-		util_privilege_off();
+		util_privilege_off(&vuid);
                 die("can't activate VC(%d)", vtNum);
         }
 
-	util_privilege_off();
+	util_privilege_off(&vuid);
         close(cfd);
         dup2(vfd, 0);
         dup2(vfd, 1);
