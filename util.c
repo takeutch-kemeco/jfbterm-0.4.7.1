@@ -37,8 +37,7 @@
 
 #include "util.h"
 
-static uid_t effective_uid;
-static uid_t real_uid;
+struct VirtualUID vuid;
 
 /* ユーザーIDを、実(real)ユーザーと実効(effective)ユーザーとで逆に設定しなおす
  *
@@ -60,8 +59,8 @@ static uid_t real_uid;
  */
 void util_privilege_init(void)
 {
-	real_uid = getuid();
-	effective_uid = geteuid();
+	vuid.real_uid = getuid();
+	vuid.effective_uid = geteuid();
 
 	util_privilege_off();
 }
@@ -69,13 +68,13 @@ void util_privilege_init(void)
 /* realユーザーIDと、effectiveユーザーIDを、本来の元の状態に設定する */
 void util_privilege_on(void)
 {
-	setreuid(real_uid, effective_uid);
+	setreuid(vuid.real_uid, vuid.effective_uid);
 }
 
 /* realユーザーIDと、effectiveユーザーIDを、逆転した状態に設定する */
 void util_privilege_off(void)
 {
-	setreuid(effective_uid, real_uid);
+	setreuid(vuid.effective_uid, vuid.real_uid);
 }
 
 /* ファイルをeffectiveユーザー権限で開く */
@@ -112,6 +111,6 @@ inline int util_privilege_ioperm(u_int from, u_int num, int turn_on)
  */
 uid_t util_getuid(void)
 {
-	return real_uid;
+	return vuid.real_uid;
 }
 

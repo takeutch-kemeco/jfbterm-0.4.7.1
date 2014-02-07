@@ -27,7 +27,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#	include "config.h"
+#include "config.h"
 #endif
 
 #include <stdio.h>
@@ -383,9 +383,6 @@ char* tapp_setup_encoding(char *en)
 	return en;
 }
 
-void hs_init(int* argc, char** argv);
-void hs_close(void);
-
 int main(int argc, char **argv)
 {
 	hs_init(&argc, &argv);
@@ -460,7 +457,7 @@ int main(int argc, char **argv)
 	tfbm_init(&gFramebuffer);
 	tfbm_open(&gFramebuffer);
 
-	util_privilege_drop();
+	util_privilege_drop(&vuid);
 	const char *tn = tcaps_find_first(&(gApp.gCaps), "term");
 	if (!tn)
 		tn = "jfbterm";

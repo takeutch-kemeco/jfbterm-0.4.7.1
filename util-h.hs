@@ -1,11 +1,30 @@
 module JFBTerm.Util where
 
 import Foreign
-import Foreign.Ptr
+import Foreign.Ptr (Ptr, nullPtr, castPtr)
+import Foreign.Storable (peek, sizeOf)
+import Foreign.Marshal.Array (peekArray0)
 import Foreign.C.Types
 import Foreign.C.String
 import Data.Char (ord)
-import System.Posix.User (setUserID, setEffectiveUserID, getRealUserID)
+import System.Posix.User (setUserID, setEffectiveUserID)
+import System.Posix.Types (CUid)
+
+data VirtualUID = VirtualUID {
+  virtualRealUID :: CUid,
+  virtualEffectiveUID :: CUid
+  } deriving (Show, Eq)
+
+instance Storable VirtualUID where
+  sizeOf (VirtualUID ruid euid) = (sizeOf ruid) + (sizeOf euid)
+  alignment a = 4
+  peek a = do
+      ruid <- peek ((castPtr a) :: Ptr CUid)
+      euid <- peek ((castPtr (plusPtr a 4)) :: Ptr CUid)
+      return (VirtualUID ruid euid)
+
+foreign export ccall
+  util_privilege_drop :: Ptr VirtualUID -> IO ()
 
 foreign export ccall
   util_search_string :: CString -> Ptr CString -> IO CInt
@@ -13,16 +32,13 @@ foreign export ccall
 foreign export ccall
   remove_quote :: CString -> IO CString
 
-foreign export ccall
-  util_privilege_drop :: CInt -> IO ()
-
 -- | real, effectiveどちらのユーザーIDも、realユーザーIDを用いる状態に設定する
-privilegeDrop :: IO ()
-privilegeDrop = getRealUserID >>= (\ruid -> setUserID ruid >> setEffectiveUserID ruid)
+privilegeDrop :: VirtualUID -> IO ()
+privilegeDrop (VirtualUID ruid euid) = setUserID ruid >> setEffectiveUserID 0 >> setEffectiveUserID euid
 
 -- | privilegeDrop c interface
-util_privilege_drop :: CInt -> IO ()
-util_privilege_drop _ = return ()
+util_privilege_drop :: Ptr VirtualUID -> IO ()
+util_privilege_drop p = (peek p) >>= privilegeDrop
 
 -- | (void** p) -> [CString]
 -- | p の最後は Null であること

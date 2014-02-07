@@ -32,6 +32,13 @@
 #ifndef INCLUDE_UTIL_H
 #define INCLUDE_UTIL_H
 
+struct VirtualUID {
+        uid_t real_uid;
+        uid_t effective_uid;
+};
+
+extern struct VirtualUID vuid;
+
 void util_privilege_init(void);
 void util_privilege_on(void);
 void util_privilege_off(void);
