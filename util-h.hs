@@ -24,6 +24,9 @@ instance Storable VirtualUID where
       return (VirtualUID ruid euid)
 
 foreign export ccall
+  util_getuid :: Ptr VirtualUID -> IO CInt
+
+foreign export ccall
   util_privilege_drop :: Ptr VirtualUID -> IO ()
 
 foreign export ccall
@@ -31,6 +34,14 @@ foreign export ccall
 
 foreign export ccall
   remove_quote :: CString -> IO CString
+
+-- | システムが現在、本来のrealユーザーIDとして考えてるIDを返す
+getUID :: VirtualUID -> IO CUid
+getUID (VirtualUID ruid euid) = return ruid
+
+-- | getUID c interface
+util_getuid :: Ptr VirtualUID -> IO CInt
+util_getuid p = (peek p) >>= getUID >>= (\i -> return ((fromIntegral i) :: CInt))
 
 -- | real, effectiveどちらのユーザーIDも、realユーザーIDを用いる状態に設定する
 privilegeDrop :: VirtualUID -> IO ()
@@ -63,7 +74,7 @@ searchString t s = searchString' 0 s
       | x == t = n
       | otherwise = searchString' (n + 1) xs
 
--- | util_search_string c interface
+-- | searchString c interface
 util_search_string :: CString -> Ptr CString -> IO CInt
 util_search_string t p = do
   s <- convertPtrListToStringList p

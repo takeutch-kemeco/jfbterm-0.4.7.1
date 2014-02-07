@@ -109,8 +109,10 @@ inline int util_privilege_ioperm(u_int from, u_int num, int turn_on)
  *
  * 本来のrealユーザーID = util_privilege_on() した場合のrealユーザーID
  */
-uid_t util_getuid(void)
+#if 0
+uid_t util_getuid(struct VirtualUID* p)
 {
 	return vuid.real_uid;
 }
+#endif
 

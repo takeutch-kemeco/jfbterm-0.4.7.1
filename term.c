@@ -337,7 +337,7 @@ static void tterm_set_utmp(struct TTerm* p)
 	char* tname = skip_dev(p->name);
 	strncpy(utmp.ut_line, tname, sizeof(utmp.ut_line));
 
-	struct passwd* pw = getpwuid(util_getuid());
+	struct passwd* pw = getpwuid(util_getuid(&vuid));
 	strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user));
 
 	time(&(utmp.ut_time));
