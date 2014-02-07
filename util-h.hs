@@ -23,6 +23,9 @@ instance Storable VirtualUID where
       euid <- peek ((castPtr (plusPtr a 4)) :: Ptr CUid)
       return (VirtualUID ruid euid)
 
+foreign import ccall safe "setreuid"
+  setreuid :: Int -> Int -> IO ()
+
 foreign export ccall
   util_getuid :: Ptr VirtualUID -> IO CInt
 
