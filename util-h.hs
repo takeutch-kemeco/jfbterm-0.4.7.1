@@ -83,6 +83,9 @@ foreign export ccall
 foreign export ccall
   limit_inner :: CInt -> CInt -> CInt -> IO CInt
 
+foreign export ccall
+  swap_int :: Ptr CInt -> Ptr CInt -> IO ()
+
 -- | システム本来の{Real,Effective}UIDを得る
 -- |
 -- | TIPS:
@@ -208,3 +211,17 @@ limit_inner :: CInt -> CInt -> CInt -> IO CInt
 limit_inner a min max = return ((fromIntegral a') :: CInt)
   where
     a' = limitInner a min max
+
+-- | 変数の内容を交換する
+swapIntegral :: Integral a => (a, a) -> (a, a)
+swapIntegral (a, b) = (b, a)
+
+-- | swapIntegral c interface
+swap_int :: Ptr CInt -> Ptr CInt -> IO ()
+swap_int a b = do
+    a' <- (peek a)
+    b' <- (peek b)
+    let t@(a'', b'') = swapIntegral (a', b')
+    poke a a''
+    poke b b''
+

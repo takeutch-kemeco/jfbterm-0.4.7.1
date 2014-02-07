@@ -50,11 +50,5 @@ char* remove_quote(char* s);
 
 #define UTIL_FREE(p) {free(p); (p) = NULL;}
 
-#define UTIL_SWAP(a, b) {			\
-	typeof(a) __UTIL_SWAP_TMP__ = (a);	\
-	(a) = (b);				\
-	(b) = __UTIL_SWAP_TMP__;		\
-}
-
 #endif /* INCLUDE_UTIL_H */
 
