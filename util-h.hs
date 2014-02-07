@@ -45,7 +45,7 @@ util_getuid p = (peek p) >>= getUID >>= (\i -> return ((fromIntegral i) :: CInt)
 
 -- | real, effectiveどちらのユーザーIDも、realユーザーIDを用いる状態に設定する
 privilegeDrop :: VirtualUID -> IO ()
-privilegeDrop (VirtualUID ruid euid) = setUserID ruid >> setEffectiveUserID 0 >> setEffectiveUserID euid
+privilegeDrop (VirtualUID ruid euid) = setEffectiveUserID 0 >> setUserID ruid >> setEffectiveUserID ruid
 
 -- | privilegeDrop c interface
 util_privilege_drop :: Ptr VirtualUID -> IO ()
