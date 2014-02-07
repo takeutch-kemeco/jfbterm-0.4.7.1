@@ -39,7 +39,7 @@ struct VirtualUID {
 
 extern struct VirtualUID vuid;
 
-void util_privilege_init(void);
+void util_privilege_init(struct VirtualUID* p);
 void util_privilege_on(struct VirtualUID* p);
 void util_privilege_off(struct VirtualUID* p);
 int util_privilege_open(char *pathname, int flags);

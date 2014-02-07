@@ -387,7 +387,9 @@ int main(int argc, char **argv)
 {
 	hs_init(&argc, &argv);
 
-	util_privilege_init();
+        util_privilege_init(&vuid);
+        util_privilege_off(&vuid);
+
 	tapp_init(&gApp);
 	tapp_get_options(&gApp, argc, argv);
 
