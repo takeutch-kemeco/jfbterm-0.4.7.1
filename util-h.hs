@@ -19,9 +19,9 @@ instance Storable VirtualUID where
   sizeOf (VirtualUID ruid euid) = (sizeOf ruid) + (sizeOf euid)
   alignment a = 4
   peek a = do
-      ruid <- peek ((castPtr a) :: Ptr CUid)
-      euid <- peek ((castPtr (plusPtr a 4)) :: Ptr CUid)
-      return (VirtualUID ruid euid)
+    ruid <- peek ((castPtr a) :: Ptr CUid)
+    euid <- peek ((castPtr (plusPtr a 4)) :: Ptr CUid)
+    return (VirtualUID ruid euid)
   poke a (VirtualUID ruid euid) = do
     poke ((castPtr a) :: Ptr CUid) ruid 
     poke ((castPtr (plusPtr a 4)) :: Ptr CUid) euid
