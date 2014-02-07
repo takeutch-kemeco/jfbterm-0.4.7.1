@@ -611,11 +611,8 @@ void tfbm_open(TFrameBufferMemory* p)
 
 #ifdef JFB_VGA16FB
 	/* see fbdpsp.c: ifdef JFB_VGA16FB */
-	if (fb_fix.type == FB_TYPE_VGA_PLANES) {
-		if ( util_privilege_ioperm(0x3c0, 0x20, 1 ) == -1 ) {
-			die("Cannot access VGA registers(ioperm).");
-		}
-	}
+	if (fb_fix.type == FB_TYPE_VGA_PLANES)
+		die("Cannot supported VGA16FB, not access VGA registers(ioperm).");
 #endif
 
 }

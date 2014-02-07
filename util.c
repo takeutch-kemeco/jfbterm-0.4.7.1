@@ -75,20 +75,3 @@ int util_privilege_open(char *pathname, int flags)
 	return fd;
 }
 
-#ifdef HAVE_IOPERM
-/* ポートの入出力許可をeffectiveユーザー権限で得る */
-int util_privilege_ioperm(u_int from, u_int num, int turn_on)
-{
-	util_privilege_on(&vuid);
-	int r = ioperm(from, num, turn_on);
-	util_privilege_off(&vuid);
-
-	return r;
-}
-#else
-inline int util_privilege_ioperm(u_int from, u_int num, int turn_on)
-{
-	return -1
-}
-#endif
-
