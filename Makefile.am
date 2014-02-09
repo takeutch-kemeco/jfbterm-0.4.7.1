@@ -1,5 +1,5 @@
 HS = ghc
-LINK = $(HS) -no-hs-main -o $@
+LINK = $(HS) -no-hs-main -package unix -o $@
 
 bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
@@ -19,12 +19,7 @@ jfbterm_SOURCES = 				\
 		vterm.c vtermlow.c vterm.h	\
 		skipagent.c skipagent.h
 
-jfbterm_HS_LIBDIR = ${HOME}/.cabal/lib/x86_64-linux-ghc-7.6.3
-
-jfbterm_LDADD = -lutil -lpthread \
-	$(jfbterm_HS_LIBDIR)/unix-2.7.0.0/libHSunix-2.7.0.0.a
-
-#jfbterm_CFLAGS = -DHAVE_CONFIG_H -I/usr/lib/ghc-7.6.3/include
+jfbterm_LDADD = -lutil -lpthread
 
 JFBTERM_CONFIG_SAMPLE            = jfbterm.conf.sample
 JFBTERM_CONFIG_SAMPLE_JA         = $(JFBTERM_CONFIG_SAMPLE).ja
