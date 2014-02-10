@@ -143,3 +143,11 @@ synchronizeSkipAgentContext c = do
       param = (parameterPtr c)
   poke (cContext c) (CSkipAgentContext use close mutex func param)
 
+-- | Integer 型を返す rdtsc
+rdtscInteger :: IO Integer
+rdtscInteger = rdtsc >>= return . toInteger
+
+-- | 使用中の CPU のクロック周波数の近似値を測定する
+getCPUHz :: IO Integer
+getCPUHz = rdtscInteger >>= (\a -> threadDelay 10000 >> rdtscInteger >>= (\b -> return ((b - a) * 10)))
+
