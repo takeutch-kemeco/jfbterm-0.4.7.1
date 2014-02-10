@@ -1,5 +1,5 @@
 HS = ghc
-LINK = $(HS) -no-hs-main -package unix -o $@
+LINK = $(HS) -no-hs-main -package unix -package rdtsc -o $@
 
 bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
@@ -17,7 +17,7 @@ jfbterm_SOURCES = 				\
 		util.c util.h util-h.hs		\
 		csv.c csv.h 			\
 		vterm.c vtermlow.c vterm.h	\
-		skipagent.c skipagent.h
+		skipagent.c skipagent.h skipagent-h.hs
 
 jfbterm_LDADD = -lutil -lpthread
 
