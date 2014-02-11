@@ -28,13 +28,16 @@
 #ifndef __SKIPAGENT_H__
 #define __SKIPAGENT_H__
 
-typedef void (*sage_throw_func)(void*);
+typedef int (*sage_throw_func)(void*);
 
 struct SkipAgentContext {
-        int use;
-        int close;
-        int mutex;
-        int thread_id;
+        int use_flag;
+        int close_flag;
+        int mutex_flag;
+        int order_flag;
+        unsigned long long start_time;
+        unsigned long long cur_time;
+        unsigned long long prev_time;
         sage_throw_func func;
         void* func_param;
 };
@@ -44,10 +47,6 @@ extern struct SkipAgentContext skip_agent_context;
 void init_skip_agent(struct SkipAgentContext* context);
 void throw_skip_agent(struct SkipAgentContext* context, sage_throw_func func, void* param);
 void close_skip_agent(struct SkipAgentContext* context);
-
-void sage_init(void);
-void sage_close(void);
-void sage_throw(sage_throw_func func, void* param);
 
 #endif // __SKIPAGENT_H__
 
