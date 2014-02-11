@@ -536,12 +536,12 @@ void tvterm_start(struct TVterm* p)
 	tvterm_register_signal(p);
 	tvterm_set_window_size(p);
 
-	init_skip_agent(&skip_agent_context);
+	sage_init();
 }
 
 void tvterm_final(struct TVterm* p)
 {
-	close_skip_agent(&skip_agent_context);
+	sage_close();
 
 	ioctl(0, KDSETMODE, KD_TEXT);
 	tpen_final(&(p->pen));
