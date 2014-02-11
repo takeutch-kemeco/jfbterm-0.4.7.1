@@ -35,6 +35,7 @@ struct SkipAgentContext {
         int close_flag;
         int mutex_flag;
         int order_flag;
+        int refresh_flag;
         unsigned long long start_time;
         unsigned long long cur_time;
         unsigned long long prev_time;

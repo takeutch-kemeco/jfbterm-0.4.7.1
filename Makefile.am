@@ -1,5 +1,5 @@
 HS = ghc
-LINK = $(HS) -no-hs-main -package unix -package rdtsc -o $@
+LINK = $(HS) -no-hs-main $(HSLIB) -o $@
 
 bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
@@ -20,6 +20,7 @@ jfbterm_SOURCES = 				\
 		skipagent.c skipagent.h skipagent-h.hs
 
 jfbterm_LDADD = -lutil -lpthread
+HSLIB = -package unix -package rdtsc -package stm
 
 JFBTERM_CONFIG_SAMPLE            = jfbterm.conf.sample
 JFBTERM_CONFIG_SAMPLE_JA         = $(JFBTERM_CONFIG_SAMPLE).ja

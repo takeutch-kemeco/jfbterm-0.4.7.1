@@ -305,7 +305,7 @@ static void __tvterm_refresh(void* __p)
 
 void tvterm_refresh(struct TVterm* p)
 {
-	sage_throw(__tvterm_refresh, (void*)p);
+	throw_skip_agent(&skip_agent_context, __tvterm_refresh, (void*)p);
 }
 
 static struct TVterm* sig_obj = NULL;

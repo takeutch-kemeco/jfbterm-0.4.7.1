@@ -427,9 +427,9 @@ int main(int argc, char **argv)
                 tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
 
 	if(gApp.gOptLegacy)
-                skip_agent_context.use = 0;
+                skip_agent_context.use_flag = 0;
 	else
-                skip_agent_context.use = 1;
+                skip_agent_context.use_flag = 1;
 
 	char *en = tcaps_find_first(&(gApp.gCaps), "encoding");
 	if (gApp.gConfEncoding)
