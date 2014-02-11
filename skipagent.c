@@ -89,7 +89,7 @@ static void unlock_mutex(const int id)
 
 static void peace_loop(void)
 {
-        while (run_flag && order_flag)
+        while (run_flag && !order_flag)
                 nanosleep(&loop_time_ts, NULL);
 }
 
