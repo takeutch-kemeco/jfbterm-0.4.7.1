@@ -1,7 +1,9 @@
+-- | JFBTerm/Util.hs
+-- | Copyright (c) 2014 Takeutch Kemeco (takeutchkemeco@gmail.com)
+-- |
 -- | JFBTERM -
 -- | Copyright (c) 2003 Fumitoshi UKAI <ukai@debian.or.jp>
 -- | Copyright (c) 1999 Noritoshi Masuichi (nmasu@ma3.justnet.ne.jp)
--- | Copyright (c) 2014 Takeutch Kemeco (takeutchkemeco@gmail.com)
 -- |
 -- | Redistribution and use in source and binary forms, with or without
 -- | modification, are permitted provided that the following conditions
@@ -24,21 +26,30 @@
 -- | OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 -- | SUCH DAMAGE.
 
-module JFBTerm.Util where
+module JFBTerm.Util (
+  VirtualUID (
+     virtualRealUID,      -- :: CUid
+     virtualEffectiveUID  -- :: CUid
+     ),
+  
+  privilegeInit, privilegeOn, privilegeOff, privilegeOpen, privilegeDrop,
+  getUID, 
+  convertPtrListToCStringList, convertPtrListToStringList, 
+  searchString, removeQuote, limitInner, swapIntegral
+  ) where
 
-import Foreign
-import Foreign.Ptr (Ptr, nullPtr, castPtr)
+import Foreign (Storable(..))
+import Foreign.Ptr (Ptr, nullPtr, castPtr, plusPtr)
 import Foreign.Storable (peek, sizeOf)
 import Foreign.Marshal.Array (peekArray0)
 import Foreign.C.Types
-import Foreign.C.String
-import Data.Char (ord)
+import Foreign.C.String (CString, newCString, peekCString)
 import System.Posix.User (setUserID, setEffectiveUserID, getRealUserID, getEffectiveUserID)
 import System.Posix.Types (CUid, Fd)
 import System.Posix.IO (openFd, defaultFileFlags, OpenMode(..))
 
 data VirtualUID = VirtualUID {
-  virtualRealUID :: CUid,
+  virtualRealUID      :: CUid,
   virtualEffectiveUID :: CUid
   } deriving (Show, Eq)
 
