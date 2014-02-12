@@ -14,10 +14,10 @@ jfbterm_SOURCES = 				\
 		pcf.c pcf.h 			\
 		pen.h JFBTerm/Pen.hs JFBTerm/PenFFI.hs \
 		term.c term.h 			\
-		util.c util.h util-h.hs		\
+		util.c util.h JFBTerm/Util.hs \
 		csv.c csv.h 			\
 		vterm.c vtermlow.c vterm.h	\
-		skipagent.c skipagent.h skipagent-h.hs
+		skipagent.c skipagent.h JFBTerm/SkipAgent.hs
 
 jfbterm_LDADD = -lutil -lpthread
 
