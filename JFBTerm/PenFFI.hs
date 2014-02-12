@@ -1,4 +1,4 @@
--- | pen-h-ffi.hs
+-- | JFBTerm/PenFFI.hs
 -- | Copyright (C) 2014 Takeutch Kemeco (takeutchkemeco@gmail.com)
 -- |
 -- | JFBTERM -
@@ -31,9 +31,9 @@
 module JFBTerm.PenFFI where
 
 import JFBTerm.Pen
+import Foreign.Storable (Storable(..))
 import Foreign.C.Types -- (CUInt)
 import Foreign.Ptr (Ptr, nullPtr)
-import Foreign.Storable
 
 foreign import ccall safe "free"
   c_free :: Ptr TPen -> IO ()
