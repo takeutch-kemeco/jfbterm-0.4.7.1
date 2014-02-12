@@ -1,4 +1,4 @@
--- | pen-h.hs
+-- | JFBTerm/Pen.hs
 -- | Copyright (C) 2014 Takeutch Kemeco (takeutchkemeco@gmail.com)
 -- |
 -- | JFBTERM -
@@ -37,7 +37,7 @@ module JFBTerm.Pen (
      swapAttribute,             -- :: a -> a
      onReverse, offReverse,     -- :: a -> a
      setColor                   -- :: a -> CUInt -> a
-  ),
+     ),
 
   TPen (
       tpenPrev, -- :: (Ptr TPen),
@@ -46,17 +46,17 @@ module JFBTerm.Pen (
       tpenBCol, -- :: CUChar,
       tpenFCol, -- :: CUChar,
       tpenAttr  -- :: CUChar
-  ),
+      ),
 
   tpenAttrULine, tpenAttrReverse, tpenAttrHigh,
   tpenLatchS, tpenLatch1, tpenLatch2, tpenCleanS,
   tpenCodeis1, tpenCodeis2, tpenLangCode
   ) where
 
-import Data.Bits
+import Foreign.Storable (Storable(..))
+import Data.Bits ((.|.), (.&.), complement)
 import Foreign.C.Types (CUChar, CUInt)
 import Foreign.Ptr (Ptr, nullPtr, castPtr, plusPtr)
-import Foreign.Storable
 
 data TPen = TPen {
   tpenPrev :: (Ptr TPen),
