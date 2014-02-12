@@ -1,6 +1,6 @@
 /*
- * skipagent.c
- * Copyright (C) 2012, 2014 Takeutch Kemeco
+ * skipagent.h
+ * Copyright (C) 2012-2014 Takeutch Kemeco
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,17 +25,26 @@
  *
  */
 
-#include <stdbool.h>
-
 #ifndef __SKIPAGENT_H__
 #define __SKIPAGENT_H__
 
-extern bool sage_use;
+typedef int (*sage_throw_func)(void*);
 
-typedef void (*sage_throw_func)(void*);
+struct SkipAgentContext {
+        int use_flag;
+        int run_flag;
+        int order_flag;
+        int mutex_tmp;
+        unsigned long long cur_time;
+        unsigned long long prev_time;
+        sage_throw_func func;
+        void* func_param;
+};
 
-void sage_init(void);
-void sage_close(void);
-void sage_throw(sage_throw_func func, void* param);
+extern struct SkipAgentContext skip_agent_context;
 
-#endif // __SKIPAGENT_H__
+void init_skip_agent(struct SkipAgentContext* context);
+void throw_skip_agent(struct SkipAgentContext* context, sage_throw_func func, void* param);
+void close_skip_agent(struct SkipAgentContext* context);
+
+#endif /* __SKIPAGENT_H__ */

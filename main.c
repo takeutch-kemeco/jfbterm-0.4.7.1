@@ -383,6 +383,9 @@ char* tapp_setup_encoding(char *en)
 	return en;
 }
 
+extern void hs_init (int *argc, char **argv[]);
+extern void hs_exit (void);
+
 int main(int argc, char **argv)
 {
 	hs_init(&argc, &argv);
@@ -427,9 +430,9 @@ int main(int argc, char **argv)
                 tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
 
 	if(gApp.gOptLegacy)
-                sage_use = false;
+                skip_agent_context.use_flag = 0;
 	else
-                sage_use = true;
+                skip_agent_context.use_flag = 1;
 
 	char *en = tcaps_find_first(&(gApp.gCaps), "encoding");
 	if (gApp.gConfEncoding)
