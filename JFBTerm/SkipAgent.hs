@@ -1,4 +1,4 @@
--- | skipagent-h.hs
+-- | JFBTerm/SkipAgent.hs
 -- | Copyright (c) 2014 Takeutch Kemeco (takeutchkemeco@gmail.com)
 -- |
 -- | Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,10 @@
 
 module JFBTerm.SkipAgent where
 
-import Foreign
-import Foreign.Ptr (Ptr, nullPtr, castPtr)
-import Foreign.Storable (peek, sizeOf)
-import Foreign.Marshal.Array (peekArray0)
+import Foreign.Ptr (Ptr, FunPtr, nullPtr, nullFunPtr, castPtr, plusPtr)
+import Foreign.Storable (Storable(..))
 import Foreign.C.Types
-import Control.Concurrent.STM
-import Control.Concurrent
-import Foreign.Ptr -- (FunPtr Ptr)
-import Foreign.C.Types
+import Control.Concurrent (forkIO, threadDelay)
 import System.CPUTime.Rdtsc(rdtsc)
 
 foreign import ccall safe "exec_c_function"
