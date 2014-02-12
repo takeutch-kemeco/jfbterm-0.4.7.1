@@ -161,19 +161,21 @@ instance TerminalPen TPen where
         | (((tpenAttr a) .&. tpenAttrULine) /= 0) = bcol' .|. 0x08
         | otherwise = bcol'
 
-  onReverse a = swapAttribute (a {tpenAttr = attr'})
+  onReverse a = a'
     where
       attr = (tpenAttr a)
-      attr'
-        | ((attr .&. tpenAttrReverse) == 0) = attr .|. tpenAttrReverse
-        | otherwise = attr
+      attr' = attr .|. tpenAttrReverse
+      a'
+        | ((attr .&. tpenAttrReverse) == 0) = swapAttribute (a {tpenAttr = attr'})
+        | otherwise = a
 
-  offReverse a = swapAttribute (a {tpenAttr = attr'})
+  offReverse a = a'
     where
       attr = (tpenAttr a)
-      attr'
-        | ((attr .&. tpenAttrReverse) /= 0) = attr .&. (complement tpenAttrReverse)
-        | otherwise = attr
+      attr' = attr .&. (complement tpenAttrReverse)
+      a'
+        | ((attr .&. tpenAttrReverse) /= 0) = swapAttribute (a {tpenAttr = attr'})
+        | otherwise = a
 
   setColor a col = f a (fromIntegral col)
     where
