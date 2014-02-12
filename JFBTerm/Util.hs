@@ -38,11 +38,9 @@ module JFBTerm.Util (
   searchString, removeQuote, limitInner, swapIntegral
   ) where
 
-import Foreign (Storable(..))
+import Foreign.Storable (Storable(..))
 import Foreign.Ptr (Ptr, nullPtr, castPtr, plusPtr)
-import Foreign.Storable (peek, sizeOf)
 import Foreign.Marshal.Array (peekArray0)
-import Foreign.C.Types
 import Foreign.C.String (CString, newCString, peekCString)
 import System.Posix.User (setUserID, setEffectiveUserID, getRealUserID, getEffectiveUserID)
 import System.Posix.Types (CUid, Fd)
@@ -67,36 +65,6 @@ instance Storable VirtualUID where
 foreign import ccall safe "setreuid"
   setreuid :: Int -> Int -> IO ()
 
-foreign export ccall
-  util_privilege_init :: Ptr VirtualUID -> IO ()
-
-foreign export ccall
-  util_privilege_on :: Ptr VirtualUID -> IO ()
-
-foreign export ccall
-  util_privilege_off :: Ptr VirtualUID -> IO ()
-
-foreign export ccall
-  util_privilege_open :: Ptr VirtualUID -> CString -> CInt -> IO CInt
-
-foreign export ccall
-  util_getuid :: Ptr VirtualUID -> IO CInt
-
-foreign export ccall
-  util_privilege_drop :: Ptr VirtualUID -> IO ()
-
-foreign export ccall
-  util_search_string :: CString -> Ptr CString -> IO CInt
-
-foreign export ccall
-  remove_quote :: CString -> IO CString
-
-foreign export ccall
-  limit_inner :: CInt -> CInt -> CInt -> IO CInt
-
-foreign export ccall
-  swap_int :: Ptr CInt -> Ptr CInt -> IO ()
-
 -- | システム本来の{Real,Effective}UIDを得る
 -- |
 -- | TIPS:
@@ -116,23 +84,13 @@ privilegeInit = do
     euid <- getEffectiveUserID
     return (VirtualUID ruid euid)
 
--- | privilegeInit c interface
-util_privilege_init :: Ptr VirtualUID -> IO ()
-util_privilege_init p = privilegeInit >>= (poke p)
-
 -- | realユーザーIDと、effectiveユーザーIDを、本来の元の状態に設定する
 privilegeOn :: VirtualUID -> IO ()
 privilegeOn (VirtualUID ruid euid) = setreuid ((fromIntegral ruid) :: Int) ((fromIntegral euid) :: Int)
 
-util_privilege_on :: Ptr VirtualUID -> IO ()
-util_privilege_on p = (peek p) >>= privilegeOn
-
 -- | realユーザーIDと、effectiveユーザーIDを、逆転した状態に設定する
 privilegeOff :: VirtualUID -> IO ()
 privilegeOff (VirtualUID ruid euid) = setreuid ((fromIntegral euid) :: Int) ((fromIntegral ruid) :: Int)
-
-util_privilege_off :: Ptr VirtualUID -> IO ()
-util_privilege_off p = (peek p) >>= privilegeOff
 
 -- | ファイルをeffectiveユーザー権限で開く
 privilegeOpen :: VirtualUID -> FilePath -> OpenMode -> IO Fd
@@ -142,30 +100,13 @@ privilegeOpen p filepath flags = do
   privilegeOff p
   return fd
 
--- | privilegeOpen c interface
-util_privilege_open :: Ptr VirtualUID -> CString -> CInt -> IO CInt
-util_privilege_open p filepath flags = do
-  p' <- peek p
-  filepath' <- (peekCString filepath) :: IO FilePath
-  let flags' = case flags of {0 -> ReadOnly; 1 -> WriteOnly; 2 -> ReadWrite}
-  i <- privilegeOpen p' filepath' flags'
-  return ((fromIntegral i) :: CInt)
-
 -- | システムが現在、本来のrealユーザーIDとして考えてるIDを返す
 getUID :: VirtualUID -> IO CUid
 getUID (VirtualUID ruid euid) = return ruid
 
--- | getUID c interface
-util_getuid :: Ptr VirtualUID -> IO CInt
-util_getuid p = (peek p) >>= getUID >>= (\i -> return ((fromIntegral i) :: CInt))
-
 -- | real, effectiveどちらのユーザーIDも、realユーザーIDを用いる状態に設定する
 privilegeDrop :: VirtualUID -> IO ()
 privilegeDrop (VirtualUID ruid euid) = setreuid ((fromIntegral ruid) :: Int) ((fromIntegral ruid) :: Int)
-
--- | privilegeDrop c interface
-util_privilege_drop :: Ptr VirtualUID -> IO ()
-util_privilege_drop p = (peek p) >>= privilegeDrop
 
 -- | (void** p) -> [CString]
 -- | p の最後は Null であること
@@ -190,13 +131,6 @@ searchString t s = searchString' 0 s
       | x == t = n
       | otherwise = searchString' (n + 1) xs
 
--- | searchString c interface
-util_search_string :: CString -> Ptr CString -> IO CInt
-util_search_string t p = do
-  s <- convertPtrListToStringList p
-  t' <- peekCString t
-  let i = searchString t' s in return ((fromInteger i) :: CInt)
-
 -- | 文字列が " または ' で前後を囲まれてた場合、それを取り除く
 -- | "ABC" -> ABC
 -- | 'ABC' -> ABC
@@ -206,10 +140,6 @@ removeQuote (x:xs)
   | x == '\'' || x == '"' = removeQuote xs
   | otherwise = x : (removeQuote xs)
 
--- | removeQuote c interface
-remove_quote :: CString -> IO CString
-remove_quote s = peekCString s >>= (return . removeQuote) >>= newCString
-
 -- | 数値を範囲a,b内に丸める
 limitInner :: Integral a => a -> a -> a -> a
 limitInner a min max
@@ -217,22 +147,6 @@ limitInner a min max
   | a > max = max
   | otherwise = a
 
--- | limitInner c interface
-limit_inner :: CInt -> CInt -> CInt -> IO CInt
-limit_inner a min max = return ((fromIntegral a') :: CInt)
-  where
-    a' = limitInner a min max
-
 -- | 変数の内容を交換する
 swapIntegral :: Integral a => (a, a) -> (a, a)
 swapIntegral (a, b) = (b, a)
-
--- | swapIntegral c interface
-swap_int :: Ptr CInt -> Ptr CInt -> IO ()
-swap_int a b = do
-    a' <- (peek a)
-    b' <- (peek b)
-    let t@(a'', b'') = swapIntegral (a', b')
-    poke a a''
-    poke b b''
-

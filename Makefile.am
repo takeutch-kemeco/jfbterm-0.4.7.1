@@ -14,7 +14,7 @@ jfbterm_SOURCES = 				\
 		pcf.c pcf.h 			\
 		pen.h JFBTerm/Pen.hs JFBTerm/PenFFI.hs \
 		term.c term.h 			\
-		util.c util.h JFBTerm/Util.hs \
+		util.c util.h JFBTerm/Util.hs JFBTerm/UtilFFI.hs \
 		csv.c csv.h 			\
 		vterm.c vtermlow.c vterm.h	\
 		skipagent.c skipagent.h JFBTerm/SkipAgent.hs
