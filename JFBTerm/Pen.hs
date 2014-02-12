@@ -28,19 +28,35 @@
 -- | OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 -- | SUCH DAMAGE.
 
-module JFBTerm.Pen where
+module JFBTerm.Pen (
+  JFBTerm.Pen.TerminalPen (
+     init,                      -- :: a
+     offAllAttribute,           -- :: a -> a
+     onHiLight, offHiLight,     -- :: a -> a
+     onUnderLine, offUnderLine, -- :: a -> a
+     swapAttribute,             -- :: a -> a
+     onReverse, offReverse,     -- :: a -> a
+     setColor                   -- :: a -> CUInt -> a
+  ),
 
---import Foreign
+  TPen (
+      tpenPrev, -- :: (Ptr TPen),
+      tpenX,    -- :: CUChar,
+      tpneY,    -- :: CUChar,
+      tpenBCol, -- :: CUChar,
+      tpenFCol, -- :: CUChar,
+      tpenAttr  -- :: CUChar
+  ),
+
+  tpenAttrULine, tpenAttrReverse, tpenAttrHigh,
+  tpenLatchS, tpenLatch1, tpenLatch2, tpenCleanS,
+  tpenCodeis1, tpenCodeis2, tpenLangCode
+  ) where
+
 import Data.Bits
 import Foreign.C.Types (CUChar, CUInt)
 import Foreign.Ptr (Ptr, nullPtr, castPtr, plusPtr)
 import Foreign.Storable
--- import Foreign.Marshal.Array (peekArray0)
---import Foreign.C.String
---import Data.Char (ord)
---import System.Posix.User (setUserID, setEffectiveUserID, getRealUserID, getEffectiveUserID)
---import System.Posix.Types
---import System.Posix.IO (openFd, defaultFileFlags, OpenMode(..))
 
 data TPen = TPen {
   tpenPrev :: (Ptr TPen),
