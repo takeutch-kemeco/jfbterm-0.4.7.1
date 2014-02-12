@@ -181,10 +181,15 @@ instance TerminalPen TPen where
     where
       tcol = [0, 4, 2, 6, 1, 5, 3, 7] :: [CUChar]
       f a col
-        | (col >= 30) && (col <= 37) = setColor' a (tcol !! col) tpenAttrHigh  tpenAttrULine
-        | (col >= 40) && (col <= 47) = setColor' a (tcol !! col) tpenAttrULine tpenAttrHigh
-      attr = (tpenAttr a)
-      setColor' a col normalAttr reverseAttr
-        | ((attr .&. tpenAttrReverse) /= 0) = case ((attr .&. reverseAttr) /= 0) of
-          True ->  a {tpenBCol = (col .|. 0x08)}
-          False -> a {tpenBCol = col}
+        | (col >= 30) && (col <= 37) = setColor' a (tcol !! (col - 30)) (setFCol) (setBCol)
+        | (col >= 40) && (col <= 47) = setColor' a (tcol !! (col - 40)) (setBCol) (setFCol)
+        | otherwise = a
+      setFCol a t
+        | ((tpenAttr a) .&. tpenAttrHigh) /= 0 = (a {tpenFCol = (t .|. 0x08)})
+        | otherwise = (a {tpenFCol = t})
+      setBCol a t
+        | ((tpenAttr a) .&. tpenAttrULine) /= 0 = (a {tpenBCol = (t .|. 0x08)})
+        | otherwise = (a {tpenBCol = t})
+      setColor' a t normalAttrFunction reverseAttrFunction
+        | ((tpenAttr a) .&. tpenAttrReverse) /= 0 = reverseAttrFunction a t
+        | otherwise = normalAttrFunction a t
