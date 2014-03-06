@@ -1,5 +1,5 @@
 HS = ghc
-LINK = $(HS) -no-hs-main -package unix -package rdtsc -package stm -threaded -o $@
+LINK = $(HS) -no-hs-main $(HSFLAGS) $(HSLIBS) -o $@
 
 bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
@@ -28,11 +28,16 @@ JFBTERM_CONFIG_SAMPLE_UNIFONT    = $(JFBTERM_CONFIG_SAMPLE).unifont
 
 JFBTERM_CONFIG_FILE = jfbterm.conf
 
+HSFLAGS = -O2 -feager-blackholing -threaded
+HSLIBS  = -package unix -package rdtsc -package stm
+
+CFLAGS = -O2
+
 #.c.o:
 #	$(HS) -DHAVE_CONFIG_H -c $< -o $@
 
 .hs.o:
-	$(HS) -c $< -o $@
+	$(HS) $(HSFLAGS) $(HSLIBS) -c $< -o $@
 
 install:
 	install jfbterm $(DESTDIR)$(bindir)/jfbterm
