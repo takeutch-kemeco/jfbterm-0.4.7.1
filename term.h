@@ -32,11 +32,12 @@
 #define INCLUDE_TERM_H
 
 #define SUCCESS (0)
+#define TTERM_TTYFD_NAME_MAX 0x1000
 
 struct TTerm {
 	int ptyfd;
 	int ttyfd;
-	char name[0x1000];
+	char name[TTERM_TTYFD_NAME_MAX];
 	struct termios ttysave;
 	struct TVterm vterm;
 };

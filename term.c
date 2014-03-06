@@ -136,15 +136,41 @@ static void application_final(void)
  */
 static int tterm_open(struct TTerm* p)
 {
-	if(openpty(&p->ptyfd, &p->ttyfd, p->name, NULL, NULL) < 0) {
-		print_strerror("error: openpty()");
-		return 0;
+	p->ptyfd = posix_openpt(O_RDWR);
+	if (p->ptyfd == -1) {
+		print_message_f("error: tterm_open(), posix_openpt()\n");
+		goto err;
 	}
+
+	if (grantpt(p->ptyfd)) {
+		print_message_f("error: tterm_open(), grantpt()\n");
+		goto err;
+	}
+
+	if (unlockpt(p->ptyfd)) {
+		print_message_f("error: tterm_open(), unlockpt()\n");
+		goto err;
+	}
+
+	if (ptsname_r(p->ptyfd, p->name, TTERM_TTYFD_NAME_MAX)) {
+		print_message_f("error: tterm_open(), ptsname_r()\n");
+		goto err;
+	}
+
+	p->ttyfd = open(p->name, O_RDWR);
+	if (p->ttyfd == -1) {
+		print_message_f("error: tterm_open(), open()\n");
+		goto err;
+	}
+
 #ifdef DEBUG_TERM
-	print_message_f("ptyfd[%d], ttyfd[%d], name[%s]\n",
-			p->ptyfd, p->ttyfd, p->name);
+	print_message_f("TTerm: ptyfd[%d], ttyfd[%d], name[%s]\n", p->ptyfd, p->ttyfd, p->name);
 #endif
+
 	return 1;
+
+err:
+	return 0;
 }
 
 #define BUF_SIZE 1024
