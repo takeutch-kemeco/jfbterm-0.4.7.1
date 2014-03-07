@@ -65,25 +65,17 @@ static void tterm_final(struct TTerm* p);
 static void tterm_set_utmp(struct TTerm* p);
 static void tterm_reset_utmp(struct TTerm* p);
 
+/* 子プロセスが終了するまで待機し、その後 vterm, term を停止し、プロセスを終了する
+ */
 static void sigchld(int sig)
 {
-	int ret = waitpid(gChildProcessId, &sig, WNOHANG);
+	siginfo_t siginfo;
+	if(waitid(P_PID, gChildProcessId, &siginfo, WEXITED))
+		die("error: sigchld(), waitid()");
 
-#ifdef DEBUG_TERM
-	print_message_f("sigchld(): "
-		        "ret[%d], "
-			"gChildProcessId[%d]\n",
-			ret, gChildProcessId);
-#endif
-
-	if(ret == gChildProcessId) {
-		tvterm_unregister_signal();
-		tterm_final(&gTerm);
-
-		exit(EXIT_SUCCESS);
-	}
-
-	signal(SIGCHLD, sigchld);
+	tvterm_unregister_signal();
+	tterm_final(&gTerm);
+	exit(EXIT_SUCCESS);
 }
 
 /* term に初期状態をセットする
