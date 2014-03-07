@@ -170,17 +170,11 @@ void tterm_start(const char *tn, const char *en)
 {
 	struct TTerm *p = &gTerm;
 
-	struct termios ntio;
-
-	int ret;
-	struct timeval tv;
-	u_char buf[BUF_SIZE+1];
-
 	tterm_init(p, en);
 	if (!tterm_open(p))
 		die("Cannot get free pty-tty.\n");
 
-	ntio = p->ttysave;
+	struct termios ntio = p->ttysave;
 	ntio.c_lflag &= ~(ECHO|ISIG|ICANON|XCASE);
         ntio.c_iflag = 0;
         ntio.c_oflag &= ~OPOST;
@@ -192,19 +186,22 @@ void tterm_start(const char *tn, const char *en)
 
 	tvterm_start(&(p->vterm));
 	fflush(stdout);
+	atexit(application_final);
+
 	gChildProcessId = fork();
 	if (gChildProcessId == 0) {
-	    /* child */
-	    tterm_wakeup_shell(p, tn);
-	    exit(1);
-	} else if (gChildProcessId < 0) {
-	    print_strerror("fork");
-	    exit(1);
+		/* child */
+		tterm_wakeup_shell(p, tn);
+		exit(EXIT_SUCCESS);
+	} else if (gChildProcessId == -1) {
+		print_strerror("fork");
+		exit(EXIT_FAILURE);
 	}
 	/* parent */
 	tterm_set_utmp(p);
 	signal(SIGCHLD, sigchld);
-	atexit(application_final);
+
+	u_char *buf = calloc(BUF_SIZE + 1, sizeof(*buf));
 
 	/* not available
 	 * VtInit();
@@ -213,34 +210,31 @@ void tterm_start(const char *tn, const char *en)
 	while (1) {
 		fd_set fds;
 		int max = 0;
-		tv.tv_sec = 0;
-		tv.tv_usec = 100000;	// 100 msec
 		FD_ZERO(&fds);
 		FD_SET(0,&fds);
 		FD_SET(p->ptyfd,&fds);
-		if (p->ptyfd > max) {
+		if (p->ptyfd > max)
 			max = p->ptyfd;
+
+		const int ret = pselect(max + 1, &fds, NULL, NULL, NULL, NULL);
+		if (ret < 0) {
+			if (errno == EINTR)
+				continue;
+			else
+				die("error: tterm_start(), pselect()\n");
 		}
 
-		ret = select(max+1, &fds, NULL, NULL, &tv);
-		if (ret == 0 || (ret < 0 && errno == EINTR))
-			continue;
-
-		if (ret < 0)
-			print_strerror_and_exit("select");
-
 		if (FD_ISSET(0, &fds)) {
-			ret = read(0, buf, BUF_SIZE);
+			const int len = read(0, buf, BUF_SIZE);
 
-			if (ret > 0)
-				write(p->ptyfd, buf, ret);
+			if (len > 0)
+				write(p->ptyfd, buf, len);
 
-		} else if (FD_ISSET(p->ptyfd,&fds)) {
-			ret = read(p->ptyfd, buf, BUF_SIZE);
+		} else if (FD_ISSET(p->ptyfd, &fds)) {
+			const int len = read(p->ptyfd, buf, BUF_SIZE);
 
-			if (ret > 0) {
-				/* write(1, buf, ret); */
-				tvterm_emulate(&(p->vterm), buf, ret);
+			if (len > 0) {
+				tvterm_emulate(&(p->vterm), buf, len);
 				tvterm_refresh(&(p->vterm));
 			}
 		}
