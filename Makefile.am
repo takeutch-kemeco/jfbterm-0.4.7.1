@@ -36,6 +36,9 @@ CFLAGS = -O2
 #.c.o:
 #	$(HS) -DHAVE_CONFIG_H -c $< -o $@
 
+.hs.hi:
+	$(HS) $(HSFLAGS) $(HSLIBS) -c $< -o $@
+
 .hs.o:
 	$(HS) $(HSFLAGS) $(HSLIBS) -c $< -o $@
 
