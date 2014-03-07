@@ -27,7 +27,7 @@ module JFBTerm.SkipAgent where
 import Foreign.Ptr (Ptr, FunPtr, nullPtr, nullFunPtr, castPtr, plusPtr)
 import Foreign.Storable (Storable(..))
 import Foreign.C.Types
-import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent (forkOS, threadDelay)
 import System.CPUTime.Rdtsc(rdtsc)
 
 foreign import ccall safe "exec_c_function"
@@ -99,7 +99,7 @@ instance Storable SkipAgentContext where
     poke ((castPtr (plusPtr a parameterPOffset)) :: Ptr (Ptr CChar))   pP
 
 init_skip_agent :: (Ptr SkipAgentContext) -> IO ()
-init_skip_agent p = peek p >>= (\c -> poke p (c {runFlag = 1})) >> forkIO (mainLoop p) >> return ()
+init_skip_agent p = peek p >>= (\c -> poke p (c {runFlag = 1})) >> forkOS (mainLoop p) >> return ()
 
 close_skip_agent :: (Ptr SkipAgentContext) -> IO ()
 close_skip_agent p = peek p >>= (\c -> poke p (c {runFlag = 0}))
