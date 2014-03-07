@@ -255,9 +255,8 @@ static void tterm_wakeup_shell(struct TTerm* p, const char* tn)
 	tcsetattr(0, TCSANOW, &(p->ttysave));
 	setgid(getgid());
 	setuid(getuid());
-	sleep(1); /* XXX: wait vt swtich completed? */
 	execvp(gApp.gExecShell, gApp.gExecShellArgv);
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
 static void tterm_set_utmp(struct TTerm *p)
