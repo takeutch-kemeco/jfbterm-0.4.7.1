@@ -212,7 +212,7 @@ void tvterm_show_cursor(struct TVterm* p, bool b)
 	}
 }
 
-static void __tvterm_refresh(void* __p)
+static int __tvterm_refresh(void* __p)
 {
 	struct TVterm* p = __p;
 
@@ -301,6 +301,8 @@ static void __tvterm_refresh(void* __p)
 	if(p->release) {
                 sig_leave_virtual_console(SIGUSR1);
 	}
+
+        return 0;
 }
 
 void tvterm_refresh(struct TVterm* p)
