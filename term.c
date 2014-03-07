@@ -43,7 +43,7 @@
 #include <sys/stat.h>
 #include <pwd.h>
 #include <pty.h>
-#include <utmp.h>
+#include <utmpx.h>
 #include <grp.h>
 
 #include "term.h"
@@ -329,69 +329,75 @@ static char* suffix_num4(char* s)
 	return ret;
 }
 
-static void tterm_set_utmp(struct TTerm* p)
+static void tterm_set_utmp(struct TTerm *p)
 {
 #ifdef DEBUG_TERM
 	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
-			skip_dev(p->name), suffix_num4(p->name));
+			p->name, p->name);
 #endif
-	struct utmp utmp;
-	memset((char*)&utmp, 0, sizeof(utmp));
+	struct utmpx *t = calloc(1, sizeof(*t));
+	if (t == NULL)
+		die("error: tterm_set_utmp(), calloc()");
 
-	char* tnum = suffix_num4(p->name);
-	strncpy(utmp.ut_id, tnum, sizeof(utmp.ut_id));
+	strncpy(t->ut_id, p->name, sizeof(t->ut_id));
+	t->ut_type = DEAD_PROCESS;
+	setutxent();
 
-	utmp.ut_type = DEAD_PROCESS;
+	if (getutxid(t) == NULL)
+		die("error: tterm_set_utmp(), getutxid()");
 
-	setutent();
+	t->ut_type = USER_PROCESS;
+	t->ut_pid = getpid();
+	strncpy(t->ut_line, p->name, sizeof(t->ut_line));
+	struct passwd *pw = getpwuid(util_getuid(&vuid));
+	strncpy(t->ut_user, pw->pw_name, sizeof(t->ut_user));
 
+	struct timeval tv;
+	struct timezone tz;
+	if (gettimeofday(&tv, &tz))
+		die("error: tterm_set_utmp(), gettimeofday()");
 
-	getutid(&utmp);
+	t->ut_tv.tv_sec = tv.tv_sec;
+	t->ut_tv.tv_usec = tv.tv_usec;
 
-	utmp.ut_type = USER_PROCESS;
+	if (pututxline(t) == NULL)
+		die("error: tterm_set_utmp(), pututxline()");
 
-	utmp.ut_pid = getpid();
-
-	char* tname = skip_dev(p->name);
-	strncpy(utmp.ut_line, tname, sizeof(utmp.ut_line));
-
-	struct passwd* pw = getpwuid(util_getuid(&vuid));
-	strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user));
-
-	time(&(utmp.ut_time));
-
-	pututline(&utmp);
-
-	endutent();
+	endutxent();
 }
 
 static void tterm_reset_utmp(struct TTerm* p)
 {
 #ifdef DEBUG_TERM
 	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",
-			skip_dev(p->name), suffix_num4(p->name));
+			p->name, p->name);
 #endif
-	struct utmp utmp;
-	memset((char*)&utmp, 0, sizeof(utmp));
+	struct utmpx *t = calloc(1, sizeof(*t));
+	if (t == NULL)
+		die("error: tterm_reset_utmp(), calloc()");
 
-	char* tnum = suffix_num4(p->name);
-	strncpy(utmp.ut_id, tnum, sizeof(utmp.ut_id));
+	strncpy(t->ut_id, p->name, sizeof(t->ut_id));
+	t->ut_type = USER_PROCESS;
+	setutxent();
 
-	utmp.ut_type = USER_PROCESS;
+	struct utmpx *tp = getutxid(t);
+	if (tp == NULL)
+		die("error: tterm_reset_utmp(), getutxid()");
 
-	setutent();
+	tp->ut_type = DEAD_PROCESS;
+	memset(tp->ut_user, 0, sizeof(t->ut_user));
+	tp->ut_type = DEAD_PROCESS;
 
+	struct timeval tv;
+	struct timezone tz;
+	if (gettimeofday(&tv, &tz))
+		die("error: tterm_set_utmp(), gettimeofday()");
 
-	struct utmp* utp = getutid(&utmp);
+	tp->ut_tv.tv_sec = tv.tv_sec;
+	tp->ut_tv.tv_usec = tv.tv_usec;
 
-	utp->ut_type = DEAD_PROCESS;
+	if (pututxline(tp) == NULL)
+		die("error: tterm_reset_utmp(), pututline()");
 
-	memset(utp->ut_user, 0, sizeof(utmp.ut_user));
-	utp->ut_type = DEAD_PROCESS;
-
-	time(&(utp->ut_time));
-
-	pututline(utp);
-
-	endutent();
+	endutxent();
 }
