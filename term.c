@@ -42,7 +42,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <pwd.h>
-#include <pty.h>
 #include <utmpx.h>
 #include <grp.h>
 
