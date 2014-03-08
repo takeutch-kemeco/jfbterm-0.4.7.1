@@ -37,7 +37,7 @@ CFLAGS = -O2
 #	$(HS) -DHAVE_CONFIG_H -c $< -o $@
 
 .hs.o:
-	$(HS) $(HSFLAGS) $(HSLIBS) -c $< -o $@
+	$(HS) $(HSFLAGS) $(HSLIBS) $< -o $@
 
 install:
 	install jfbterm $(DESTDIR)$(bindir)/jfbterm
