@@ -323,10 +323,10 @@ static char* suffix_num4(char *s)
 
 static void tterm_set_utmp(struct TTerm *p)
 {
-//#ifdef DEBUG_TERM
+#ifdef DEBUG_TERM
 	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
 			p->name, p->name);
-//#endif
+#endif
 	struct utmpx *t = calloc(1, sizeof(*t));
 	if (t == NULL)
 		die("error: tterm_set_utmp(), calloc()");
@@ -366,10 +366,10 @@ static void tterm_set_utmp(struct TTerm *p)
 
 static void tterm_reset_utmp(struct TTerm* p)
 {
-//#ifdef DEBUG_TERM
+#ifdef DEBUG_TERM
 	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",
 			p->name, p->name);
-//#endif
+#endif
 	struct utmpx *t = calloc(1, sizeof(*t));
 	if (t == NULL)
 		die("error: tterm_reset_utmp(), calloc()");
