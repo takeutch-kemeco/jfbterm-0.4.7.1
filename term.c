@@ -252,32 +252,107 @@ static void tterm_wakeup_shell(struct TTerm* p, const char* tn)
 	exit(EXIT_FAILURE);
 }
 
+/* 文字列中の、先頭からの "?/dev/" を読み飛ばしたアドレスを返す
+ * 該当しない場合は、元の文字列の先頭アドレスをそのまま返す
+ *
+ * 例：
+ * "/dev/tty123"  => "tty123"
+ * "/dev/pty/123" => "pty/123"
+ *
+ * "/aaa/dev/bbb" => "bbb"
+ * "/aaa/bbb/ccc" => "/aaa/bbb/ccc"
+ *
+ * "/devian"      => "/devian"
+ */
+static char* skip_dev(char *s)
+{
+	char dev_str[] = "/dev/";
+	char *p = s;
+
+	while (*p != '\0') {
+		p = strchr(p, dev_str[0]);
+		if (p) {
+			if (strcmp(p, dev_str) == 0) {
+				s = p + strlen(dev_str);
+				break;
+			}
+		} else {
+			break;
+		}
+
+		p++;
+	}
+
+	return s;
+}
+
+/* 文字列の右側から [0-9]数字のみが連続する文字列を抜き出した、文字列の先頭アドレスを返す
+ *
+ * ただし、最大で４文字まで。それ以上の長さの数字が連続した場合は、以降は切り捨てる
+ *
+ * 該当する数字が存在しない場合はNULLを返す
+ *
+ * 例：
+ * "/dev/tty123"    => "123"
+ * "/dev/pty/123"   => "123"
+ *
+ * "/dev/tty12345"  => "2345"
+ * "/dev/pty/12345" => "2345"
+ */
+static char* suffix_num4(char *s)
+{
+	char *ret = NULL;
+
+	int count = 0;
+	int len = strlen(s);
+	while (len--) {
+		if (isdigit(s[len])) {
+			ret = &s[len];
+			count++;
+		} else {
+			break;
+		}
+
+		if (count >= 4) {
+			break;
+		}
+	}
+
+	return ret;
+}
+
 static void tterm_set_utmp(struct TTerm *p)
 {
-#ifdef DEBUG_TERM
+//#ifdef DEBUG_TERM
 	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
 			p->name, p->name);
-#endif
+//#endif
 	struct utmpx *t = calloc(1, sizeof(*t));
 	if (t == NULL)
 		die("error: tterm_set_utmp(), calloc()");
 
-	strncpy(t->ut_id, p->name, sizeof(t->ut_id));
+	char *tnum = suffix_num4(p->name);
+	strncpy(t->ut_id, tnum, sizeof(t->ut_id));
+
 	t->ut_type = DEAD_PROCESS;
+
 	setutxent();
 
 	if (getutxid(t) == NULL)
 		die("error: tterm_set_utmp(), getutxid()");
 
 	t->ut_type = USER_PROCESS;
+
 	t->ut_pid = getpid();
-	strncpy(t->ut_line, p->name, sizeof(t->ut_line));
+
+	char *tname = skip_dev(p->name);
+	strncpy(t->ut_line, tname, sizeof(t->ut_line));
+
 	struct passwd *pw = getpwuid(util_getuid(&vuid));
 	strncpy(t->ut_user, pw->pw_name, sizeof(t->ut_user));
 
 	struct timeval tv;
-	struct timezone tz;
-	if (gettimeofday(&tv, &tz))
+	if (gettimeofday(&tv, NULL))
 		die("error: tterm_set_utmp(), gettimeofday()");
 
 	t->ut_tv.tv_sec = tv.tv_sec;
@@ -291,16 +366,19 @@ static void tterm_set_utmp(struct TTerm *p)
 
 static void tterm_reset_utmp(struct TTerm* p)
 {
-#ifdef DEBUG_TERM
+//#ifdef DEBUG_TERM
 	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",
 			p->name, p->name);
-#endif
+//#endif
 	struct utmpx *t = calloc(1, sizeof(*t));
 	if (t == NULL)
 		die("error: tterm_reset_utmp(), calloc()");
 
-	strncpy(t->ut_id, p->name, sizeof(t->ut_id));
+	char *tnum = suffix_num4(p->name);
+	strncpy(t->ut_id, tnum, sizeof(t->ut_id));
+
 	t->ut_type = USER_PROCESS;
+
 	setutxent();
 
 	struct utmpx *tp = getutxid(t);
@@ -308,12 +386,13 @@ static void tterm_reset_utmp(struct TTerm* p)
 		die("error: tterm_reset_utmp(), getutxid()");
 
 	tp->ut_type = DEAD_PROCESS;
+
 	memset(tp->ut_user, 0, sizeof(t->ut_user));
+
 	tp->ut_type = DEAD_PROCESS;
 
 	struct timeval tv;
-	struct timezone tz;
-	if (gettimeofday(&tv, &tz))
+	if (gettimeofday(&tv, NULL))
 		die("error: tterm_set_utmp(), gettimeofday()");
 
 	tp->ut_tv.tv_sec = tv.tv_sec;
