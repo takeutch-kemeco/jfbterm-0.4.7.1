@@ -13,7 +13,7 @@ jfbterm_SOURCES = 				\
 		message.c message.h 		\
 		pcf.c pcf.h 			\
 		pen.h JFBTerm/Pen.hs JFBTerm/PenFFI.hs \
-		term.c term.h 			\
+		term.c term.h JFBTerm/Term.hs JFBTerm/TermFFI.hs \
 		util.c util.h JFBTerm/Util.hs JFBTerm/UtilFFI.hs \
 		csv.c csv.h 			\
 		vterm.c vtermlow.c vterm.h	\
