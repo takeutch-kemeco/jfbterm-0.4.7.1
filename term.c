@@ -42,7 +42,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <pwd.h>
-#include <utmp.h>
+#include <utmpx.h>
 #include <grp.h>
 
 #include "term.h"
@@ -315,7 +315,7 @@ static void tterm_set_utmp(struct TTerm* p)
 	print_message_f("tterm_set_utmp(): tname=[%s], suffix=[%s]\n",
 			skip_dev(p->name), suffix_num4(p->name));
 #endif
-	struct utmp utmp;
+	struct utmpx utmp;
 	memset((char*)&utmp, 0, sizeof(utmp));
 
 	char* tnum = suffix_num4(p->name);
@@ -323,9 +323,9 @@ static void tterm_set_utmp(struct TTerm* p)
 
 	utmp.ut_type = DEAD_PROCESS;
 
-	setutent();
+	setutxent();
 
-	getutid(&utmp);
+	getutxid(&utmp);
 
 	utmp.ut_type = USER_PROCESS;
 
@@ -337,11 +337,17 @@ static void tterm_set_utmp(struct TTerm* p)
 	struct passwd* pw = getpwuid(util_getuid(&vuid));
 	strncpy(utmp.ut_user, pw->pw_name, sizeof(utmp.ut_user));
 
-	time((time_t*)&utmp.ut_time);
+	struct timeval tv;
+	struct timezone tz;
+	if (gettimeofday(&tv, &tz))
+		die("error: tterm_set_utmp(), gettimeofday()");
 
-	pututline(&utmp);
+	utmp.ut_tv.tv_sec = tv.tv_sec;
+	utmp.ut_tv.tv_usec = tv.tv_usec;
 
-	endutent();
+	pututxline(&utmp);
+
+	endutxent();
 }
 
 static void tterm_reset_utmp(struct TTerm* p)
@@ -350,7 +356,7 @@ static void tterm_reset_utmp(struct TTerm* p)
 	print_message_f("tterm_reset_utmp(): tname=[%s], suffix=[%s]\n",
 			skip_dev(p->name), suffix_num4(p->name));
 #endif
-	struct utmp utmp;
+	struct utmpx utmp;
 	memset((char*)&utmp, 0, sizeof(utmp));
 
 	char* tnum = suffix_num4(p->name);
@@ -358,18 +364,24 @@ static void tterm_reset_utmp(struct TTerm* p)
 
 	utmp.ut_type = USER_PROCESS;
 
-	setutent();
+	setutxent();
 
-	struct utmp* utp = getutid(&utmp);
+	struct utmpx *utp = getutxid(&utmp);
 
 	utp->ut_type = DEAD_PROCESS;
 
 	memset(utp->ut_user, 0, sizeof(utmp.ut_user));
 	utp->ut_type = DEAD_PROCESS;
 
-	time((time_t*)&utp->ut_time);
+	struct timeval tv;
+	struct timezone tz;
+	if (gettimeofday(&tv, &tz))
+		die("error: tterm_set_utmp(), gettimeofday()");
 
-	pututline(utp);
+	utp->ut_tv.tv_sec = tv.tv_sec;
+	utp->ut_tv.tv_usec = tv.tv_usec;
+
+	pututxline(utp);
 
 	endutent();
 }
