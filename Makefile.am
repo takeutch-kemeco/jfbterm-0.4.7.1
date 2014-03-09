@@ -16,7 +16,8 @@ jfbterm_SOURCES = 				\
 		term.c term.h JFBTerm/Term.hs JFBTerm/TermFFI.hs \
 		util.c util.h JFBTerm/Util.hs JFBTerm/UtilFFI.hs \
 		csv.c csv.h 			\
-		vterm.c vtermlow.c vterm.h	\
+		vterm.c vterm.h JFBTerm/VTerm.hs JFBTerm/VTermFFI.hs \
+		vtermlow.c			\
 		skipagent.c skipagent.h JFBTerm/SkipAgent.hs
 
 jfbterm_LDADD = -lutil -lpthread
