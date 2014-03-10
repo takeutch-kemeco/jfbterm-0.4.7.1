@@ -310,15 +310,6 @@ void tvterm_pop_pen_and_set_currnt_pen(struct TVterm* p, bool b)
 	free(t);
 }
 
-static inline int IS_GL_AREA(struct TVterm* p, u_char ch)
-{
-	if(p->tgl.type & TFONT_FT_96CHAR) {
-		return (0x1F < ch && ch < 0x80);
-	} else {
-		return (0x20 < ch && ch < 0x7F);
-	}
-}
-
 static inline int IS_GR_AREA(struct TVterm* p, u_char ch)
 {
 	if(p->tgr.type & TFONT_FT_96CHAR) {
@@ -386,27 +377,6 @@ static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
 		p->knj1 = 0;
 		p->tgr = p->gr;
 		p->tgl = p->gl;
-	} else if(IS_GL_AREA(p, ch)) {
-		if(p->tgl.type & TFONT_FT_DOUBLE) {
-			SET_WARP_FLAG_IF_NEEDED(p);
-			p->knj1 = ch;
-			p->knj1h = p->tgl.half;
-			p->knj1idx = p->tgl.idx;
-		} else {
-			INSERT_N_CHARS_IF_NEEDED(p, 1);
-
-			u_char tmp;
-			if(p->tgl.half == FH_RIGHT) {
-				tmp = ch | 0x80;
-			} else {
-				tmp = ch;
-			}
-			tvterm_sput(p, p->tgl.idx, tmp);
-
-			p->pen.x++;
-			p->tgr = p->gr;
-			p->tgl = p->gl;
-		}
 	} else if(IS_GR_AREA(p, ch)) {
 		if(p->tgr.type & TFONT_FT_DOUBLE) {
 			SET_WARP_FLAG_IF_NEEDED(p);
@@ -588,13 +558,7 @@ int tvterm_put_utf8_char(struct TVterm *p, u_char ch)
 	}
 
 	int rev;
-	if(p->altCs &&
-	   (p->ucs2ch < 127) &&
-	   (IS_GL_AREA(p, (u_char)(p->ucs2ch & 0x0ff)))) {
-		rev = tvterm_put_normal_char(p, (p->ucs2ch & 0x0ff));
-	} else {
-		rev = tvterm_put_uchar(p, p->ucs2ch);
-	}
+	rev = tvterm_put_uchar(p, p->ucs2ch);
 
 	if(rev < 0) {
 		p->ucs2ch >>= 6;
