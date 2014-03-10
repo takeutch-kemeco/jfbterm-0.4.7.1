@@ -71,14 +71,6 @@ if test x$enable_utf8 = xyes; then
 else
 	AC_MSG_RESULT(no)
 fi
-AC_ARG_ENABLE(other-coding-system, [ --enable-other-coding-system support other-coding-system [default yes]],,enable_other=$enable_utf8)
-AC_MSG_CHECKING(whether to enable other coding system)
-if test x$enable_utf8 = xyes -a x$enable_other = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_OTHER_CODING_SYSTEM)
-else
-	AC_MSG_RESULT(no)
-fi
 
 AC_ARG_ENABLE(1bpp, [ --enable-1bpp            support 1bpp [default no]],,enable_1bpp=no)
 AC_MSG_CHECKING(whether to enable 1bpp)

@@ -56,9 +56,6 @@
 static void tvterm_set_default_encoding(struct TVterm* p, const char* en);
 static void tvterm_esc_start(struct TVterm* p, u_char ch);
 static void tvterm_esc_bracket(struct TVterm*, u_char);
-#ifdef JFB_OTHER_CODING_SYSTEM
-static void tvterm_esc_rbracket(struct TVterm*, u_char);
-#endif
 static void tvterm_esc_traditional_multibyte_fix(struct TVterm* p, u_char ch);
 static int tvterm_find_font_index(int fsig);
 static void tvterm_esc_designate_font(struct TVterm* p, u_char ch);
@@ -877,10 +874,6 @@ static void tvterm_esc_start(struct TVterm* p, u_char ch)
 		p->esc = tvterm_esc_bracket;
 		break;
 
-	case Fe(ISO_OSC):	/* 5/13 ] */
-		p->esc = tvterm_esc_rbracket;
-		break;
-
 	case ISO__MBS:		/* 2/4 $ */
 		p->esc = tvterm_esc_traditional_multibyte_fix;
 		p->escSignature = TFONT_FT_DOUBLE;
@@ -1318,56 +1311,6 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 		if(p->esc == NULL) {
 			question = narg = varg[0] = varg[1] = 0;
 		}
-	}
-}
-
-/*
- * ESC  ]    p... F
- * 1/11 5/13 p... F
- *
- * p: 2/0 - 7/E
- * F: 0/1 - 1/15
- *
- * 0/5	designate private coding system
- *
- */
-#define MAX_ARGLEN 48
-static void tvterm_esc_rbracket(struct TVterm* p, u_char ch)
-{
-	static u_char arg[MAX_ARGLEN + 1];
-	static u_char enbuf[MAX_ARGLEN + 32];
-	static int argidx;
-
-	if(ch >= 0x20 && ch <= 0x7e) {
-		if(argidx < MAX_ARGLEN-1) {
-			arg[argidx++] = ch;
-		}
-
-		arg[argidx] = '\0';
-	} else {
-		const char* en;
-		struct TCodingSystem otherCS;
-
-		p->esc = NULL;
-		switch(ch) {
-		case 0x05:	/* 0/5 designate private coding system */
-			en = tcaps_find_entry(p->caps, "encoding.", arg);
-			if(en == NULL) {
-				sprintf(enbuf,
-					"other,%s,iconv,UTF-8",
-					arg);
-
-				en = enbuf;
-			}
-
-			if(tvterm_parse_otherCS(en, &otherCS)) {
-				tvterm_switch_to_otherCS(p, &otherCS);
-			}
-			break;
-		}
-
-		argidx = 0;
-		memset(arg, 0, sizeof(arg));
 	}
 }
 
