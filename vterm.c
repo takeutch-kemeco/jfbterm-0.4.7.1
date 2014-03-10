@@ -98,8 +98,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->utf8remain = 0;
 	p->ucs2ch = 0;
 
-	p->otherCS = NULL;
-
 	p->caps = caps;
 	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
@@ -142,8 +140,6 @@ FINALIZE:
 /* TVterm を UTF-8 モードへ変更する */
 static void tvterm_switch_to_UTF8(struct TVterm* p)
 {
-	p->otherCS = NULL;
-
 	if(p->utf8DefaultIdx == 0) {
 		const char *en = tcaps_find_entry(p->caps,
 						  "encoding.",

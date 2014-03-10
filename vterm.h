@@ -50,24 +50,6 @@ struct TFontSpec {
 	FONTSET_HALF half;	/* 文字集合のG0,G1 のどちらを使っているか */
 };
 
-#define MAX_MULTIBYTE_CHARLEN 6
-struct TCodingSystem {
-	u_int fch;
-	/* iconv state */
-	char *fromcode;
-	char *tocode;
-	iconv_t cd;
-	char inbuf[MAX_MULTIBYTE_CHARLEN];
-	int inbuflen;
-	char outbuf[MAX_MULTIBYTE_CHARLEN];
-
-	/* saved state */
-	u_int gSavedL;
-	u_int gSavedR;
-	u_int gSavedIdx[4];
-	u_int utf8SavedIdx;
-};
-
 struct TCursor {
 	u_int x;
 	u_int y;
@@ -121,8 +103,6 @@ struct TVterm {
 	u_int utf8Idx;
 	u_int utf8remain;
 	u_int ucs2ch;
-
-	struct TCodingSystem* otherCS;
 
 	bool altCs;
 	struct TCaps* caps;
