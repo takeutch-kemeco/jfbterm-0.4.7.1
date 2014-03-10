@@ -67,7 +67,6 @@ static void tvterm_set_window_size(struct TVterm* p);
 static void tvterm_switch_to_UTF8(struct TVterm *p);
 static int tvterm_is_UTF8(struct TVterm *p);
 
-static void tvterm_finish_otherCS(struct TVterm *p);
 static void tvterm_switch_to_otherCS(struct TVterm *p,
 				     struct TCodingSystem *other);
 static int tvterm_is_otherCS(struct TVterm *p);
@@ -148,7 +147,7 @@ FINALIZE:
 /* TVterm を UTF-8 モードへ変更する */
 static void tvterm_switch_to_UTF8(struct TVterm* p)
 {
-	tvterm_finish_otherCS(p);
+	p->otherCS = NULL;
 
 	if(p->utf8DefaultIdx == 0) {
 		const char *en = tcaps_find_entry(p->caps,
@@ -171,11 +170,6 @@ static int tvterm_is_UTF8(struct TVterm* p)
 	} else {
 		return 0;
 	}
-}
-
-static void tvterm_finish_otherCS(struct TVterm* p)
-{
-	p->otherCS = NULL;
 }
 
 static void __tvterm_switch_to_otherCS(struct TVterm* p,
@@ -207,7 +201,7 @@ static void __tvterm_switch_to_otherCS(struct TVterm* p,
 static void tvterm_switch_to_otherCS(struct TVterm* p,
 				     struct TCodingSystem* ocs)
 {
-	tvterm_finish_otherCS(p);
+	p->otherCS = NULL;
 	/* save current designate/invoke */
 	ocs->gSavedL = p->gl.invokedGn;
 	ocs->gSavedR = p->gr.invokedGn;
