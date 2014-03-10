@@ -117,45 +117,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	tvterm_set_default_encoding(p, en);
 }
 
-/* エンコーディング設定の文字列からトークン切り分けする */
-int tvterm_parse_encoding(const char* en, int idx[6])
-{
-	static const char* table[] = {"G0", "G1", "G2", "G3", NULL};
-
-	struct TCsv farg;
-	tcsv_init(&farg, en);
-	if(farg.cap != 6) {
-		tcsv_final(&farg);
-		return 0;
-	}
-
-	int i;
-	for(i = 0; i < 6; i++) {
-		const char* g = tcsv_get_token(&farg);
-
-		int ig;
-		switch(i) {
-		case 0 ... 1:
-			ig = util_search_string(g, table);
-			break;
-
-		default:
-			ig = tfont_ary_search_idx(g);
-			break;
-		}
-
-		if(ig == -1) {
-			ig = i;
-		}
-
-		idx[i] = ig;
-	}
-
-	tcsv_final(&farg);
-
-	return 1;
-}
-
 /* TVterm の状態を ISO2022 モードにする */
 static void tvterm_switch_to_ISO2022(struct TVterm *p)
 {
@@ -329,51 +290,10 @@ static void __tvterm_switch_to_otherCS(struct TVterm* p,
 			return;
 		}
 
-		if(tvterm_parse_encoding(en, idx) == 0) {
-			free(ocs->tocode);
-			ocs->tocode = strdup("UTF-8");
-			__tvterm_switch_to_otherCS(p, ocs, tocode);
-			return;
-		}
-
-		int i;
-		for(i = 0; i < 4; i++) {
-			p->gIdx[i] = idx[2+i];
-		}
-		tvterm_invoke_gx(p, &(p->gl), idx[0]);
-		tvterm_invoke_gx(p, &(p->gr), idx[1]);
-		p->tgl = p->gl;
-		p->tgr = p->gr;
-		p->knj1 = 0;
+		free(ocs->tocode);
+		ocs->tocode = strdup("UTF-8");
+		__tvterm_switch_to_otherCS(p, ocs, tocode);
 	}
-
-	ocs->cd = iconv_open(tocode, ocs->fromcode);
-	if(ocs->cd == (iconv_t)(-1)) {
-		if(strcmp(ocs->tocode, "UTF-8") == 0) {
-			free(ocs->tocode);
-			ocs->tocode = strdup("UTF-8");
-			__tvterm_switch_to_otherCS(p, ocs, tocode);
-			return;
-		}
-
-		goto FINALIZE;
-	}
-
-	/* ok */
-	static struct TCodingSystem otherCS;
-	memcpy(&otherCS, ocs, sizeof(otherCS));
-	memset(otherCS.inbuf, 0, sizeof(otherCS.inbuf));
-	otherCS.inbuflen = 0;
-	memset(otherCS.outbuf, 0, sizeof(otherCS.outbuf));
-	p->otherCS = &otherCS;
-	return;
-
-FINALIZE:
-	free(ocs->fromcode);
-	free(ocs->tocode);
-	ocs->fromcode = NULL;
-	ocs->tocode = NULL;
-	return;
 }
 
 static void tvterm_switch_to_otherCS(struct TVterm* p,
@@ -447,20 +367,6 @@ static inline void tvterm_set_default_encoding_utf8(struct TVterm* p,
 static inline void tvterm_set_default_encoding_iso2022(struct TVterm* p,
 						       const char* en)
 {
-	int idx[6];
-	if(tvterm_parse_encoding(en, idx)) {
-		/* GL */
-		p->gDefaultL = idx[0];
-
-		/* GR */
-		p->gDefaultR = idx[1];
-
-		/* G0 .. G3 */
-		int i;
-		for(i = 0; i < 4; i++) {
-			p->gDefaultIdx[i] = idx[2+i];
-		}
-	}
 }
 
 void tvterm_set_default_encoding(struct TVterm* p, const char* en)
@@ -1698,47 +1604,6 @@ void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 	if(strcmp(g, "UTF-8") == 0) {
 		fprintf(tf, "%s", "\033%G");
 		goto FINALIZE;
-	}
-
-	int idx[6];
-
-	/* ISO-2022 */
-	fprintf(tf, "%s", "\033%@");
-	if(tvterm_parse_encoding(en, idx) == 0) {
-		print_warn("ENCODING : BAD FORMAT : %s\n", en);
-		goto FINALIZE;
-	}
-
-	/* GL */
-	static const char *invokeL[] = {"\017", "\016", "\033n", "\033o"};
-	fprintf(tf, "%s", invokeL[idx[0]]);
-
-	/* GR */
-	static const char *invokeR[] = {"", "\033~", "\033}", "\033|"};
-	fprintf(tf, "%s", invokeR[idx[1]]);
-
-	/* G0 .. G3 */
-	int i;
-	for(i = 0; i < 4; i++) {
-		TFont* f = &gFont[idx[2+i]];
-		u_int n = f->fsignature;
-		char c = n & 255;
-		u_int f1 = n & TFONT_FT_DOUBLE;
-		u_int f2 = n & TFONT_FT_96CHAR;
-
-		static const char csr4[] = {
-			ISO_GZD4, ISO_G1D4, ISO_G2D4, ISO_G3D4
-		};
-
-		static const char csr6[] = {
-			MULE__GZD6, ISO_G1D6, ISO_G2D6, ISO_G3D6
-		};
-
-		fprintf(tf,
-			"\033%s%c%c",
-			(f1 ? "$" : ""),
-			(f2 ? csr6[i] : csr4[i]),
-			c);
 	}
 
 FINALIZE:
