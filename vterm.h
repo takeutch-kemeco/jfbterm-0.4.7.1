@@ -68,6 +68,13 @@ struct TVterm {
 	struct TPen* savedPenSL;	/* ステータスライン用 */
 	int scroll;			/* スクロール行数 */
 
+	/* --- */
+	enum {
+		SL_NONE,
+		SL_ENTER,
+		SL_LEAVE
+	} sl;
+
 	u_int utf8DefaultIdx;
 	u_int utf8Idx;
 	u_int utf8remain;

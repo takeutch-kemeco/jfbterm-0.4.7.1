@@ -700,33 +700,48 @@ static void tvterm_esc_status_line(struct TVterm* p, u_char mode)
 {
 	switch(mode) {
 	case 'T':	/* To */
+		if(p->sl == SL_ENTER) {
+			break;
+		}
+
 		if(!p->savedPenSL) {
 			tvterm_push_current_pen(p, false);
 		}
 		/* fail into next case */
 
 	case 'S':	/* Show */
-		p->ymax = p->ycap - 1;
-		tvterm_set_window_size(p);
+		if(p->sl == SL_NONE) {
+			p->ymax = p->ycap - 1;
+			tvterm_set_window_size(p);
+		}
 
 		if(mode == 'T') {
+			p->sl = SL_ENTER;
 			tvterm_set_region(p, p->ycap-1, p->ycap);
 		}
 		break;
 
 	case 'F':	/* From */
-		tvterm_set_region(p, 0, p->ycap -1);
+		if(p->sl == SL_ENTER) {
+			p->sl = SL_LEAVE;
+			tvterm_set_region(p, 0, p->ycap -1);
 
-		if(p->savedPenSL) {
-			tvterm_pop_pen_and_set_currnt_pen(p, false);
+			if(p->savedPenSL) {
+				tvterm_pop_pen_and_set_currnt_pen(p, false);
+			}
+			p->savedPenSL = NULL;
 		}
-		p->savedPenSL = NULL;
 		break;
 
 	case 'H':	/* Hide */
 	case 'E':	/* Erase */
+		if(p->sl == SL_NONE) {
+			break;
+		}
+
 		tvterm_set_region(p, 0, p->ycap);
 		tvterm_set_window_size(p);
+		p->sl = SL_NONE;
 		break;
 
 	default:
@@ -841,8 +856,10 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 			    n = p->ycap;
 			}
 
-			if(n == p->ycap) {
-				 n--;
+			if(p->sl != SL_NONE) {
+				if(n == p->ycap) {
+					 n--;
+				}
 			}
 
 			tvterm_set_region(p, varg[0] ? (varg[0] - 1): 0, n);
