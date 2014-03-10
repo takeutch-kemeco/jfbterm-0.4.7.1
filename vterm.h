@@ -80,7 +80,6 @@ struct TVterm {
 	u_int utf8remain;
 	u_int ucs2ch;
 
-	bool altCs;
 	struct TCaps* caps;
 
 	bool wrap;

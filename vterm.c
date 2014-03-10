@@ -88,7 +88,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->ucs2ch = 0;
 
 	p->caps = caps;
-	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
 }
 
@@ -181,8 +180,6 @@ void tvterm_set_default_invoke_and_designate(struct TVterm* p)
 	p->utf8Idx = p->utf8DefaultIdx;
 	p->utf8remain = 0;
 	p->ucs2ch = 0;
-
-	p->altCs = false;
 }
 
 void tvterm_start(struct TVterm* p)
@@ -199,7 +196,6 @@ void tvterm_start(struct TVterm* p)
 	p->ins = false;
 	p->wrap = false;
 	p->active = true;
-	p->altCs = false;
 
 	/* ISO-2022 */
 	tvterm_set_default_invoke_and_designate(p);
@@ -602,17 +598,9 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 	case 27: tpen_no_reverse(&(p->pen));
 		break;
 
-	case 10:	/* rmacs, rmpch */
-		p->altCs = false;
-		break;
-
 	case 11:	/* smacs, smpch */
 		if(acsIdx == 0) {
 			acsIdx = tvterm_find_font_index(0x30|TFONT_FT_94CHAR);
-		}
-
-		if(acsIdx > 0) {
-			p->altCs = true;
 		}
 		break;
 
