@@ -77,7 +77,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->savedPen = NULL;
 	p->savedPenSL = NULL;
 	p->scroll = 0;
-	p->soft = false;
 	p->wrap = false;
 	p->esc = NULL;
 
@@ -199,7 +198,6 @@ void tvterm_start(struct TVterm* p)
 	p->pen.bcol = 0;
 	p->pen.attr = 0;
 	p->esc = NULL;
-	p->soft = false;
 	p->ins = false;
 	p->wrap = false;
 	p->active = true;
@@ -686,12 +684,6 @@ static void tvterm_set_region(struct TVterm* p, int ymin, int ymax)
 	}
 
 	p->wrap = false;
-
-	if(p->ymin || p->ymax != p->ycap) {
-		p->soft = true;
-	} else {
-		p->soft = false;
-	}
 }
 
 void tvterm_set_window_size(struct TVterm* p)

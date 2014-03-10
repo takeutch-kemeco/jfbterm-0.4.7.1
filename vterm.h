@@ -88,7 +88,6 @@ struct TVterm {
 	bool altCs;
 	struct TCaps* caps;
 
-	bool soft;
 	bool wrap;
 	bool ins;			/* 挿入モード */
 	bool active;			/* このターミナルがアクティブ */
