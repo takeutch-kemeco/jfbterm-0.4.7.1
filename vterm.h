@@ -34,7 +34,6 @@
 #include "getcap.h"
 #include "config.h"
 #include "pen.h"
-#include "font.h"
 
 #include <iconv.h>
 
