@@ -308,58 +308,6 @@ static inline void SET_WARP_FLAG_IF_NEEDED(struct TVterm* p)
 	}
 }
 
-
-static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
-{
-	if(p->pen.x == p->xmax) {
-		p->wrap = true;
-		p->pen.x--;
-	}
-
-	if(p->wrap) {
-		p->pen.x -= p->xmax -1;
-
-		if(p->pen.y == p->ymax - 1) {
-			p->scroll++;
-		} else {
-			p->pen.y++;
-		}
-
-		p->wrap = false;
-
-		return -1;
-	}
-
-	if(p->knj1) {
-		INSERT_N_CHARS_IF_NEEDED(p, 2);
-
-		u_char ch1;
-		if(p->knj1h == FH_RIGHT) {
-			ch1 = p->knj1 | 0x80;
-		} else {
-			ch1 = p->knj1 & 0x7F;
-		}
-
-		u_char ch2;
-		if(p->knj1h == FH_RIGHT) {
-			ch2 = ch | 0x80;
-		} else {
-			ch2 = ch & 0x7F;
-		}
-
-		tvterm_wput(p, p->knj1idx, ch1, ch2);
-		p->pen.x += 2;
-		p->knj1 = 0;
-	} else if(ch == 0x20) {
-		INSERT_N_CHARS_IF_NEEDED(p, 1);
-		tvterm_sput(p, 0, 0x20);
-
-		p->pen.x++;
-	}
-
-	return 0;
-}
-
 static int tvterm_put_uchar(struct TVterm* p, u_int ch)
 {
 	TFont *pf = &gFont[p->utf8Idx];
@@ -546,14 +494,6 @@ void tvterm_emulate(struct TVterm* p, const char* buff, int nchars)
 			}
 		} else if(ch == ISO_DEL) {
 			/* nothing to do. */
-		} else {
-			int rev = tvterm_put_normal_char(p, ch);
-			if(rev == 0) {
-				continue;
-			} else if(rev < 0) {
-				nchars -= rev;
-				buff += rev;
-			}
 		}
 
 		if(p->scroll > 0) {
