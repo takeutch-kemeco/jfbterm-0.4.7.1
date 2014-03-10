@@ -41,8 +41,6 @@
 #ifndef INCLUDE_VTERM_H
 #define INCLUDE_VTERM_H
 
-#define	LEN_REPORT	9
-
 struct TCursor {
 	u_int x;
 	u_int y;
@@ -92,8 +90,6 @@ struct TVterm {
 	/* カーソル */
 	struct TCursor cursor;
 
-	/* ESC Report Buffer */
-	char report[LEN_REPORT];
 	/* low level half */
 	u_int textHead;
 	u_int xcap4; /* 4 bytes 境界に整合した桁数(xcap + 0 ... 3) */

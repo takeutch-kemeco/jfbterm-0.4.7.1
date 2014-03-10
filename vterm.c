@@ -51,8 +51,6 @@
 #include "sequence.h"
 #include "message.h"
 
-#define	LEN_REPORT 9
-
 static void tvterm_set_default_encoding(struct TVterm* p, const char* en);
 static void tvterm_esc_start(struct TVterm* p, u_char ch);
 static void tvterm_esc_bracket(struct TVterm*, u_char);
@@ -619,35 +617,6 @@ static void tvterm_set_mode(struct TVterm* p, u_char mode, bool sw)
 	}
 }
 
-static void tvterm_esc_report(struct TVterm* p, u_char mode, u_short arg)
-{
-	p->report[0] = '\0';
-
-	switch(mode) {
-	case 'n':
-		if(arg == 6) {
-			int x = p->pen.x;
-			x = limit_inner(x, x, p->xmax - 1);
-
-			int y = p->pen.y;
-			y = limit_inner(y, y, p->ymax - 1);
-
-			sprintf(p->report, "\x1B[%d;%dR", y, x);
-		} else if(arg == 5) {
-			strcpy(p->report, "\x1B[0n\0");
-		}
-		break;
-
-	case 'c':
-		if(arg == 0) {
-			strcpy(p->report, "\x1B[?6c\0");
-		}
-		break;
-	}
-
-	write(p->term->ptyfd, p->report, strlen(p->report));
-}
-
 static void tvterm_set_region(struct TVterm* p, int ymin, int ymax)
 {
 	/* FIX ME ! : 1999/10/30 */
@@ -875,9 +844,6 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 
 		case 'n':
 		case 'c':
-			if(question != true) {
-				tvterm_esc_report(p, ch, varg[0]);
-			}
 			break;
 
 		case 'R':
