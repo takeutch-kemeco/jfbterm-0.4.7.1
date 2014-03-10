@@ -43,13 +43,6 @@
 
 #define	LEN_REPORT	9
 
-struct TFontSpec {
-	u_int invokedGn;	/* 呼び出さされている Gn : n = 0..3 */
-	u_int idx;		/* 文字集合のgFont[]での位置 */
-	u_int type; 		/* 文字集合の区分 */
-	FONTSET_HALF half;	/* 文字集合のG0,G1 のどちらを使っているか */
-};
-
 struct TCursor {
 	u_int x;
 	u_int y;
@@ -83,10 +76,6 @@ struct TVterm {
 	/* ISO-2022 対応 */
 	u_int escSignature;
 	u_int escGn;
-	struct TFontSpec tgl;	/* 次の文字がGLのときに使う文字集合 */
-	struct TFontSpec tgr;	/* 次の文字がGRのときに使う文字集合 */
-	struct TFontSpec gl;	/* GL に呼び出されている文字集合 */
-	struct TFontSpec gr;	/* GR に呼び出されている文字集合 */
 	u_int gIdx[4];		/* Gn に指示されている文字集合のgFont[]での位置 */
 	/* --- */
 	u_int gDefaultL;

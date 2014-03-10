@@ -191,8 +191,6 @@ void tvterm_set_default_invoke_and_designate(struct TVterm* p)
 	p->gIdx[1] = p->gDefaultIdx[1];		/* G1 <== JIS X 0208 */
 	p->gIdx[2] = p->gDefaultIdx[2];		/* G2 <== ASCII */
 	p->gIdx[3] = p->gDefaultIdx[3];		/* G3 <== ASCII */
-	p->tgl = p->gl;				/* Next char's GL <== GL */
-	p->tgr = p->gr;				/* Next char's GR <== GR */
 	p->knj1 = 0;
 
 	p->utf8Idx = p->utf8DefaultIdx;
@@ -366,15 +364,11 @@ static int tvterm_put_normal_char(struct TVterm* p, u_char ch)
 		tvterm_wput(p, p->knj1idx, ch1, ch2);
 		p->pen.x += 2;
 		p->knj1 = 0;
-		p->tgr = p->gr;
-		p->tgl = p->gl;
 	} else if(ch == 0x20) {
 		INSERT_N_CHARS_IF_NEEDED(p, 1);
 		tvterm_sput(p, 0, 0x20);
 
 		p->pen.x++;
-		p->tgr = p->gr;
-		p->tgl = p->gl;
 	}
 
 	return 0;
@@ -714,8 +708,6 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 
 	case 10:	/* rmacs, rmpch */
 		p->gIdx[0] = 0;
-		p->tgl = p->gl;
-		p->tgr = p->gr;
 		p->altCs = false;
 		break;
 
@@ -726,8 +718,6 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 
 		if(acsIdx > 0) {
 			p->gIdx[0] = acsIdx;
-			p->tgl = p->gl;
-			p->tgr = p->gr;
 			p->altCs = true;
 		}
 		break;
