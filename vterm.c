@@ -59,8 +59,6 @@ static void tvterm_esc_bracket(struct TVterm*, u_char);
 static void tvterm_esc_traditional_multibyte_fix(struct TVterm* p, u_char ch);
 static int tvterm_find_font_index(int fsig);
 static void tvterm_esc_designate_font(struct TVterm* p, u_char ch);
-static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n);
-static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs);
 static void tvterm_set_window_size(struct TVterm* p);
 
 static void tvterm_switch_to_UTF8(struct TVterm *p);
@@ -193,8 +191,6 @@ void tvterm_set_default_invoke_and_designate(struct TVterm* p)
 	p->gIdx[1] = p->gDefaultIdx[1];		/* G1 <== JIS X 0208 */
 	p->gIdx[2] = p->gDefaultIdx[2];		/* G2 <== ASCII */
 	p->gIdx[3] = p->gDefaultIdx[3];		/* G3 <== ASCII */
-	tvterm_invoke_gx(p, &(p->gl), p->gDefaultL);/* GL <== G0 */
-	tvterm_invoke_gx(p, &(p->gr), p->gDefaultR);/* GR <== G1 */
 	p->tgl = p->gl;				/* Next char's GL <== GL */
 	p->tgr = p->gr;				/* Next char's GR <== GR */
 	p->knj1 = 0;
@@ -541,11 +537,9 @@ int tvterm_iso_C1_set(struct TVterm* p, u_char ch)
 {
 	switch(ch) {
 	case ISO_SS2:	/* single shift 2 */
-		tvterm_invoke_gx(p, &(p->tgr), 2); /* GR <== G2 */
 		return 1;
 
 	case ISO_SS3:	/* single shift 3 */
-		tvterm_invoke_gx(p, &(p->tgr), 3); /* GR <== G3 */
 		return 1;
 
 	default:
@@ -733,14 +727,6 @@ static void tvterm_esc_start(struct TVterm* p, u_char ch)
 		}
 		break;
 
-	case Fe(ISO_SS2):	/* 4/14 N *//* 7bit single shift 2 */
-		tvterm_invoke_gx(p, &(p->tgl), 2); /* GL <== G2 */
-		break;
-
-	case Fe(ISO_SS3):	/* 4/15 O *//* 7bit single shift 3 */
-		tvterm_invoke_gx(p, &(p->tgl), 3); /* GL <== G3 */
-		break;
-
 	case ISO_RIS:		/* 6/3 c */
 		p->pen.fcol = 7;
 		p->pen.bcol = 0;
@@ -794,8 +780,6 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 
 	case 10:	/* rmacs, rmpch */
 		p->gIdx[0] = 0;
-		tvterm_re_invoke_gx(p, &(p->gl));
-		tvterm_re_invoke_gx(p, &(p->gr));
 		p->tgl = p->gl;
 		p->tgr = p->gr;
 		p->altCs = false;
@@ -808,8 +792,6 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 
 		if(acsIdx > 0) {
 			p->gIdx[0] = acsIdx;
-			tvterm_re_invoke_gx(p, &(p->gl));
-			tvterm_re_invoke_gx(p, &(p->gr));
 			p->tgl = p->gl;
 			p->tgr = p->gr;
 			p->altCs = true;
@@ -1110,28 +1092,6 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 			question = narg = varg[0] = varg[1] = 0;
 		}
 	}
-}
-
-/* Note:
-* KON2 Support
-* ESC ISO_94_TO_G0 U  ==> GRAPHIC FONT SET
-* ESC ISO_94_TO_G1 U  ==> ISO 8859-1 ?
-* ESC ISO_94_TO_G1 0  ==> GRAPHIC FONT SET
-*/
-
-static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n)
-{
-	fs->invokedGn = n;
-	fs->idx = p->gIdx[fs->invokedGn];
-	fs->type = gFont[fs->idx].fsignature;
-	fs->half = gFont[fs->idx].fhalf;
-}
-
-static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs)
-{
-	fs->idx = p->gIdx[fs->invokedGn];
-	fs->type = gFont[fs->idx].fsignature;
-	fs->half = gFont[fs->idx].fhalf;
 }
 
 static int tvterm_find_font_index(int fsig)
