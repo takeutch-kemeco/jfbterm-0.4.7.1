@@ -61,7 +61,7 @@ static void tvterm_text_clean_band(struct TVterm* p, u_int top, u_int btm);
 static inline u_int tvterm_coord_to_index(struct TVterm* p,
 					  u_int x, u_int y)
 {
-	return (p->textHead + x + y * p->xcap4) % p->tsize;
+	return (x + y * p->xcap4) % p->tsize;
 }
 
 static inline int IsKanji(struct TVterm* p, u_int x, u_int y)

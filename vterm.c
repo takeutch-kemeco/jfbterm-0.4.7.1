@@ -78,8 +78,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->wrap = false;
 	p->esc = NULL;
 
-	p->textHead = 0;
-
 	p->utf8DefaultIdx = 0;
 	p->utf8Idx = 0;
 	p->utf8remain = 0;
@@ -242,7 +240,6 @@ void tvterm_final(struct TVterm* p)
 		free(p->savedPenSL);
 		p->savedPenSL = NULL;
 	}
-	p->textHead = 0;
 	UTIL_FREE(p->text);
 	UTIL_FREE(p->attr);
 	UTIL_FREE(p->flag);

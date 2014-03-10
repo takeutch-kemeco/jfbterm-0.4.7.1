@@ -90,7 +90,6 @@ struct TVterm {
 	struct TCursor cursor;
 
 	/* low level half */
-	u_int textHead;
 	u_int xcap4; /* 4 bytes 境界に整合した桁数(xcap + 0 ... 3) */
 	u_int tsize; /* == xcap4 * ycap */
 	/* */
