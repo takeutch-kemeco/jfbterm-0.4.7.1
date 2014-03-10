@@ -73,14 +73,6 @@ struct TVterm {
 	FONTSET_HALF knj1h;
 	u_int knj1idx;
 
-	/* ISO-2022 対応 */
-	u_int escSignature;
-	u_int escGn;
-	u_int gIdx[4];		/* Gn に指示されている文字集合のgFont[]での位置 */
-	/* --- */
-	u_int gDefaultL;
-	u_int gDefaultR;
-	u_int gDefaultIdx[4];
 	/* --- */
 	enum {
 		SL_NONE,

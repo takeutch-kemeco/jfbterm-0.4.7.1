@@ -83,14 +83,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 
 	p->textHead = 0;
 
-	/* iso 2022 's default */
-	p->gDefaultL = 0;
-	p->gDefaultR = 1;
-	p->gDefaultIdx[0] = 0;		/* G0 <== ASCII */
-	p->gDefaultIdx[1] = 1;		/* G1 <== JIS X 0208 */
-	p->gDefaultIdx[2] = 0;		/* G2 <== ASCII */
-	p->gDefaultIdx[3] = 0;		/* G3 <== ASCII */
-
 	p->utf8DefaultIdx = 0;
 	p->utf8Idx = 0;
 	p->utf8remain = 0;
@@ -187,10 +179,6 @@ void tvterm_set_default_encoding(struct TVterm* p, const char* en)
 
 void tvterm_set_default_invoke_and_designate(struct TVterm* p)
 {
-	p->gIdx[0] = p->gDefaultIdx[0];		/* G0 <== ASCII */
-	p->gIdx[1] = p->gDefaultIdx[1];		/* G1 <== JIS X 0208 */
-	p->gIdx[2] = p->gDefaultIdx[2];		/* G2 <== ASCII */
-	p->gIdx[3] = p->gDefaultIdx[3];		/* G3 <== ASCII */
 	p->knj1 = 0;
 
 	p->utf8Idx = p->utf8DefaultIdx;
@@ -218,8 +206,6 @@ void tvterm_start(struct TVterm* p)
 	p->altCs = false;
 
 	/* ISO-2022 */
-	p->escSignature = 0;
-	p->escGn = 0;
 	tvterm_set_default_invoke_and_designate(p);
 
 	p->cursor.x = 0;
@@ -456,8 +442,6 @@ int tvterm_iso_C0_set(struct TVterm* p, u_char ch)
 
 	case UNIVERSAL_ESC:
 		p->esc = tvterm_esc_start;
-		p->escSignature = 0;
-		p->escGn = 0;
 		return 1;
 
 	default:
@@ -582,8 +566,6 @@ void tvterm_emulate(struct TVterm* p, const char* buff, int nchars)
 }
 
 #define ESC_ISO_GnDx(n, x) {				\
-		p->escSignature |= (x);			\
-		p->escGn = (n);				\
 		p->esc = tvterm_esc_designate_font;	\
 }
 
@@ -600,7 +582,6 @@ static void tvterm_esc_start(struct TVterm* p, u_char ch)
 
 	case ISO__MBS:		/* 2/4 $ */
 		p->esc = tvterm_esc_traditional_multibyte_fix;
-		p->escSignature = TFONT_FT_DOUBLE;
 		break;
 
 	case ISO_GZD4:		/* 2/8 ( */
@@ -707,7 +688,6 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 		break;
 
 	case 10:	/* rmacs, rmpch */
-		p->gIdx[0] = 0;
 		p->altCs = false;
 		break;
 
@@ -717,7 +697,6 @@ void tvterm_esc_set_attr(struct TVterm* p, int col)
 		}
 
 		if(acsIdx > 0) {
-			p->gIdx[0] = acsIdx;
 			p->altCs = true;
 		}
 		break;
