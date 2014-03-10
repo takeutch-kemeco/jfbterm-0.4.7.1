@@ -67,8 +67,6 @@ static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n);
 static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs);
 static void tvterm_set_window_size(struct TVterm* p);
 
-static int tvterm_is_ISO2022(struct TVterm *p);
-
 static void tvterm_switch_to_UTF8(struct TVterm *p);
 static int tvterm_is_UTF8(struct TVterm *p);
 
@@ -114,20 +112,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->caps = caps;
 	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
-}
-
-/* TVterm が ISO2022 モードかどうかの確認 */
-static int tvterm_is_ISO2022(struct TVterm *p)
-{
-	if(tvterm_is_otherCS(p)) {
-		return 0;
-	}
-
-	if(tvterm_is_UTF8(p)) {
-		return 0;
-	}
-
-	return 1;
 }
 
 static int tvterm_UTF8index(const char* en)
@@ -711,24 +695,6 @@ int tvterm_iso_C0_set(struct TVterm* p, u_char ch)
 		p->escGn = 0;
 		return 1;
 
-	case ISO_LS1:
-		if(!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gl), 1); /* GL <== G1 */
-		p->tgl = p->gl;
-		return 1;
-
-	case ISO_LS0:
-		if (!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gl), 0); /* GL <== G0 */
-		p->tgl = p->gl;
-		return 1;
-
 	default:
 		break;
 	}
@@ -1046,51 +1012,6 @@ static void tvterm_esc_start(struct TVterm* p, u_char ch)
 	case DEC_RC:		/* 3/8 8 */
 		tvterm_pop_pen_and_set_currnt_pen(p, true);
 		p->wrap = false;
-		break;
-
-	case ISO_LS2:		/* 6/14 n */
-		if (!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gl), 2); /* GL <= G2 */
-		p->tgl = p->gl;
-		break;
-
-	case ISO_LS3:		/* 6/15 o */
-		if(!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gl), 3); /* GL <= G3 */
-		p->tgl = p->gl;
-		break;
-
-	case ISO_LS3R:		/* 7/12 | */
-		if (!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gr), 3); /* GR <= G3 */
-		p->tgr = p->gr;
-		break;
-
-	case ISO_LS2R:		/* 7/13 } */
-		if (!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gr), 2); /* GR <= G2 */
-		p->tgr = p->gr;
-		break;
-
-	case ISO_LS1R:		/* 7/14 ~ */
-		if (!tvterm_is_ISO2022(p)) {
-			break;
-		}
-
-		tvterm_invoke_gx(p, &(p->gr), 1); /* GR <= G1 */
-		p->tgr = p->gr;
 		break;
 	}
 }
@@ -1527,20 +1448,6 @@ static int tvterm_find_font_index(int fsig)
 
 static void tvterm_esc_designate_font(struct TVterm* p, u_char ch)
 {
-	if(!tvterm_is_ISO2022(p)) {
-		p->esc = NULL;
-		return;
-	}
-
-	const int i = tvterm_find_font_index(ch | p->escSignature);
-	if(i >= 0) {
-		p->gIdx[p->escGn] = i;
-		tvterm_re_invoke_gx(p, &(p->gl));
-		tvterm_re_invoke_gx(p, &(p->gr));
-		p->tgl = p->gl;
-		p->tgr = p->gr;
-	}
-
 	p->esc = NULL;
 }
 
