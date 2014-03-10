@@ -399,22 +399,6 @@ int tvterm_iso_C0_set(struct TVterm* p, u_char ch)
 	return 0;
 }
 
-int tvterm_iso_C1_set(struct TVterm* p, u_char ch)
-{
-	switch(ch) {
-	case ISO_SS2:	/* single shift 2 */
-		return 1;
-
-	case ISO_SS3:	/* single shift 3 */
-		return 1;
-
-	default:
-		break;
-	}
-
-	return 0;
-}
-
 #define UTF8_CHECK_START(p) {		\
 	if((p)->utf8remain != 0) {	\
 		(p)->ucs2ch = 0;	\
@@ -486,11 +470,6 @@ void tvterm_emulate(struct TVterm* p, const char* buff, int nchars)
 			} else if(rev < 0) {
 				nchars -= rev;
 				buff += rev;
-			}
-		} else if((0x7F < ch) && (ch < 0xA0)) {
-			int cn = tvterm_iso_C1_set(p, ch);
-			if(cn) {
-				continue;
 			}
 		} else if(ch == ISO_DEL) {
 			/* nothing to do. */
