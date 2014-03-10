@@ -178,8 +178,6 @@ void tvterm_set_default_encoding(struct TVterm* p, const char* en)
 
 void tvterm_set_default_invoke_and_designate(struct TVterm* p)
 {
-	p->knj1 = 0;
-
 	p->utf8Idx = p->utf8DefaultIdx;
 	p->utf8remain = 0;
 	p->ucs2ch = 0;

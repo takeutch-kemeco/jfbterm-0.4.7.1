@@ -67,11 +67,6 @@ struct TVterm {
 	struct TPen* savedPen;
 	struct TPen* savedPenSL;	/* ステータスライン用 */
 	int scroll;			/* スクロール行数 */
-	/* -- */
-
-	u_char knj1;			/* first byte of 2 byte code */
-	FONTSET_HALF knj1h;
-	u_int knj1idx;
 
 	/* --- */
 	enum {
