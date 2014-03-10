@@ -206,40 +206,6 @@ int tvterm_parse_otherCS(const char* en, struct TCodingSystem* otherCS)
 
 static void tvterm_finish_otherCS(struct TVterm* p)
 {
-	/* XXX restore ISO-2022 state? */
-	if(p->otherCS) {
-		struct TCodingSystem* o = p->otherCS;
-
-		/* restore designate/invoke state */
-		int i;
-		for(i = 0; i < 4; i++) {
-			p->gIdx[i] = o->gSavedIdx[i];
-		}
-
-		tvterm_invoke_gx(p, &(p->gl), o->gSavedL);
-		tvterm_invoke_gx(p, &(p->gr), o->gSavedR);
-		p->tgl = p->gl;
-		p->tgr = p->gr;
-		p->knj1 = 0;
-		p->utf8Idx = o->utf8SavedIdx;
-		p->utf8remain = 0;
-		p->ucs2ch = 0;
-
-		if(o->cd != (iconv_t)(-1)) {
-			iconv_close(o->cd);
-		}
-		o->cd = (iconv_t)(-1);
-
-		if(o->fromcode) {
-			free(o->fromcode);
-		}
-		o->fromcode = NULL;
-
-		if(o->tocode) {
-			free(o->tocode);
-		}
-		o->tocode = NULL;
-	}
 	p->otherCS = NULL;
 }
 
