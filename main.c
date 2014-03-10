@@ -332,9 +332,6 @@ void ShowCaps(void)
 #ifdef JFB_TRON
 	fprintf(stdout, " TRON");
 #endif	/* JFB_TRON */
-#ifdef JFB_OTHER_CODING_SYSTEM
-	fprintf(stdout, " OTHER-CODING-SYSTEM");
-#endif
 #endif	/* JFB_MINI_JFBTERM */
 	fprintf(stdout, "\n");
 	fprintf(stdout, "[[ MISC ]]\n"

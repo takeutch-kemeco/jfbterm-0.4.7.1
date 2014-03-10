@@ -8,9 +8,6 @@
 /* Support UTF-8 */
 #undef JFB_UTF8
 
-/* Support other coding system */
-#undef JFB_OTHER_CODING_SYSTEM
-
 /* Support 1bpp */
 #undef JFB_1BPP
 
