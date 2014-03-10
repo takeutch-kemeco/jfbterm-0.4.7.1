@@ -67,8 +67,6 @@ static void tvterm_set_window_size(struct TVterm* p);
 static void tvterm_switch_to_UTF8(struct TVterm *p);
 static int tvterm_is_UTF8(struct TVterm *p);
 
-static int tvterm_is_otherCS(struct TVterm *p);
-
 /* TVterm の各種パラメーターの初期化 */
 void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
                  struct TCaps* caps, const char* en)
@@ -164,16 +162,6 @@ static void tvterm_switch_to_UTF8(struct TVterm* p)
 static int tvterm_is_UTF8(struct TVterm* p)
 {
 	if(p->utf8Idx != 0) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-
-static int
-tvterm_is_otherCS(struct TVterm* p)
-{
-	if(p->otherCS != NULL) {
 		return 1;
 	} else {
 		return 0;
@@ -525,9 +513,6 @@ int tvterm_iso_C0_set(struct TVterm* p, u_char ch)
 
 	case ISO_VT:
 	case ISO_FF:
-		if(!tvterm_is_otherCS(p)) {
-			tvterm_set_default_invoke_and_designate(p);
-		}
 		/* fail into next case */
 
 	case ISO_LF:
@@ -713,14 +698,6 @@ void tvterm_emulate(struct TVterm* p, const char* buff, int nchars)
 			int cn = tvterm_iso_C0_set(p, ch);
 			if(cn) {
 				continue;
-			}
-		} else if(tvterm_is_otherCS(p)) {
-			int rev = tvterm_put_otherCS_char(p, ch);
-			if(rev >= 0) {
-				continue;
-			} else if(rev < 0) {
-				nchars -= rev;
-				buff += rev;
 			}
 		} else if(tvterm_is_UTF8(p)) {
 			int rev = tvterm_put_utf8_char(p, ch);
