@@ -67,7 +67,6 @@ static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n);
 static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs);
 static void tvterm_set_window_size(struct TVterm* p);
 
-static void tvterm_switch_to_ISO2022(struct TVterm *p);
 static int tvterm_is_ISO2022(struct TVterm *p);
 
 static void tvterm_switch_to_UTF8(struct TVterm *p);
@@ -115,16 +114,6 @@ void tvterm_init(struct TVterm* p, struct TTerm* pt, u_int hw, u_int hh,
 	p->caps = caps;
 	p->altCs = false;
 	tvterm_set_default_encoding(p, en);
-}
-
-/* TVterm の状態を ISO2022 モードにする */
-static void tvterm_switch_to_ISO2022(struct TVterm *p)
-{
-	tvterm_finish_otherCS(p);
-
-	p->utf8Idx = 0;
-	p->utf8remain = 0;
-	p->ucs2ch = 0;
 }
 
 /* TVterm が ISO2022 モードかどうかの確認 */
@@ -1558,11 +1547,6 @@ static void tvterm_esc_designate_font(struct TVterm* p, u_char ch)
 static void tvterm_esc_designate_otherCS(struct TVterm* p, u_char ch)
 {
 	switch(ch) {
-	case 0x40:
-		/* reset ISO-2022 */
-		tvterm_switch_to_ISO2022(p);
-		break;
-
 	case 0x47: /* XXX: designate and invoke UTF-8 coding */
 		tvterm_switch_to_UTF8(p);
 		break;
