@@ -226,24 +226,6 @@ tvterm_is_otherCS(struct TVterm* p)
 	}
 }
 
-/* other,<coding-system>,iconv,<std-coding-system> */
-static inline void tvterm_set_default_encoding_other(struct TVterm* p,
-						     const char* en)
-{
-#ifdef JFB_OTHER_CODING_SYSTEM
-	struct TCsv farg;
-	tcsv_init(&farg, en);
-
-	const char* g = tcsv_get_token(&farg);
-	if(strcmp(g, "other") == 0) {
-		static struct TCodingSystem otherCS;
-		tvterm_switch_to_otherCS(p, &otherCS);
-	}
-
-	tcsv_final(&farg);
-#endif
-}
-
 /* UTF-8,<fontsetname> */
 static inline void tvterm_set_default_encoding_utf8(struct TVterm* p,
 						    const char* en)
@@ -265,7 +247,6 @@ static inline void tvterm_set_default_encoding_utf8(struct TVterm* p,
 
 void tvterm_set_default_encoding(struct TVterm* p, const char* en)
 {
-	tvterm_set_default_encoding_other(p, en);
 	tvterm_set_default_encoding_utf8(p, en);
 }
 
