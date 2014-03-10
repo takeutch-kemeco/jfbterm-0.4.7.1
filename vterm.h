@@ -92,8 +92,6 @@ struct TVterm {
 	/* カーソル */
 	struct TCursor cursor;
 
-        /*  */
-        struct winsize win;
 	/* ESC Report Buffer */
 	char report[LEN_REPORT];
 	/* low level half */
