@@ -59,7 +59,6 @@ static void tvterm_esc_bracket(struct TVterm*, u_char);
 static void tvterm_esc_traditional_multibyte_fix(struct TVterm* p, u_char ch);
 static int tvterm_find_font_index(int fsig);
 static void tvterm_esc_designate_font(struct TVterm* p, u_char ch);
-static void tvterm_esc_designate_otherCS(struct TVterm* p, u_char ch);
 static void tvterm_invoke_gx(struct TVterm* p, struct TFontSpec* fs, u_int n);
 static void tvterm_re_invoke_gx(struct TVterm* p, struct TFontSpec* fs);
 static void tvterm_set_window_size(struct TVterm* p);
@@ -686,10 +685,6 @@ static void tvterm_esc_start(struct TVterm* p, u_char ch)
 		p->escSignature = TFONT_FT_DOUBLE;
 		break;
 
-	case ISO_DOCS:		/* 2/5 % */
-		p->esc = tvterm_esc_designate_otherCS;
-		break;
-
 	case ISO_GZD4:		/* 2/8 ( */
 		ESC_ISO_GnDx(0, TFONT_FT_94CHAR);
 		break;
@@ -1157,17 +1152,6 @@ static int tvterm_find_font_index(int fsig)
 
 static void tvterm_esc_designate_font(struct TVterm* p, u_char ch)
 {
-	p->esc = NULL;
-}
-
-static void tvterm_esc_designate_otherCS(struct TVterm* p, u_char ch)
-{
-	switch(ch) {
-	case 0x47: /* XXX: designate and invoke UTF-8 coding */
-		tvterm_switch_to_UTF8(p);
-		break;
-	}
-
 	p->esc = NULL;
 }
 
