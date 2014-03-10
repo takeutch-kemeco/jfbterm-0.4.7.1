@@ -173,34 +173,6 @@ static int tvterm_is_UTF8(struct TVterm* p)
 	}
 }
 
-int tvterm_parse_otherCS(const char* en, struct TCodingSystem* otherCS)
-{
-	memset(otherCS, 0, sizeof(*otherCS));
-
-	struct TCsv farg;
-	tcsv_init(&farg, en);
-
-	if (farg.cap != 4) {
-		tcsv_final(&farg);
-		return 0;
-	}
-
-	const char *g;
-	g = tcsv_get_token(&farg); /* g == "other" */
-
-	g = tcsv_get_token(&farg);
-	otherCS->fromcode = strdup(g);
-
-	g = tcsv_get_token(&farg); /* g == "iconv" */
-
-	g = tcsv_get_token(&farg);
-	otherCS->tocode = strdup(g);
-
-	tcsv_final(&farg);
-
-	return 1;
-}
-
 static void tvterm_finish_otherCS(struct TVterm* p)
 {
 	p->otherCS = NULL;
@@ -271,9 +243,7 @@ static inline void tvterm_set_default_encoding_other(struct TVterm* p,
 	const char* g = tcsv_get_token(&farg);
 	if(strcmp(g, "other") == 0) {
 		static struct TCodingSystem otherCS;
-		if (tvterm_parse_otherCS(en, &otherCS)) {
-			tvterm_switch_to_otherCS(p, &otherCS);
-		}
+		tvterm_switch_to_otherCS(p, &otherCS);
 	}
 
 	tcsv_final(&farg);
@@ -1383,16 +1353,6 @@ void tvterm_show_sequence(FILE* tf, struct TCaps* cap, const char* en)
 	struct TCsv farg;
 	tcsv_init(&farg, en);
 	const char *g = tcsv_get_token(&farg);
-
-	if(strcmp(g, "other") == 0) {
-		struct TCodingSystem otherCS;
-		if(tvterm_parse_otherCS(en, &otherCS)) {
-			fprintf(tf, "%s%s\005", "\033]", otherCS.fromcode);
-			free(otherCS.fromcode);
-			free(otherCS.tocode);
-		}
-		goto FINALIZE;
-	}
 
 	if(strcmp(g, "UTF-8") == 0) {
 		fprintf(tf, "%s", "\033%G");
