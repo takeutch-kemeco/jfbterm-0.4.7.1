@@ -86,7 +86,6 @@ struct TVterm {
 	bool ins;			/* 挿入モード */
 	bool active;			/* このターミナルがアクティブ */
 	bool busy;			/* ビジー状態 */
-	bool sw;
 	bool release;
 	bool textClear;
 	void (*esc)(struct TVterm* p, u_char ch);

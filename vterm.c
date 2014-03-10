@@ -616,10 +616,6 @@ static void tvterm_set_mode(struct TVterm* p, u_char mode, bool sw)
 	case 4:
 		p->ins = sw;
 		break;
-
-	case 25:
-		p->sw = sw;
-		break;
 	}
 }
 
