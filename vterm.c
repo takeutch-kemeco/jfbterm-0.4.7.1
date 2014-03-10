@@ -302,17 +302,10 @@ static inline void tvterm_set_default_encoding_utf8(struct TVterm* p,
 #endif
 }
 
-/* ISO-2022 */
-static inline void tvterm_set_default_encoding_iso2022(struct TVterm* p,
-						       const char* en)
-{
-}
-
 void tvterm_set_default_encoding(struct TVterm* p, const char* en)
 {
 	tvterm_set_default_encoding_other(p, en);
 	tvterm_set_default_encoding_utf8(p, en);
-	tvterm_set_default_encoding_iso2022(p, en);
 }
 
 void tvterm_set_default_invoke_and_designate(struct TVterm* p)
