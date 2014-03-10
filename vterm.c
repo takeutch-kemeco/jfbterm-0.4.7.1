@@ -67,8 +67,6 @@ static void tvterm_set_window_size(struct TVterm* p);
 static void tvterm_switch_to_UTF8(struct TVterm *p);
 static int tvterm_is_UTF8(struct TVterm *p);
 
-static void tvterm_switch_to_otherCS(struct TVterm *p,
-				     struct TCodingSystem *other);
 static int tvterm_is_otherCS(struct TVterm *p);
 
 /* TVterm の各種パラメーターの初期化 */
@@ -170,50 +168,6 @@ static int tvterm_is_UTF8(struct TVterm* p)
 	} else {
 		return 0;
 	}
-}
-
-static void __tvterm_switch_to_otherCS(struct TVterm* p,
-				       struct TCodingSystem* ocs,
-				       char* tocode)
-{
-	if(strcmp(ocs->tocode, "UTF-8") == 0) {
-		tvterm_switch_to_UTF8(p);
-		tocode = "UCS-2BE"; /* XXX */
-	} else {
-		int idx[6];
-
-		char *en = tcaps_find_entry(p->caps,
-					    "encoding.",
-					    ocs->tocode);
-		if(en == NULL) {
-			free(ocs->tocode);
-			ocs->tocode = strdup("UTF-8");
-			__tvterm_switch_to_otherCS(p, ocs, tocode);
-			return;
-		}
-
-		free(ocs->tocode);
-		ocs->tocode = strdup("UTF-8");
-		__tvterm_switch_to_otherCS(p, ocs, tocode);
-	}
-}
-
-static void tvterm_switch_to_otherCS(struct TVterm* p,
-				     struct TCodingSystem* ocs)
-{
-	p->otherCS = NULL;
-	/* save current designate/invoke */
-	ocs->gSavedL = p->gl.invokedGn;
-	ocs->gSavedR = p->gr.invokedGn;
-
-	int i;
-	for(i = 0; i < 4; i++) {
-		ocs->gSavedIdx[i] = p->gIdx[i];
-	}
-	ocs->utf8SavedIdx = p->utf8Idx;
-
-	char* tocode = ocs->tocode;
-	__tvterm_switch_to_otherCS(p, ocs, tocode);
 }
 
 static int
