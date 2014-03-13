@@ -4,6 +4,7 @@ jfbterm は、Version 0.2.0 以降から autoconf/automake 化されています
 インストールは、
 
 	./autogen.sh
+	./configure --prefix=/usr --sysconfdir=/etc
 	make
 	sudo make install
 

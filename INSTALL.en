@@ -3,6 +3,7 @@ jfbterm is autoconfisicated since version 0.2.0.
 To install jfbterm, run
 
 	./autogen.sh
+	./configure --prefix=/usr --sysconfdir=/etc
 	make
 	sudo make install
 
