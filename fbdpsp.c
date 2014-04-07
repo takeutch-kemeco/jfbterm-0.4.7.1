@@ -893,7 +893,7 @@ void tfbm_reverse_32bpp_packed(TFrameBufferMemory* p,
 #define GRAPHICS_MODE_INDEX 5           /* Graphics Mode Register index. */
 #define BIT_MASK_INDEX 8                /* Bit Mask Register index. */
 
-static inline void rmw(volatile char *p)
+static inline void rmw(volatile u_char *p)
 {
         *p |= 1;
 }
@@ -1000,12 +1000,10 @@ void tfbm_overlay_vga16(
 	u_int xds8 = xd/8;
 	u_int xde8 = (xd+lx+7)/8;
 	unsigned char emask;
-	unsigned char smask;
 	u_int ix;
 
 	eofs = eofs ? eofs : 8;
 	emask = 0xff00 >> eofs;
-	smask = 0xff << sofs;
 
 	setmode(0);
 	setop(0);
