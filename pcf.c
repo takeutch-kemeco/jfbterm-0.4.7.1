@@ -622,7 +622,7 @@ static TPcfIndex* tpcf_search_section(TPcf *p, u_int type)
 
 void tpcf_load(TPcf *p, FILE *fp)
 {
-	char magic[] = {1, 'f', 'c', 'p'};
+	u_char magic[] = {1, 'f', 'c', 'p'};
 	/* --- */
 	size_t	readp = 0;
 	TPcfIndex* q;
