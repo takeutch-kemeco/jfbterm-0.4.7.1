@@ -48,6 +48,7 @@ void util_privilege_drop(struct VirtualUID* p);
 int util_search_string(const char* s, const char** array);
 char* remove_quote(char* s);
 int limit_inner(int val, int min, int max);
+void swap_int(int *a, int *b);
 
 #define UTIL_FREE(p) {free(p); (p) = NULL;}
 
