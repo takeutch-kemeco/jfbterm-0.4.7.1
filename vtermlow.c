@@ -219,7 +219,7 @@ static int __tvterm_refresh(void* __p)
 	p->busy = true;
 	if(!p->active) {
 		p->busy = false;
-		return;
+		return 0;
 	}
 
 	tvterm_show_cursor(p, false);
