@@ -498,10 +498,10 @@ void tfbm_open(TFrameBufferMemory* p)
 	switch(tfbm_scr_rot_flag) {
 	case TFBM_SCR_ROT_FLAG_CW:
 	case TFBM_SCR_ROT_FLAG_CCW:
-		swap_int(&fb_var.xres,         &fb_var.yres);
-		swap_int(&fb_var.xres_virtual, &fb_var.yres_virtual);
-		swap_int(&fb_var.xoffset,      &fb_var.yoffset);
-		swap_int(&fb_var.height,       &fb_var.width);
+		swap_int((int*)&fb_var.xres,         (int*)&fb_var.yres);
+		swap_int((int*)&fb_var.xres_virtual, (int*)&fb_var.yres_virtual);
+		swap_int((int*)&fb_var.xoffset,      (int*)&fb_var.yoffset);
+		swap_int((int*)&fb_var.height,       (int*)&fb_var.width);
 		break;
 
 	default:
