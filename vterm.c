@@ -709,7 +709,7 @@ static void tvterm_esc_status_line(struct TVterm* p, u_char mode)
 static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 {
 	u_char	n;
-	static u_short varg[MAX_NARG], narg, question;
+	static u_short varg[MAX_NARG], narg;
 
 	if(ch >= '0' && ch <= '9') {
 		varg[narg] = (varg[narg] * 10) + (ch - '0');
@@ -848,7 +848,7 @@ static void tvterm_esc_bracket(struct TVterm* p, u_char ch)
 		}
 
 		if(p->esc == NULL) {
-			question = narg = varg[0] = varg[1] = 0;
+			narg = varg[0] = varg[1] = 0;
 		}
 	}
 }
