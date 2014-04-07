@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stddef.h>
 #include <stdbool.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -575,23 +576,23 @@ void tfbm_open(TFrameBufferMemory* p)
 	p->slen = (fb_fix.smem_len + p->soff + ~PAGE_MASK) & PAGE_MASK;
 	p->smem = (u_char*)mmap(NULL, p->slen, PROT_READ|PROT_WRITE,
 				MAP_SHARED, p->fh, (off_t)0);
-	if ((int)p->smem == -1) {
+	if ((ptrdiff_t)p->smem == -1) {
 		die("cannot mmap(smem)");
 	}
-	p->smem = (char *)p->smem + p->soff;
+	p->smem = (u_char*)p->smem + p->soff;
 
 	p->moff = (u_int)(fb_fix.mmio_start) & (~PAGE_MASK);
 	p->mlen = (fb_fix.mmio_len + p->moff + ~PAGE_MASK) & PAGE_MASK;
 	p->mmio = (u_char*)mmap(NULL, p->mlen, PROT_READ|PROT_WRITE,
 				MAP_SHARED, p->fh, p->slen);
-	if ((int)p->mmio == -1) {
+	if ((ptrdiff_t)p->mmio == -1) {
 #ifdef JFB_MMIO_CHECK
 		die("cannot mmap(mmio)");
 #else
 		print_message("cannot mmap(mmio) : %s\n", strerror(errno));
 #endif
 	}
-	p->mmio = (char *)p->mmio + p->moff;
+	p->mmio = (u_char*)p->mmio + p->moff;
 
 #ifdef DEBUG
 	print_message("mmap ; %d - %p\n", p->slen, p->smem);
@@ -622,11 +623,11 @@ void tfbm_close(TFrameBufferMemory* p)
 	if (p->fh == -1) {
 		return;
 	}
-	if ((int)p->smem != -1) {
-		munmap((caddr_t)((u_int)p->smem & PAGE_MASK), p->slen);
+	if ((ptrdiff_t)p->smem != -1) {
+		munmap((caddr_t)((ptrdiff_t)p->smem & PAGE_MASK), p->slen);
 	}
-	if ((int)p->mmio != -1) {
-		munmap((caddr_t)((u_int)p->mmio & PAGE_MASK), p->mlen);
+	if ((ptrdiff_t)p->mmio != -1) {
+		munmap((caddr_t)((ptrdiff_t)p->mmio & PAGE_MASK), p->mlen);
 	}
 	if (cmapSaved == true) {
 		tfbm_put_cmap(p->fh, &ocmap);
