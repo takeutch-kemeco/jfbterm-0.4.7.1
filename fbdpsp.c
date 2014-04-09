@@ -37,8 +37,6 @@
 #  define min(a, b)   (((a)>(b))?(b):(a))
 #endif
 
-#ifdef JFB_32BPP
-
 /* xとyをスクリーンの回転設定に合わせて、右か左に回転移動。
  * CW（クロックワイズ）が、首を時計回りに傾けて見るのに適した状態。
  * CCW（カウンターCW）が、首を反時計回りに傾けて見るのに適した状態。
@@ -220,6 +218,3 @@ void tfbm_reverse_32bpp_packed(TFrameBufferMemory *p,
 		}
 	}
 }
-
-#endif /* JFB_32BPP */
-
