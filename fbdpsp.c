@@ -97,7 +97,7 @@ void tfbm_fill_rect_32bpp_packed(TFrameBufferMemory *p,
 				 u_int lx, u_int ly,
 				 u_int color)
 {
-	const u_int icol = tfbm_select_32_color(color);
+	const u_int icol = trueColor32Table[color];
 
 	u_int y;
 	for (y = sy; y < sy + ly; y++) {
@@ -184,7 +184,7 @@ void tfbm_overlay_32bpp_packed(TFrameBufferMemory *p,
 			       u_int lx, u_int ly,
 			       u_int gap, u_int color)
 {
-	const u_int icol = tfbm_select_32_color(color);
+	const u_int icol = trueColor32Table[color];
 
 	u_int x;
 	u_int y;
@@ -211,7 +211,7 @@ void tfbm_reverse_32bpp_packed(TFrameBufferMemory *p,
 			       u_int lx, u_int ly,
 			       u_int color)
 {
-	const u_int icol = tfbm_select_32_color(color);
+	const u_int icol = trueColor32Table[color];
 
 	u_int x,y;
 	for (y = sy; y < sy + ly; y++) {

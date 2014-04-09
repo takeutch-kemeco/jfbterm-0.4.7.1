@@ -74,7 +74,7 @@ static struct fb_var_screeninfo ovar;
 static bool modified_var_screen_info = false;
 
 /*---------------------------------------------------------------------------*/
-static u_int trueColor32Table[16];
+u_int trueColor32Table[16];
 
 #define CL_B0 0x80FF
 #define CL_B1 0xFFFF
@@ -383,10 +383,5 @@ void tfbm_close(TFrameBufferMemory *p)
 	}
 
 	close(p->fh);
-}
-
-u_int tfbm_select_32_color(u_int c)
-{
-	return trueColor32Table[c];
 }
 

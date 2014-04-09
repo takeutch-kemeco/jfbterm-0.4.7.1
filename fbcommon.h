@@ -61,8 +61,8 @@ void tfbm_init(TFrameBufferMemory *p);
 void tfbm_open(TFrameBufferMemory *p);
 void tfbm_close(TFrameBufferMemory *p);
 
-u_int tfbm_select_32_color(u_int);
-
 extern enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
+
+extern u_int trueColor32Table[16];
 
 #endif /* INCLUDE_FBCOMMON_H */
