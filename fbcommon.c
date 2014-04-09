@@ -44,9 +44,6 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#ifdef JFB_VGA16FB
-#include <sys/io.h>
-#endif
 #include <linux/vt.h>
 #include <linux/fb.h>
 
@@ -58,83 +55,11 @@
 
 enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
 
-static int tfbm_select_visual(  TFrameBufferMemory *p,
-				struct fb_var_screeninfo *fbvs,
-				struct fb_fix_screeninfo *fbfs);
+static int tfbm_select_visual(TFrameBufferMemory *p,
+			      struct fb_var_screeninfo *fbvs,
+			      struct fb_fix_screeninfo *fbfs);
 
 static TFrameBufferCapability sFBCapabilityList[] = {
-#if (defined(JFB_2BPP) && defined(JFB_PACKED) && defined(JFB_PSEUDOCOLOR))
-	{
-		2, FB_TYPE_PACKED_PIXELS, FB_VISUAL_PSEUDOCOLOR,
-		tfbm_fill_rect_2bpp_packed,
-		tfbm_overlay_2bpp_packed,
-		tfbm_clear_all_2bpp_packed,
-		tfbm_reverse_2bpp_packed
-	},
-#endif
-#if (defined(JFB_8BPP) && defined(JFB_PACKED) && defined(JFB_PSEUDOCOLOR))
-	{
-		8, FB_TYPE_PACKED_PIXELS, FB_VISUAL_PSEUDOCOLOR,
-		tfbm_fill_rect_8bpp_packed,
-		tfbm_overlay_8bpp_packed,
-		tfbm_clear_all_8bpp_packed,
-		tfbm_reverse_8bpp_packed
-	},
-#endif
-#if (defined(JFB_15BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{
-		15, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
-		tfbm_fill_rect_15bpp_packed,
-		tfbm_overlay_15bpp_packed,
-		tfbm_clear_all_15bpp_packed,
-		tfbm_reverse_15bpp_packed
-	},
-#endif
-#if (defined(JFB_15BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{
-		15, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
-		tfbm_fill_rect_15bpp_packed,
-		tfbm_overlay_15bpp_packed,
-		tfbm_clear_all_15bpp_packed,
-		tfbm_reverse_15bpp_packed
-	},
-#endif
-#if (defined(JFB_16BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{
-		16, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
-		tfbm_fill_rect_16bpp_packed,
-		tfbm_overlay_16bpp_packed,
-		tfbm_clear_all_16bpp_packed,
-		tfbm_reverse_16bpp_packed
-	},
-#endif
-#if (defined(JFB_16BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{
-		16, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
-		tfbm_fill_rect_16bpp_packed,
-		tfbm_overlay_16bpp_packed,
-		tfbm_clear_all_16bpp_packed,
-		tfbm_reverse_16bpp_packed
-	},
-#endif
-#if (defined(JFB_24BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{
-		24, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
-		tfbm_fill_rect_24bpp_packed,
-		tfbm_overlay_24bpp_packed,
-		tfbm_clear_all_24bpp_packed,
-		tfbm_reverse_24bpp_packed
-	},
-#endif
-#if (defined(JFB_24BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{
-		24, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
-		tfbm_fill_rect_24bpp_packed,
-		tfbm_overlay_24bpp_packed,
-		tfbm_clear_all_24bpp_packed,
-		tfbm_reverse_24bpp_packed
-	},
-#endif
 #if (defined(JFB_32BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
 	{
 		32, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
@@ -153,24 +78,6 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 		tfbm_reverse_32bpp_packed
 	},
 #endif
-#if (defined(JFB_VGA16FB))
-	{
-		4, FB_TYPE_VGA_PLANES, FB_VISUAL_PSEUDOCOLOR,
-		tfbm_fill_rect_vga16,
-		tfbm_overlay_vga16,
-		tfbm_clear_all_vga16,
-		tfbm_reverse_vga16
-	},
-#endif
-#if 0
-	{
-		0, FB_TYPE_PACKED_PIXELS, FB_VISUAL_MONO01,
-		NULL,
-		NULL,
-		NULL,
-		NULL
-	},
-#endif
 	{
 		0, FB_TYPE_PACKED_PIXELS, FB_VISUAL_PSEUDOCOLOR,
 		NULL,
@@ -187,11 +94,11 @@ static TFrameBufferCapability sFBCapabilityList[] = {
 static char* fbdn = NULL;
 
 static unsigned short red[256], green[256], blue[256];
-static struct fb_cmap ncmap = { 0, 256, red, green, blue, NULL};
+static struct fb_cmap ncmap = {0, 256, red, green, blue, NULL};
 
 static bool cmapSaved = false;
 static unsigned short ored[256], ogreen[256], oblue[256], otrans[256];
-static struct fb_cmap ocmap = { 0, 256, ored, ogreen, oblue, otrans};
+static struct fb_cmap ocmap = {0, 256, ored, ogreen, oblue, otrans};
 
 static int tvisual = 0;
 
@@ -217,14 +124,12 @@ static void tfbm_setup_color_table(struct fb_var_screeninfo *var)
 {
 	int i;
 	for (i = 0; i < 16; i++) {
-		trueColor32Table[i] =
-			 (((u_int)(red16[i]) >> (16 - var->red.length))
-					 << var->red.offset) |
-			 (((u_int)(green16[i]) >> (16 - var->green.length))
-					 << var->green.offset) |
-			 (((u_int)(blue16[i]) >> (16 - var->blue.length))
-					 << var->blue.offset) ;
-		trueColor16Table[i] = (u_short)(trueColor32Table[i]);
+		const u_int r = ((u_int)red16[i]   >> (16 - var->red.length))   << var->red.offset;
+		const u_int g = ((u_int)green16[i] >> (16 - var->green.length)) << var->green.offset;
+		const u_int b = ((u_int)blue16[i]  >> (16 - var->blue.length))  << var->blue.offset;
+		const u_int rgb = r | g | b;
+		trueColor32Table[i] = rgb;
+		trueColor16Table[i] = (u_short)rgb;
 		print_message("color %d : %x, %x\n", i, trueColor32Table[i], trueColor16Table[i]);
 	}
 }
@@ -232,55 +137,39 @@ static void tfbm_setup_color_table(struct fb_var_screeninfo *var)
 /*---------------------------------------------------------------------------*/
 static void tfbm_get_var_screen_info(int fh, struct fb_var_screeninfo *var)
 {
-	if (ioctl(fh, FBIOGET_VSCREENINFO, var)) {
+	if (ioctl(fh, FBIOGET_VSCREENINFO, var))
 		print_strerror_and_exit("ioctl FBIOGET_VSCREENINFO");
-	}
 }
 
 static void tfbm_set_var_screen_info(int fh, struct fb_var_screeninfo *var)
 {
-	if (ioctl(fh, FBIOPUT_VSCREENINFO, var)) {
+	if (ioctl(fh, FBIOPUT_VSCREENINFO, var))
 		print_strerror_and_exit("ioctl FBIOPUT_VSCREENINFO");
-	}
 }
 
 static void tfbm_get_fix_screen_info(int fh, struct fb_fix_screeninfo *fix)
 {
-	if (ioctl(fh, FBIOGET_FSCREENINFO, fix)) {
+	if (ioctl(fh, FBIOGET_FSCREENINFO, fix))
 		print_strerror_and_exit("ioctl FBIOGET_FSCREENINFO");
-	}
 }
 
 static void tfbm_get_cmap(int fh, struct fb_cmap *cmap)
 {
-	if (ioctl(fh, FBIOGETCMAP, cmap)) {
+	if (ioctl(fh, FBIOGETCMAP, cmap))
 		print_strerror_and_exit("ioctl FBIOGETCMAP");
-	}
 }
 
 static void tfbm_put_cmap(int fh, struct fb_cmap *cmap)
 {
-	if (ioctl(fh, FBIOPUTCMAP, cmap)) {
+	if (ioctl(fh, FBIOPUTCMAP, cmap))
 		print_strerror_and_exit("ioctl FBIOPUTCMAP");
-	}
 }
 
 static void tfbm_pan_display(int fh, struct fb_var_screeninfo *var)
 {
-	if (ioctl(fh, FBIOPAN_DISPLAY, var)) {
+	if (ioctl(fh, FBIOPAN_DISPLAY, var))
 		print_strerror_and_exit("ioctl FBIOPAN_DISPLAY");
-	}
 }
-
-#if defined(JFB_2BPP)
-static void simple_2bpp_palette(void)
-{
-        red[0] = green[0] = blue[0] = 0x0000;
-        red[1] = green[1] = blue[1] = 0x5555;
-        red[2] = green[2] = blue[2] = 0xaaaa;
-        red[3] = green[3] = blue[3] = 0xffff;
-}
-#endif
 
 static void linear_palette(int bit)
 {
@@ -288,101 +177,45 @@ static void linear_palette(int bit)
 	int size = 256 >> (8 - bit);
 
 	for (i = 0 ; i < size ; i++) {
-		red[i] = green[i] = blue[i] =
-		(unsigned short)(65535.0 * pow(i/(size - 1.0), fbgamma));
-	}
-}
-
-static void dither_palette(int r, int g, int b)
-{
-	int rs, gs, bs, i;
-	int rsize = 256 >> (8 - r);
-	int gsize = 256 >> (8 - g);
-	int bsize = 256 >> (8 - b);
-
-	rs = 256 / (r - 1);
-	gs = 256 / (g - 1);
-	bs = 256 / (b - 1);
-	for (i = 0; i < r*g*b; i++) {
-		unsigned short ridx = (unsigned short)(65535.0 * pow(i/(rsize - 1.0), fbgamma));
-		unsigned short gidx = (unsigned short)(65535.0 * pow(i/(gsize - 1.0), fbgamma));
-		unsigned short bidx = (unsigned short)(65535.0 * pow(i/(bsize - 1.0), fbgamma));
-		green[i+16] = (gs * ((gidx / (r * b)) % g)) * 255;
-		red[i+16]   = (rs * ((ridx / b) % r)) * 255;
-		blue[i+16]  = (bs * ((bidx) % b)) * 255;
+		red[i] = green[i] = blue[i] = (u_short)(65535.0 * pow(i / (size - 1.0), fbgamma));
 	}
 }
 
 extern void set_most_left(__u32 bpp, struct fb_bitfield a_pixel_field);
 
-static void tfbm_initcolors(TFrameBufferMemory* p,
-			    struct fb_var_screeninfo* fbvs,
-			    struct fb_fix_screeninfo* fbfs)
+static void tfbm_initcolors(TFrameBufferMemory *p,
+			    struct fb_var_screeninfo *fbvs,
+			    struct fb_fix_screeninfo *fbfs)
 {
 	/* get colormap */
-	if (fbfs->visual == FB_VISUAL_DIRECTCOLOR ||
-	    fbfs->visual == FB_VISUAL_PSEUDOCOLOR) {
+	if ((fbfs->visual == FB_VISUAL_DIRECTCOLOR) || (fbfs->visual == FB_VISUAL_PSEUDOCOLOR))
 		tfbm_get_cmap(p->fh, &ncmap);
-	}
 
-	switch (fbvs->bits_per_pixel) {
-	case 1:
-		break;
-#if defined(JFB_2BPP)
-	case 2:
-		simple_2bpp_palette();
-		set_most_left(2, fbvs->red);
-		break;
-#endif
-	case 4:
-		break;
-	case 8:
-		if (fbfs->visual != FB_VISUAL_PSEUDOCOLOR) {
-			linear_palette(8);
-		} else {
-			dither_palette(5,9,5);
-		}
-		break;
-	case 15:
-	case 16:
-		if (fbfs->visual == FB_VISUAL_DIRECTCOLOR) {
-			linear_palette(5);
-		}
-		break;
-	case 24:
-	case 32:
-		if (fbfs->visual == FB_VISUAL_DIRECTCOLOR) {
-			linear_palette(8);
-		}
-		break;
-	default:
+	if (fbvs->bits_per_pixel != 32)
 		die("Oops: %i bit/pixel ???\n", fbvs->bits_per_pixel);
-	}
+
+	if (fbfs->visual == FB_VISUAL_DIRECTCOLOR)
+		linear_palette(8);
 
 	/* set colormap */
-	if (fbfs->visual == FB_VISUAL_DIRECTCOLOR ||
-	    fbfs->visual == FB_VISUAL_PSEUDOCOLOR) {
+	if ((fbfs->visual == FB_VISUAL_DIRECTCOLOR) || (fbfs->visual == FB_VISUAL_PSEUDOCOLOR))
 		tfbm_put_cmap(p->fh, &ncmap);
-	}
 }
 
-#ifdef DEBUG
-static void tfbm_show_screeninfo(TFrameBufferMemory* p,
-				 struct fb_var_screeninfo* fbvs,
-				 struct fb_fix_screeninfo* fbfs)
+static void tfbm_show_screeninfo(TFrameBufferMemory *p,
+				 struct fb_var_screeninfo *fbvs,
+				 struct fb_fix_screeninfo *fbfs)
 {
+#ifdef DEBUG
 	u_int c;
-	const char* t;
-	const char* v;
+	const char *t;
+	const char *v;
 
 	c = fbfs->type;
 	t = c == FB_TYPE_PACKED_PIXELS ?	"Packed Pixels" :
 	    c == FB_TYPE_PLANES ?		"Non interleaved planes" :
 	    c == FB_TYPE_INTERLEAVED_PLANES ?	"Interleaved planes" :
 	    c == FB_TYPE_TEXT ?			"Text/attributes" :
-#if (defined(JFB_VGA16FB))
-	    c == FB_TYPE_VGA_PLANES ?		"EGA/VGA planes" :
-#endif
 						"Unknown planes";
 	c = fbfs->visual;
 	v = c == FB_VISUAL_MONO01 ?		"Monochr. 1=Black 0=White" :
@@ -413,11 +246,11 @@ static void tfbm_show_screeninfo(TFrameBufferMemory* p,
 			fbvs->blue.offset, fbvs->blue.length,
 			fbvs->blue.msb_right ? '-' : '+');
 	print_message("==================================================\n");
+#endif /* DEBUG */
 }
-#endif
 
 /*---------------------------------------------------------------------------*/
-void tfbm_init(TFrameBufferMemory* p)
+void tfbm_init(TFrameBufferMemory *p)
 {
 	char *env_fbdn;
 	p->fh = -1;
@@ -461,22 +294,21 @@ void tfbm_init(TFrameBufferMemory* p)
 	}
 }
 
-void tfbm_open(TFrameBufferMemory* p)
+void tfbm_open(TFrameBufferMemory *p)
 {
 	struct stat st;
 	struct fb_var_screeninfo fb_var;
 	struct fb_fix_screeninfo fb_fix;
 
-	if ((p->fh = util_privilege_open(&vuid, fbdn, O_RDWR)) == -1) {
+	if ((p->fh = util_privilege_open(&vuid, fbdn, O_RDWR)) == -1)
 		die("open %s: %s\n", fbdn, strerror(errno));
-	}
 
-	if (-1 == fstat(p->fh,&st)) {
+	if (-1 == fstat(p->fh,&st))
 		die("fstat(%s): %s\n", fbdn, strerror(errno));
-	}
-	if (!S_ISCHR(st.st_mode) || major(st.st_rdev) != 29 /* FB_MAJOR */) {
+
+	if (!S_ISCHR(st.st_mode) || major(st.st_rdev) != 29 /* FB_MAJOR */)
 		die("%s: not a frame buffer device\n", fbdn);
-	}
+
 	free(fbdn);
 
 	tfbm_get_var_screen_info(p->fh, &fb_var);
@@ -490,8 +322,7 @@ void tfbm_open(TFrameBufferMemory* p)
 	}
 	tfbm_get_fix_screen_info(p->fh, &fb_fix);
 
-	if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR ||
-	    fb_fix.visual == FB_VISUAL_PSEUDOCOLOR) {
+	if ((fb_fix.visual == FB_VISUAL_DIRECTCOLOR) || (fb_fix.visual == FB_VISUAL_PSEUDOCOLOR)) {
 		tfbm_get_cmap(p->fh, &ocmap);
 		cmapSaved = true;
 	}
@@ -503,9 +334,6 @@ void tfbm_open(TFrameBufferMemory* p)
 		swap_int((int*)&fb_var.xres_virtual, (int*)&fb_var.yres_virtual);
 		swap_int((int*)&fb_var.xoffset,      (int*)&fb_var.yoffset);
 		swap_int((int*)&fb_var.height,       (int*)&fb_var.width);
-		break;
-
-	default:
 		break;
 	}
 
@@ -529,39 +357,15 @@ void tfbm_open(TFrameBufferMemory* p)
 			fb_var.lower_margin = tmp;
 		}
 		break;
-
-	default:
-		break;
 	}
-
-#ifdef FORCE_8BIT
-	if(fb_fix.visual == FB_VISUAL_DIRECTCOLOR) {
-		if (modified_var_screen_info == false) {
-			memcpy((void*)&ovar,(void*)&fb_var,sizeof(ovar));
-			modified_var_screen_info = true;
-		}
-		fb_var.bits_per_pixel = 8;
-		fb_var.vmode |= FB_VMODE_CONUPDATE;
-		fb_var.activate = FB_ACTIVATE_NOW;
-		tfbm_set_var_screen_info(p->fh, &fb_var);
-		tfbm_get_fix_screen_info(p->fh, &fb_fix);
-		if (fb_fix.type != FB_TYPE_PACKED_PIXELS ||
-				fb_var.bits_per_pixel != 8) {
-			ovar.vmode |= FB_VMODE_CONUPDATE;
-			ovar.activate = FB_ACTIVATE_NOW;
-			tfbm_set_var_screen_info(p->fh, &ovar);
-			die("fb does not support 8bpp packed format\n");
-		}
-	}
-#endif /* FORCE_8BIT */
 
 #ifdef DEBUG
 	tfbm_show_screeninfo(p, &fb_var, &fb_fix);
-#endif
+#endif /* DUBUG */
+
 	tvisual = tfbm_select_visual(p, &fb_var, &fb_fix);
-	if (tvisual < 0) {
+	if (tvisual < 0)
 		die("Oops: Unknown frame buffer ???\n");
-	}
 
 	tfbm_setup_color_table(&fb_var);
 
@@ -590,14 +394,14 @@ void tfbm_open(TFrameBufferMemory* p)
 		die("cannot mmap(mmio)");
 #else
 		print_message("cannot mmap(mmio) : %s\n", strerror(errno));
-#endif
+#endif /* JFB_MMIO_CHECK */
 	}
 	p->mmio = (u_char*)p->mmio + p->moff;
 
 #ifdef DEBUG
 	print_message("mmap ; %d - %p\n", p->slen, p->smem);
 	print_message("mmio ; %d - %p\n", p->mlen, p->mmio);
-#endif
+#endif /* DEBUG */
 
 	/* move viewport to upper left corner */
 	if (fb_var.xoffset != 0 || fb_var.yoffset != 0) {
@@ -605,45 +409,41 @@ void tfbm_open(TFrameBufferMemory* p)
 		fb_var.yoffset = 0;
 		tfbm_pan_display(p->fh, &fb_var);
 	}
-	if (!sFBCapabilityList[tvisual].fill) {
+
+	if (!sFBCapabilityList[tvisual].fill)
 		die("No framebuffer supported.");
-	}
+
 	p->cap = sFBCapabilityList[tvisual];
-
-#ifdef JFB_VGA16FB
-	/* see fbdpsp.c: ifdef JFB_VGA16FB */
-	if (fb_fix.type == FB_TYPE_VGA_PLANES)
-		die("Cannot supported VGA16FB, not access VGA registers(ioperm).");
-#endif
-
 }
 
-void tfbm_close(TFrameBufferMemory* p)
+void tfbm_close(TFrameBufferMemory *p)
 {
-	if (p->fh == -1) {
+	if (p->fh == -1)
 		return;
-	}
-	if ((ptrdiff_t)p->smem != -1) {
+
+	if ((ptrdiff_t)p->smem != -1)
 		munmap((caddr_t)((ptrdiff_t)p->smem & PAGE_MASK), p->slen);
-	}
-	if ((ptrdiff_t)p->mmio != -1) {
+
+	if ((ptrdiff_t)p->mmio != -1)
 		munmap((caddr_t)((ptrdiff_t)p->mmio & PAGE_MASK), p->mlen);
-	}
+
 	if (cmapSaved == true) {
 		tfbm_put_cmap(p->fh, &ocmap);
 		cmapSaved = false;
 	}
+
 	if (modified_var_screen_info == true) {
 		ovar.activate = FB_ACTIVATE_NOW;
 		tfbm_set_var_screen_info(p->fh, &ovar);
 		modified_var_screen_info = false;
 	}
+
 	close(p->fh);
 }
 
-int tfbm_select_visual( TFrameBufferMemory* p,
-			struct fb_var_screeninfo* fbvs,
-			struct fb_fix_screeninfo* fbfs)
+int tfbm_select_visual(TFrameBufferMemory *p,
+		       struct fb_var_screeninfo *fbvs,
+		       struct fb_fix_screeninfo *fbfs)
 {
 	int ret;
 	int static_color = 0;
@@ -652,25 +452,22 @@ int tfbm_select_visual( TFrameBufferMemory* p,
 	    fbfs->visual = FB_VISUAL_PSEUDOCOLOR;
 	    static_color = 1;
 	}
+
 	for(ret = 0 ; sFBCapabilityList[ret].bitsPerPixel != 0 ; ret++) {
-		if (sFBCapabilityList[ret].fbType == fbfs->type &&
-		    sFBCapabilityList[ret].fbVisual == fbfs->visual &&
-		    sFBCapabilityList[ret].bitsPerPixel==fbvs->bits_per_pixel){
-			if(static_color){
+		if ((sFBCapabilityList[ret].fbType == fbfs->type) &&
+		    (sFBCapabilityList[ret].fbVisual == fbfs->visual) &&
+		    (sFBCapabilityList[ret].bitsPerPixel==fbvs->bits_per_pixel)) {
+			if (static_color)
 			    fbfs->visual = FB_VISUAL_STATIC_PSEUDOCOLOR;
-			}
+
 			return ret;
 		}
 	}
-	if(static_color){
-		fbfs->visual = FB_VISUAL_STATIC_PSEUDOCOLOR;
-	}
-	return -1;
-}
 
-u_short tfbm_select_16_color(u_int c)
-{
-	return trueColor16Table[c];
+	if (static_color)
+		fbfs->visual = FB_VISUAL_STATIC_PSEUDOCOLOR;
+
+	return -1;
 }
 
 u_int tfbm_select_32_color(u_int c)

@@ -92,7 +92,6 @@ void tfbm_open(TFrameBufferMemory *p);
 void tfbm_close(TFrameBufferMemory *p);
 
 u_int tfbm_select_32_color(u_int);
-u_short tfbm_select_16_color(u_int);
 
 extern float fbgamma;
 

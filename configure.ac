@@ -72,83 +72,11 @@ else
 	AC_MSG_RESULT(no)
 fi
 
-AC_ARG_ENABLE(1bpp, [ --enable-1bpp            support 1bpp [default no]],,enable_1bpp=no)
-AC_MSG_CHECKING(whether to enable 1bpp)
-if test x$enable_1bpp = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_1BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
-AC_ARG_ENABLE(2bpp, [ --enable-2bpp            support 2bpp [default yes]],,enable_2bpp=yes)
-AC_MSG_CHECKING(whether to enable 2bpp)
-if test x$enable_2bpp = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_2BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
-dnl AC_ARG_ENABLE(4bpp, [ --enable-4bpp            support 4bpp [default no]],,enable_4bpp=no)
-dnl AC_MSG_CHECKING(whether to enable 4bpp)
-dnl if test x$enable_4bpp = xyes; then
-dnl	AC_MSG_RESULT(yes)
-dnl	AC_DEFINE(JFB_4BPP)
-dnl else
-dnl	AC_MSG_RESULT(no)
-dnl fi
-
-AC_ARG_ENABLE(8bpp, [ --enable-8bpp            support 8bpp [default yes]],,enable_8bpp=yes)
-AC_MSG_CHECKING(whether to enable 8bpp)
-if test x$enable_8bpp = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_8BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
-AC_ARG_ENABLE(15bpp, [ --enable-15bpp           support 15bpp [default yes]],,enable_15bpp=yes)
-AC_MSG_CHECKING(whether to enable 15bpp)
-if test x$enable_15bpp = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_15BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
-AC_ARG_ENABLE(16bpp, [ --enable-16bpp           support 16bpp [default yes]],,enable_16bpp=yes)
-AC_MSG_CHECKING(whether to enable 16bpp)
-if test x$enable_16bpp = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_16BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
-AC_ARG_ENABLE(24bpp, [ --enable-24bpp           support 24bpp [default yes]],,enable_24bpp=yes)
-AC_MSG_CHECKING(whether to enable 24bpp)
-if test x$enable_24bpp = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_24BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
 AC_ARG_ENABLE(32bpp, [ --enable-32bpp           support 32bpp [default yes]],,enable_32bpp=yes)
 AC_MSG_CHECKING(whether to enable 32bpp)
 if test x$enable_32bpp = xyes; then
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(JFB_32BPP)
-else
-	AC_MSG_RESULT(no)
-fi
-
-AC_ARG_ENABLE(pseudo-color, [ --enable-pseudo-color    support pseudo-color [default yes]],,enable_pseudo_color=yes)
-AC_MSG_CHECKING(whether to enable pseudo-color)
-if test x$enable_pseudo_color = xyes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(JFB_PSEUDOCOLOR)
 else
 	AC_MSG_RESULT(no)
 fi
@@ -167,20 +95,6 @@ AC_MSG_CHECKING(whether to enable true-color)
 if test x$enable_true_color = xyes; then
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(JFB_TRUECOLOR)
-else
-	AC_MSG_RESULT(no)
-fi
-
-AC_ARG_ENABLE(vga16fb, [ --enable-vga16fb         support vga16fb [default yes]],,enable_vga16fb=yes)
-AC_MSG_CHECKING(whether to enable vga16fb)
-if test x$enable_vga16fb = xyes; then
-	AC_MSG_RESULT(yes)
-	if test x$ac_cv_func_ioperm = xyes; then
-	   AC_DEFINE(JFB_VGA16FB)
-	else
-	   AC_MSG_WARN([ but ioperm() not found on your system, disable vga16fb support])
-	   enable_vga16fb=no
-	fi
 else
 	AC_MSG_RESULT(no)
 fi
