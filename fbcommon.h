@@ -63,8 +63,6 @@ void tfbm_close(TFrameBufferMemory *p);
 
 u_int tfbm_select_32_color(u_int);
 
-extern float fbgamma;
-
 extern enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
 
 #endif /* INCLUDE_FBCOMMON_H */
