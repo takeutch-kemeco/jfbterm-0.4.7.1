@@ -198,7 +198,7 @@ static inline void tvterm_show_cursor_normal(struct TVterm* p)
 
 	const u_int color = 0x0F;
 
-	gFramebuffer.cap.reverse(&gFramebuffer, x, y, lx, ly, color);
+	tfbm_reverse_32bpp_packed(&gFramebuffer, x, y, lx, ly, color);
 }
 
 void tvterm_show_cursor(struct TVterm* p, bool b)
@@ -217,30 +217,26 @@ static int __tvterm_refresh(void* __p)
 	struct TVterm* p = __p;
 
 	p->busy = true;
-	if(!p->active) {
+	if (!p->active) {
 		p->busy = false;
 		return 0;
 	}
 
 	tvterm_show_cursor(p, false);
 
-	if(p->textClear) {
-		gFramebuffer.cap.fill(&gFramebuffer,
-				      0, 0,
-				      gFramebuffer.width,
-				      gFramebuffer.height,
-				      0);
+	if (p->textClear) {
+		tfbm_fill_rect_32bpp_packed(&gFramebuffer, 0, 0, gFramebuffer.width, gFramebuffer.height, 0);
 		p->textClear = false;
 	}
 
 	u_int y;
-	for(y = 0; y < p->ycap; y++) {
+	for (y = 0; y < p->ycap; y++) {
 		u_int x;
-		for(x = 0; x < p->xcap; x++) {
+		for (x = 0; x < p->xcap; x++) {
 			u_int i = tvterm_coord_to_index(p, x, y);
 
 			u_char fg = p->flag[i];
-			if(fg & CLEAN_S) {
+			if (fg & CLEAN_S) {
 				 continue; /* already clean */
 			}
 
@@ -254,7 +250,7 @@ static int __tvterm_refresh(void* __p)
 
 			TFont* pf;
 			u_int w;
-			if(fg & CODEIS_1) {
+			if (fg & CODEIS_1) {
 				w = 2;
 				pf = &(gFont[lang]);
 
@@ -268,28 +264,18 @@ static int __tvterm_refresh(void* __p)
 			/* XXX: multiwidth support (unifont) */
 			u_int gw;
 			const u_char* glyph = pf->conv(pf, chlw, &gw);
-			gFramebuffer.cap.fill(&gFramebuffer,
-					      gFontsWidth * x,
-					      gFontsHeight * y,
-					      gFontsWidth * w,
-					      gFontsHeight,
-					      bc);
+			tfbm_fill_rect_32bpp_packed(&gFramebuffer, gFontsWidth * x, gFontsHeight * y,
+						    gFontsWidth * w, gFontsHeight, bc);
 
-			if(chlw == 0) {
+			if (chlw == 0)
 				continue;
-			}
 
-			gFramebuffer.cap.overlay(&gFramebuffer,
-						 gFontsWidth * x,
-						 gFontsHeight * y,
-						 glyph,
-						 gw,
-						 pf->height, pf->bytew,
-						 fc);
+			tfbm_overlay_32bpp_packed(&gFramebuffer, gFontsWidth * x, gFontsHeight * y,
+						  glyph, gw, pf->height, pf->bytew, fc);
 		}
 	}
 
-	if(p->pen.x < p->xcap && p->pen.y < p->ycap) {
+	if (p->pen.x < p->xcap && p->pen.y < p->ycap) {
 		/* XXX: pen position go out of screen by resize(1) for example */
 		tvterm_set_cursor_wide(p, IsKanji(p,p->pen.x,p->pen.y));
 		p->cursor.x = p->pen.x;
@@ -298,9 +284,8 @@ static int __tvterm_refresh(void* __p)
 	}
 
 	p->busy = false;
-	if(p->release) {
+	if (p->release)
                 sig_leave_virtual_console(SIGUSR1);
-	}
 
         return 0;
 }

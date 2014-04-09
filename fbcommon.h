@@ -32,20 +32,6 @@
 
 struct Raw_TFrameBufferMemory;
 
-typedef struct Raw_TFrameBufferCapability {
-	u_int bitsPerPixel;
-	u_int fbType;
-	u_int fbVisual;
-	void (*fill)(struct Raw_TFrameBufferMemory *p, u_int x, u_int y,
-	             u_int lx, u_int ly, u_int color);
-	void (*overlay)(struct Raw_TFrameBufferMemory *p, u_int xd, u_int yd,
-			const u_char *ps, u_int lx, u_int ly,
-                        u_int gap, u_int color);
-	void (*clear_all)(struct Raw_TFrameBufferMemory *p, u_int color);
-	void (*reverse)(struct Raw_TFrameBufferMemory *p, u_int x, u_int y,
-			u_int lx, u_int ly, u_int color);
-} TFrameBufferCapability;
-
 typedef struct Raw_TFrameBufferMemory {
 	u_int height;
 	u_int width;
@@ -60,8 +46,6 @@ typedef struct Raw_TFrameBufferMemory {
 	u_int mlen;
 	u_char *smem;
 	u_char *mmio;
-	/* function hooks */
-	TFrameBufferCapability cap;
 	int ttyfd;
 } TFrameBufferMemory;
 

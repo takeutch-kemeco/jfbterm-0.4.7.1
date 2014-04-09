@@ -55,38 +55,6 @@
 
 enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
 
-static int tfbm_select_visual(TFrameBufferMemory *p,
-			      struct fb_var_screeninfo *fbvs,
-			      struct fb_fix_screeninfo *fbfs);
-
-static TFrameBufferCapability sFBCapabilityList[] = {
-#if (defined(JFB_32BPP) && defined(JFB_PACKED) && defined(JFB_TRUECOLOR))
-	{
-		32, FB_TYPE_PACKED_PIXELS, FB_VISUAL_TRUECOLOR,
-		tfbm_fill_rect_32bpp_packed,
-		tfbm_overlay_32bpp_packed,
-		tfbm_clear_all_32bpp_packed,
-		tfbm_reverse_32bpp_packed
-	},
-#endif
-#if (defined(JFB_32BPP) && defined(JFB_PACKED) && defined(JFB_DIRECTCOLOR))
-	{
-		32, FB_TYPE_PACKED_PIXELS, FB_VISUAL_DIRECTCOLOR,
-		tfbm_fill_rect_32bpp_packed,
-		tfbm_overlay_32bpp_packed,
-		tfbm_clear_all_32bpp_packed,
-		tfbm_reverse_32bpp_packed
-	},
-#endif
-	{
-		0, FB_TYPE_PACKED_PIXELS, FB_VISUAL_PSEUDOCOLOR,
-		NULL,
-		NULL,
-		NULL,
-		NULL
-	 }
-};
-
 #ifndef major	/* defined in sys/sysmacros.h - ukai 1999/10/27 */
 #define major(dev) (((dev) >> 8) & 0xff)
 #endif
@@ -314,10 +282,8 @@ void tfbm_open(TFrameBufferMemory *p)
 	}
 	tfbm_get_fix_screen_info(p->fh, &fb_fix);
 
-	if ((fb_fix.visual == FB_VISUAL_DIRECTCOLOR) || (fb_fix.visual == FB_VISUAL_PSEUDOCOLOR)) {
-		tfbm_get_cmap(p->fh, &ocmap);
-		cmapSaved = true;
-	}
+	tfbm_get_cmap(p->fh, &ocmap);
+	cmapSaved = true;
 
 	switch(tfbm_scr_rot_flag) {
 	case TFBM_SCR_ROT_FLAG_CW:
@@ -351,16 +317,8 @@ void tfbm_open(TFrameBufferMemory *p)
 		break;
 	}
 
-#ifdef DEBUG
 	tfbm_show_screeninfo(p, &fb_var, &fb_fix);
-#endif /* DUBUG */
-
-	tvisual = tfbm_select_visual(p, &fb_var, &fb_fix);
-	if (tvisual < 0)
-		die("Oops: Unknown frame buffer ???\n");
-
 	tfbm_setup_color_table(&fb_var);
-
 	tfbm_initcolors(p, &fb_var, &fb_fix);
 
 	/* fix: scanline length is not necessarily the same as display width */
@@ -370,8 +328,7 @@ void tfbm_open(TFrameBufferMemory *p)
 
 	p->soff = (u_int)(fb_fix.smem_start) & (~PAGE_MASK);
 	p->slen = (fb_fix.smem_len + p->soff + ~PAGE_MASK) & PAGE_MASK;
-	p->smem = (u_char*)mmap(NULL, p->slen, PROT_READ|PROT_WRITE,
-				MAP_SHARED, p->fh, (off_t)0);
+	p->smem = (u_char*)mmap(NULL, p->slen, PROT_READ|PROT_WRITE, MAP_SHARED, p->fh, (off_t)0);
 	if ((ptrdiff_t)p->smem == -1) {
 		die("cannot mmap(smem)");
 	}
@@ -401,11 +358,6 @@ void tfbm_open(TFrameBufferMemory *p)
 		fb_var.yoffset = 0;
 		tfbm_pan_display(p->fh, &fb_var);
 	}
-
-	if (!sFBCapabilityList[tvisual].fill)
-		die("No framebuffer supported.");
-
-	p->cap = sFBCapabilityList[tvisual];
 }
 
 void tfbm_close(TFrameBufferMemory *p)
@@ -431,35 +383,6 @@ void tfbm_close(TFrameBufferMemory *p)
 	}
 
 	close(p->fh);
-}
-
-int tfbm_select_visual(TFrameBufferMemory *p,
-		       struct fb_var_screeninfo *fbvs,
-		       struct fb_fix_screeninfo *fbfs)
-{
-	int ret;
-	int static_color = 0;
-
-	if(fbfs->visual == FB_VISUAL_STATIC_PSEUDOCOLOR){
-	    fbfs->visual = FB_VISUAL_PSEUDOCOLOR;
-	    static_color = 1;
-	}
-
-	for(ret = 0 ; sFBCapabilityList[ret].bitsPerPixel != 0 ; ret++) {
-		if ((sFBCapabilityList[ret].fbType == fbfs->type) &&
-		    (sFBCapabilityList[ret].fbVisual == fbfs->visual) &&
-		    (sFBCapabilityList[ret].bitsPerPixel==fbvs->bits_per_pixel)) {
-			if (static_color)
-			    fbfs->visual = FB_VISUAL_STATIC_PSEUDOCOLOR;
-
-			return ret;
-		}
-	}
-
-	if (static_color)
-		fbfs->visual = FB_VISUAL_STATIC_PSEUDOCOLOR;
-
-	return -1;
 }
 
 u_int tfbm_select_32_color(u_int c)
