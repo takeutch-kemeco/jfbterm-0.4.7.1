@@ -107,7 +107,6 @@ static bool modified_var_screen_info = false;
 
 /*---------------------------------------------------------------------------*/
 static u_int trueColor32Table[16];
-static u_short trueColor16Table[16];
 
 #define CL_B0 0x80FF
 #define CL_B1 0xFFFF
@@ -127,8 +126,7 @@ static void tfbm_setup_color_table(struct fb_var_screeninfo *var)
 		const u_int b = ((u_int)blue16[i]  >> (16 - var->blue.length))  << var->blue.offset;
 		const u_int rgb = r | g | b;
 		trueColor32Table[i] = rgb;
-		trueColor16Table[i] = (u_short)rgb;
-		print_message("color %d : %x, %x\n", i, trueColor32Table[i], trueColor16Table[i]);
+		print_message("color %d : %x\n", i, trueColor32Table[i]);
 	}
 }
 
