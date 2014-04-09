@@ -63,20 +63,6 @@ typedef struct Raw_TFrameBufferMemory {
 	/* function hooks */
 	TFrameBufferCapability cap;
 	int ttyfd;
-#if 0
-	(*init)(void),		 /* 初期化 */
-	(*text_mode)(void),	 /* テキストモードに切替え */
-	(*graph_mode)(void),	 /* グラフィックモードに切替え */
-	(*wput)(u_char *code, u_char fc, u_char bc), /* 漢字出力 */
-	(*sput)(u_char *code, u_char fc, u_char bc), /* ANK出力 */
-	(*set_cursor_address)(struct cursorInfo *c, u_int x, u_int y),
-	/* カーソル c のアドレスを (x,y) に設定 */
-	(*set_address)(u_int i),
-	/* 文字書き込みアドレスを i 文字目に設定 */
-	(*cursor)(struct cursorInfo*),	/* カーソルをトグル */
-	(*screen_saver)(bool),	 /* スクリーンブランク/アンブランク */
-	(*detatch)(void),	 /* ドライバ解放 */
-#endif
 } TFrameBufferMemory;
 
 enum TFBM_SCR_ROT_FLAG {
