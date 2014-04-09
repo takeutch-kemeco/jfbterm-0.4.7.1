@@ -443,10 +443,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-        char* cp;
-	if ((cp = tcaps_find_first(&(gApp.gCaps), "color.gamma")) != NULL)
-		fbgamma = (float)atof(cp);
-
 	tfont_setup_fontlist(fcap->values);
 	print_message("encoding : %s\n", en);
 	print_message("exec : %s ", gApp.gExecShell);

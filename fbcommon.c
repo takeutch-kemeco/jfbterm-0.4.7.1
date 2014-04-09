@@ -102,8 +102,6 @@ static struct fb_cmap ocmap = {0, 256, ored, ogreen, oblue, otrans};
 
 static int tvisual = 0;
 
-float fbgamma = 1.7;
-
 static struct fb_var_screeninfo ovar;
 static bool modified_var_screen_info = false;
 
@@ -171,13 +169,11 @@ static void tfbm_pan_display(int fh, struct fb_var_screeninfo *var)
 		print_strerror_and_exit("ioctl FBIOPAN_DISPLAY");
 }
 
-static void linear_palette(int bit)
+static void linear_palette(void)
 {
-	int i;
-	int size = 256 >> (8 - bit);
-
-	for (i = 0 ; i < size ; i++) {
-		red[i] = green[i] = blue[i] = (u_short)(65535.0 * pow(i / (size - 1.0), fbgamma));
+	u_short i;
+	for (i = 0 ; i < 256; i++) {
+		red[i] = green[i] = blue[i] = i << 8;
 	}
 }
 
@@ -187,7 +183,6 @@ static void tfbm_initcolors(TFrameBufferMemory *p,
 			    struct fb_var_screeninfo *fbvs,
 			    struct fb_fix_screeninfo *fbfs)
 {
-	/* get colormap */
 	if ((fbfs->visual == FB_VISUAL_DIRECTCOLOR) || (fbfs->visual == FB_VISUAL_PSEUDOCOLOR))
 		tfbm_get_cmap(p->fh, &ncmap);
 
@@ -195,9 +190,8 @@ static void tfbm_initcolors(TFrameBufferMemory *p,
 		die("Oops: %i bit/pixel ???\n", fbvs->bits_per_pixel);
 
 	if (fbfs->visual == FB_VISUAL_DIRECTCOLOR)
-		linear_palette(8);
+		linear_palette();
 
-	/* set colormap */
 	if ((fbfs->visual == FB_VISUAL_DIRECTCOLOR) || (fbfs->visual == FB_VISUAL_PSEUDOCOLOR))
 		tfbm_put_cmap(p->fh, &ncmap);
 }
