@@ -5,7 +5,7 @@ bin_PROGRAMS = jfbterm
 jfbterm_SOURCES = 				\
 		main.c main.h 			\
 		sequence.h 			\
-		fbcommon.c fbcommon.h 		\
+		fbcommon.c fbcommon.h JFBTerm/FBCommon.hs \
 		fbdpsp.c fbdpsp.h 		\
 		font.c font.h 			\
 		picofont.c picofont.h 		\
