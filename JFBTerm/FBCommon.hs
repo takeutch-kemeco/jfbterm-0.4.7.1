@@ -51,8 +51,8 @@ module JFBTerm.FBCommon (
   ) where
 
 import Foreign.Storable (Storable(..))
-import Data.Bits ((.|.), (.&.), complement)
-import Foreign.C.Types (CInt, CUInt, CUChar)
+import Data.Bits ((.|.), (.&.), xor, complement)
+import Foreign.C.Types -- (CInt, CUInt, CUChar)
 import Foreign.Ptr (Ptr, nullPtr, castPtr, plusPtr)
 
 data TFrameBufferMemory = TFrameBufferMemory {
@@ -141,3 +141,169 @@ instance Storable TFrameBufferMemory where
     poke ((castPtr (plusPtr a tfbmSourceMemoryOffset))  :: Ptr (Ptr CUChar)) sm
     poke ((castPtr (plusPtr a tfbmMemoryMapIOOffset))   :: Ptr (Ptr CUChar)) mm
     poke ((castPtr (plusPtr a tfbmTTYFileHandleOffset)) :: Ptr CInt)         tf
+
+tfbmTrueColor32Table = a ++ a
+  where
+    a = [0x000000, 0x8080ff, 0x80ff80, 0x80ffff, 0xff8080, 0xff80ff, 0xffff80, 0xffffff] :: [CUInt]
+
+-- | xとyをスクリーンの回転設定に合わせて、右か左に回転移動。
+-- | CW（クロックワイズ）が、首を時計回りに傾けて見るのに適した状態。
+-- | CCW（カウンターCW）が、首を反時計回りに傾けて見るのに適した状態。
+tfbmRotXY32BppPacked :: CUInt -> CUInt -> CUInt -> CUInt -> (CUInt, CUInt)
+tfbmRotXY32BppPacked x y w h = (x, y)
+
+tfbmSeekPixAdrs32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> Ptr CUInt
+tfbmSeekPixAdrs32BppPacked fbm x y = castPtr smem'
+  where
+    (x', y') = tfbmRotXY32BppPacked x y (tfbmWidth fbm) (tfbmHeight fbm) 
+    i = fromIntegral ((y' * (tfbmBytePerLine fbm)) + (x' * 4)) :: Int
+    smem' = plusPtr (tfbmSourceMemory fbm) i
+  
+tfbmSetPixel32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> IO ()
+tfbmSetPixel32BppPacked fbm x y icol = do
+  case x >= 0 && x < (tfbmWidth fbm) && y >= 0 && y < (tfbmHeight fbm) of
+    True -> poke (tfbmSeekPixAdrs32BppPacked fbm x y) icol
+    otherwise -> return ()
+
+tfbmXOrPixel32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> IO ()
+tfbmXOrPixel32BppPacked fbm x y icol = do
+  let d = tfbmSeekPixAdrs32BppPacked fbm x y
+  case x >= 0 && x < (tfbmWidth fbm) && y >= 0 && y < (tfbmHeight fbm) of
+    True -> peek d >>= (\v -> poke d (xor v icol))
+    otherwise -> return ()
+
+tfbmFillRect32BppPacked :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+tfbmFillRect32BppPacked p xHead yHead xLen yLen colorIndex = do
+  fbm <- peek p
+  let xs = [xHead .. (xHead + xLen - 1)]
+      ys = [yHead .. (yHead + yLen - 1)]
+      ps = [(x, y) | y <- ys, x <- xs]
+      icol = tfbmTrueColor32Table !! (fromIntegral colorIndex)
+  mapM_ (\(x, y) -> tfbmSetPixel32BppPacked fbm x y icol) ps
+  return ()
+
+tfbmClearAll32BppPacked :: Ptr TFrameBufferMemory -> CUInt -> IO ()
+tfbmClearAll32BppPacked p colorIndex = do
+  fbm <- peek p
+  let width  = tfbmWidth  fbm
+      height = tfbmHeight fbm
+  tfbmFillRect32BppPacked p 0 0 width height colorIndex
+
+tfbmByteTo8Pix32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> CUChar -> CUInt -> IO ()
+tfbmByteTo8Pix32BppPacked fbm x y sb icol = do
+  case (sb .&. 0x80) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 0) y icol
+    otherwise -> return ()
+  
+  case (sb .&. 0x40) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 1) y icol
+    otherwise -> return ()
+
+  case (sb .&. 0x20) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 2) y icol
+    otherwise -> return ()
+
+  case (sb .&. 0x10) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 3) y icol
+    otherwise -> return ()
+
+  case (sb .&. 0x08) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 4) y icol
+    otherwise -> return ()
+
+  case (sb .&. 0x04) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 5) y icol
+    otherwise -> return ()
+
+  case (sb .&. 0x02) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 6) y icol
+    otherwise -> return ()
+
+  case (sb .&. 0x01) /= 0 of
+    True -> tfbmSetPixel32BppPacked fbm (x + 7) y icol
+    otherwise -> return ()
+
+tfbmByteToXPix32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> CUChar -> CUInt -> CUInt -> IO ()
+tfbmByteToXPix32BppPacked fbm x y sb icol index = do
+  case (index >= 7) && ((sb .&. 0x02) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 6) y icol
+    otherwise -> return ()
+
+  case (index >= 6) && ((sb .&. 0x04) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 5) y icol
+    otherwise -> return ()
+                              
+  case (index >= 5) && ((sb .&. 0x08) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 4) y icol
+    otherwise -> return ()
+  
+  case (index >= 4) && ((sb .&. 0x10) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 3) y icol
+    otherwise -> return ()
+  
+  case (index >= 3) && ((sb .&. 0x20) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 2) y icol
+    otherwise -> return ()
+
+  case (index >= 2) && ((sb .&. 0x40) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 1) y icol
+    otherwise -> return ()
+
+  case (index >= 1) && ((sb .&. 0x80) /= 0) of
+    True -> tfbmSetPixel32BppPacked fbm (x + 0) y icol
+    otherwise -> return ()
+
+tfbmOverlay32BppPacked :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> Ptr CUChar -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+tfbmOverlay32BppPacked p xd yd ps lx ly gap colorIndex = do
+  fbm <- peek p
+  let ys = zip [yd .. ((yd + ly) - 1)] [0, (fromIntegral gap) ..]
+      icol = tfbmTrueColor32Table !! (fromIntegral colorIndex)
+  mapM_ (\(y, g) -> drawLine fbm xd lx y ps g icol) ys
+  return ()
+  where
+    drawLine fbm xd lx y ps gap icol = do
+      let xs = zip [xd, (xd + 8) .. (xd + lx)] [0..]
+          lastLen = mod (xd + lx) 8
+          lastPos = fst (last xs)
+          lastPtr = snd (last xs)
+          ff = 0xff :: CUChar
+      mapM_ (\(x, i) -> peek (plusPtr ps (i + gap)) >>= (\v -> tfbmByteTo8Pix32BppPacked fbm x y v icol)) xs
+      case lastLen /= 0 of
+        True -> peek (plusPtr ps (lastPtr + gap)) >>= (\v -> tfbmByteToXPix32BppPacked fbm lastPos y v icol lastLen)
+        otherwise -> return ()
+      return ()
+
+tfbmReverse32BppPacked :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+tfbmReverse32BppPacked p xHead yHead xLen yLen colorIndex = do
+  fbm <- peek p
+  let xs = [xHead .. (xHead + xLen)]
+      ys = [yHead .. (yHead + yLen)]
+      ps = [(x, y) | y <- ys, x <- xs]
+      icol = tfbmTrueColor32Table !! (fromIntegral colorIndex)
+  mapM_ (\(x, y) -> tfbmXOrPixel32BppPacked fbm x y icol) ps
+  return ()
+
+foreign export ccall
+  tfbm_fill_rect_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> CUInt ->CUInt -> CUInt -> IO ()
+
+foreign export ccall
+  tfbm_overlay_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> Ptr CUChar -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+
+foreign export ccall
+  tfbm_clear_all_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> IO ()
+
+foreign export ccall
+  tfbm_reverse_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+
+tfbm_fill_rect_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> CUInt ->CUInt -> CUInt -> IO ()
+tfbm_fill_rect_32bpp_packed p sx sy lx ly color = tfbmFillRect32BppPacked p sx sy lx ly color
+
+tfbm_overlay_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> Ptr CUChar -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+tfbm_overlay_32bpp_packed p xd yd ps lx ly gap color = tfbmOverlay32BppPacked p xd yd ps lx ly gap color
+
+tfbm_clear_all_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> IO ()
+tfbm_clear_all_32bpp_packed p color = tfbmClearAll32BppPacked p color
+
+tfbm_reverse_32bpp_packed :: Ptr TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> CUInt -> CUInt -> IO ()
+tfbm_reverse_32bpp_packed p sx sy lx ly color = tfbmReverse32BppPacked p sx sy lx ly color
+
