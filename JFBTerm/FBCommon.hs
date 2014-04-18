@@ -151,16 +151,23 @@ tfbmTrueColor32Table = a ++ a
   where
     a = [0x000000, 0x8080ff, 0x80ff80, 0x80ffff, 0xff8080, 0xff80ff, 0xffff80, 0xffffff] :: [CUInt]
 
+tfbmScreenRotateNormal = 0x01 :: CUInt
+tfbmScreenRotateCW     = 0x02 :: CUInt
+tfbmScreenRotateCCW    = 0x04 :: CUInt
+
 -- | xとyをスクリーンの回転設定に合わせて、右か左に回転移動。
 -- | CW（クロックワイズ）が、首を時計回りに傾けて見るのに適した状態。
 -- | CCW（カウンターCW）が、首を反時計回りに傾けて見るのに適した状態。
-tfbmRotXY32BppPacked :: CUInt -> CUInt -> CUInt -> CUInt -> (CUInt, CUInt)
-tfbmRotXY32BppPacked x y w h = (x, y)
+tfbmRotXY32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> CUInt -> CUInt -> (CUInt, CUInt)
+tfbmRotXY32BppPacked fbm x y w h
+  | (tfbmScreenRotate fbm) == tfbmScreenRotateCW  = (((h - 1) - y), x)
+  | (tfbmScreenRotate fbm) == tfbmScreenRotateCCW = (y, ((w -1) - x))
+  | otherwise = (x, y)
 
 tfbmSeekPixAdrs32BppPacked :: TFrameBufferMemory -> CUInt -> CUInt -> Ptr CUInt
 tfbmSeekPixAdrs32BppPacked fbm x y = castPtr smem'
   where
-    (x', y') = tfbmRotXY32BppPacked x y (tfbmWidth fbm) (tfbmHeight fbm) 
+    (x', y') = tfbmRotXY32BppPacked fbm x y (tfbmWidth fbm) (tfbmHeight fbm)
     i = fromIntegral ((y' * (tfbmBytePerLine fbm)) + (x' * 4)) :: Int
     smem' = plusPtr (tfbmSourceMemory fbm) i
   
