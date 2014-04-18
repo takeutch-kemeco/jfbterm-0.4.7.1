@@ -36,6 +36,7 @@ typedef struct Raw_TFrameBufferMemory {
 	u_int height;
 	u_int width;
 	u_int bytePerLine;
+	u_int screen_rotate;
 	/* --- */
 	int fh;
 	u_int sstart;
@@ -44,9 +45,9 @@ typedef struct Raw_TFrameBufferMemory {
 	u_int mstart;
 	u_int moff;
 	u_int mlen;
+	int ttyfd;
 	u_char *smem;
 	u_char *mmio;
-	int ttyfd;
 } TFrameBufferMemory;
 
 enum TFBM_SCR_ROT_FLAG {

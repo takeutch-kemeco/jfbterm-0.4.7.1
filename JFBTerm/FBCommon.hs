@@ -37,6 +37,7 @@ module JFBTerm.FBCommon (
     tfbmHeight,       -- CUInt
     tfbmWidth,        -- CUInt
     tfbmBytePerLine,  -- CUInt
+    tfbmScreenRotate, -- CUInt
     tfbmFileHandle,   -- CInt
     tfbmSourceStart,  -- CUInt
     tfbmSourceOffset, -- CUInt
@@ -44,9 +45,9 @@ module JFBTerm.FBCommon (
     tfbmMemoryStart,  -- CUInt
     tfbmMemoryOffset, -- CUInt
     tfbmMemoryLength, -- CUint
+    tfbmTTYFileHandle, -- CInt
     tfbmSourceMemory, -- (Ptr CUChar)
-    tfbmMemoryMapIO,  -- (Ptr CUChar)
-    tfbmTTYFileHandle -- CInt
+    tfbmMemoryMapIO   -- (Ptr CUChar)
     )
   ) where
 
@@ -59,6 +60,7 @@ data TFrameBufferMemory = TFrameBufferMemory {
   tfbmHeight            :: CUInt,
   tfbmWidth             :: CUInt,
   tfbmBytePerLine       :: CUInt,
+  tfbmScreenRotate      :: CUInt,
   tfbmFileHandle        :: CInt,
   tfbmSourceStart       :: CUInt,
   tfbmSourceOffset      :: CUInt,
@@ -66,9 +68,9 @@ data TFrameBufferMemory = TFrameBufferMemory {
   tfbmMemoryStart       :: CUInt,
   tfbmMemoryOffset      :: CUInt,
   tfbmMemoryLength      :: CUInt,
+  tfbmTTYFileHandle     :: CInt,
   tfbmSourceMemory      :: (Ptr CUChar),
-  tfbmMemoryMapIO       :: (Ptr CUChar),
-  tfbmTTYFileHandle     :: CInt
+  tfbmMemoryMapIO       :: (Ptr CUChar)
   } deriving (Show, Eq)
 
 class FrameBufferCapability a where
@@ -91,23 +93,24 @@ sizePtr    = sizeOf nullPtr
 tfbmHeightOffset        = 0
 tfbmWidthOffset         = tfbmHeightOffset       + sizeCUInt
 tfbmBytePerLineOffset   = tfbmWidthOffset        + sizeCUInt
-tfbmFileHandleOffset    = tfbmBytePerLineOffset  + sizeCUInt
+tfbmScreenRotateOffset  = tfbmBytePerLineOffset  + sizeCUInt
+tfbmFileHandleOffset    = tfbmScreenRotateOffset + sizeCUInt
 tfbmSourceStartOffset   = tfbmFileHandleOffset   + sizeCInt
 tfbmSourceOffsetOffset  = tfbmSourceStartOffset  + sizeCUInt      
 tfbmSourceLengthOffset  = tfbmSourceOffsetOffset + sizeCUInt
 tfbmMemoryStartOffset   = tfbmSourceLengthOffset + sizeCUInt       
 tfbmMemoryOffsetOffset  = tfbmMemoryStartOffset  + sizeCUInt      
 tfbmMemoryLengthOffset  = tfbmMemoryOffsetOffset + sizeCUInt      
-tfbmSourceMemoryOffset  = tfbmMemoryLengthOffset + sizeCUInt      
-tfbmMemoryMapIOOffset   = tfbmSourceMemoryOffset + sizePtr       
-tfbmTTYFileHandleOffset = tfbmMemoryMapIOOffset  + sizePtr
+tfbmTTYFileHandleOffset = tfbmMemoryLengthOffset + sizeCUInt
+tfbmSourceMemoryOffset  = tfbmTTYFileHandleOffset + sizeCInt
+tfbmMemoryMapIOOffset   = tfbmSourceMemoryOffset + sizePtr
 
 instance Storable TFrameBufferMemory where
-  sizeOf (TFrameBufferMemory h w bp fh ss so sl ms mo ml sm mm tf) =
-    (sizeOf w) + (sizeOf h) + (sizeOf bp) + (sizeOf fh) +
+  sizeOf (TFrameBufferMemory h w bp sr fh ss so sl ms mo ml tf sm mm) =
+    (sizeOf w) + (sizeOf h) + (sizeOf bp) + (sizeOf sr) + (sizeOf fh) +
     (sizeOf ss) + (sizeOf so) + (sizeOf sl) + 
     (sizeOf ms) + (sizeOf mo) + (sizeOf ml) + 
-    (sizeOf sm) + (sizeOf mm) + (sizeOf tf)
+    (sizeOf tf) + (sizeOf sm) + (sizeOf mm)
 
   alignment a = maximum [sizePtr, sizeCInt, sizeCUInt, sizeCUChar]
 
@@ -115,6 +118,7 @@ instance Storable TFrameBufferMemory where
     h  <- peek ((castPtr (plusPtr a tfbmHeightOffset))        :: Ptr CUInt)
     w  <- peek ((castPtr (plusPtr a tfbmWidthOffset))         :: Ptr CUInt)
     bp <- peek ((castPtr (plusPtr a tfbmBytePerLineOffset))   :: Ptr CUInt)
+    sr <- peek ((castPtr (plusPtr a tfbmScreenRotateOffset))  :: Ptr CUInt)
     fh <- peek ((castPtr (plusPtr a tfbmFileHandleOffset))    :: Ptr CInt)
     ss <- peek ((castPtr (plusPtr a tfbmSourceStartOffset))   :: Ptr CUInt)
     so <- peek ((castPtr (plusPtr a tfbmSourceOffsetOffset))  :: Ptr CUInt)
@@ -122,15 +126,16 @@ instance Storable TFrameBufferMemory where
     ms <- peek ((castPtr (plusPtr a tfbmMemoryStartOffset))   :: Ptr CUInt)
     mo <- peek ((castPtr (plusPtr a tfbmMemoryOffsetOffset))  :: Ptr CUInt)
     ml <- peek ((castPtr (plusPtr a tfbmMemoryLengthOffset))  :: Ptr CUInt)
+    tf <- peek ((castPtr (plusPtr a tfbmTTYFileHandleOffset)) :: Ptr CInt)
     sm <- peek ((castPtr (plusPtr a tfbmSourceMemoryOffset))  :: Ptr (Ptr CUChar))
     mm <- peek ((castPtr (plusPtr a tfbmMemoryMapIOOffset))   :: Ptr (Ptr CUChar))
-    tf <- peek ((castPtr (plusPtr a tfbmTTYFileHandleOffset)) :: Ptr CInt)
-    return (TFrameBufferMemory h w bp fh ss so sl ms mo ml sm mm tf)
+    return (TFrameBufferMemory h w bp sr fh ss so sl ms mo ml tf sm mm)
   
-  poke a (TFrameBufferMemory h w bp fh ss so sl ms mo ml sm mm tf) = do
+  poke a (TFrameBufferMemory h w bp sr fh ss so sl ms mo ml tf sm mm) = do
     poke ((castPtr (plusPtr a tfbmHeightOffset))        :: Ptr CUInt)        h
     poke ((castPtr (plusPtr a tfbmWidthOffset))         :: Ptr CUInt)        w
     poke ((castPtr (plusPtr a tfbmBytePerLineOffset))   :: Ptr CUInt)        bp
+    poke ((castPtr (plusPtr a tfbmScreenRotateOffset))  :: Ptr CUInt)        sr
     poke ((castPtr (plusPtr a tfbmFileHandleOffset))    :: Ptr CInt)         fh
     poke ((castPtr (plusPtr a tfbmSourceStartOffset))   :: Ptr CUInt)        ss
     poke ((castPtr (plusPtr a tfbmSourceOffsetOffset))  :: Ptr CUInt)        so
@@ -138,9 +143,9 @@ instance Storable TFrameBufferMemory where
     poke ((castPtr (plusPtr a tfbmMemoryStartOffset))   :: Ptr CUInt)        ms
     poke ((castPtr (plusPtr a tfbmMemoryOffsetOffset))  :: Ptr CUInt)        mo
     poke ((castPtr (plusPtr a tfbmMemoryLengthOffset))  :: Ptr CUInt)        ml
+    poke ((castPtr (plusPtr a tfbmTTYFileHandleOffset)) :: Ptr CInt)         tf
     poke ((castPtr (plusPtr a tfbmSourceMemoryOffset))  :: Ptr (Ptr CUChar)) sm
     poke ((castPtr (plusPtr a tfbmMemoryMapIOOffset))   :: Ptr (Ptr CUChar)) mm
-    poke ((castPtr (plusPtr a tfbmTTYFileHandleOffset)) :: Ptr CInt)         tf
 
 tfbmTrueColor32Table = a ++ a
   where
