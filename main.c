@@ -420,11 +420,11 @@ int main(int argc, char **argv)
 	}
 
         if(gApp.gOptCW)
-                tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CW;
+                gFramebuffer.screen_rotate = TFBM_SCR_ROT_FLAG_CW;
 	else if (gApp.gOptCCW)
-                tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_CCW;
+                gFramebuffer.screen_rotate = TFBM_SCR_ROT_FLAG_CCW;
 	else
-                tfbm_scr_rot_flag = TFBM_SCR_ROT_FLAG_NORMAL;
+                gFramebuffer.screen_rotate = TFBM_SCR_ROT_FLAG_NORMAL;
 
 	if(gApp.gOptLegacy)
                 skip_agent_context.use_flag = 0;

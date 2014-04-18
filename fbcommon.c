@@ -53,8 +53,6 @@
 
 #include "fbdpsp.h"
 
-enum TFBM_SCR_ROT_FLAG tfbm_scr_rot_flag;
-
 #ifndef major	/* defined in sys/sysmacros.h - ukai 1999/10/27 */
 #define major(dev) (((dev) >> 8) & 0xff)
 #endif
@@ -285,7 +283,7 @@ void tfbm_open(TFrameBufferMemory *p)
 	tfbm_get_cmap(p->fh, &ocmap);
 	cmapSaved = true;
 
-	switch(tfbm_scr_rot_flag) {
+	switch(p->screen_rotate) {
 	case TFBM_SCR_ROT_FLAG_CW:
 	case TFBM_SCR_ROT_FLAG_CCW:
 		swap_int((int*)&fb_var.xres,         (int*)&fb_var.yres);
@@ -295,7 +293,7 @@ void tfbm_open(TFrameBufferMemory *p)
 		break;
 	}
 
-	switch(tfbm_scr_rot_flag) {
+	switch(p->screen_rotate) {
 	case TFBM_SCR_ROT_FLAG_CW:
 		{
 			u_int tmp = fb_var.left_margin;
